@@ -9,9 +9,9 @@ Update this file whenever an image is added, replaced, or removed.
 |------------------|------------------------|-----------|------------------------|
 | `hero.jpg`       | Hero (top)             | 80%       | Stock — needs source   |
 | `aws-logo.png`   | Inline (after Objectives) | 30% centred | AWS brand asset    |
-| `ambiance1.jpg`  | (unused in post 22)    | n/a       | Stock — needs source   |
-| `ambiance2.jpg`  | After Script 2         | 100%      | Stock — needs source   |
-| `ambiance3.jpg`  | Before Lessons Learnt  | 100%      | Stock — needs source   |
+| `ambiance1.jpg`  | After Objectives        | height=3.5in | Stock — needs source |
+| `ambiance2.jpg`  | After Script 2         | 100%      | AI — Gemini generated  |
+| `ambiance3.jpg`  | Before Lessons Learnt  | 100%      | AI — Gemini generated  |
 
 ## Attributions (FILL IN)
 
@@ -26,26 +26,38 @@ Update this file whenever an image is added, replaced, or removed.
   Use under AWS trademark guidelines for editorial reference;
   not endorsed by AWS.
 
-- `ambiance1.jpg` — TODO: confirm source. Currently unused in `index.qmd`.
-  Either remove the file or place it in an unused slot.
+- `ambiance1.jpg` — TODO: confirm source. Used in `index.qmd` after the
+  Objectives list, caption "A clean workstation poised at the start of a
+  focused provisioning session." Actual content: a desk with an iMac
+  (screen reads "DO MORE."), desk lamp, and pennant — a generic
+  workstation stock photo, not AWS-specific. The Unsplash credit
+  previously logged below (Carl Heyerdahl, "knife on plate") does not
+  match this file's content and has been removed pending the real source.
 
-- `ambiance2.jpg` — TODO: confirm source. Stock photo of server racks.
-  Suggested URL: https://unsplash.com/s/photos/data-center
-  Photographer: [name]
-  Licence: Unsplash Free / Pexels Free / CC0
-  Downloaded: [YYYY-MM-DD]
+- `ambiance2.jpg` — Generated with Google Gemini (gemini-3-pro-image-preview),
+  2026-08-28. Prompt: 'Editorial photograph of a data center server room,
+  rows of dark server racks with rack-mounted units and blinking teal and
+  blue LED status lights, shot at a slight angle with shallow depth of
+  field, cool blue ambient lighting, cables neatly bundled, clean
+  professional atmosphere, no people, no text overlays, photorealistic,
+  16:9 aspect ratio'. Replaces a prior file that had been swapped for an
+  unrelated Linux desktop-customization screenshot.
 
-- `ambiance3.jpg` — TODO: confirm source. Stock photo of laptop + notebook.
-  Suggested URL: https://unsplash.com/s/photos/workspace
-  Photographer: [name]
-  Licence: Unsplash Free / Pexels Free / CC0
-  Downloaded: [YYYY-MM-DD]
+- `ambiance3.jpg` — Generated with Google Gemini (gemini-3-pro-image-preview),
+  2026-08-28. Prompt: 'Editorial photograph of a calm minimalist home
+  office desk with a silver laptop showing a code editor, an open paper
+  notebook with handwritten notes and a pen beside it, a warm walnut wood
+  desk surface, soft natural window light, a cup of coffee nearby, shallow
+  depth of field, no people, no readable logos, photorealistic, 16:9
+  aspect ratio'. Replaces a prior file that had been swapped for an
+  unrelated photo of Geisel Library (UCSD).
 
 ## Recommended replacements
 
 Per `IMAGE_GENERATION_PLAN.md`, setup posts should mix roughly 50% own
-screenshots / 25% stock / 25% AI. Post 22 is currently 100% stock.
-Candidates for replacement with own screenshots:
+screenshots / 25% stock / 25% AI. `ambiance2.jpg` and `ambiance3.jpg` are
+now AI-generated (see attributions above); still open as own-screenshot
+upgrades:
 
 - `ambiance2.jpg` → terminal showing `aws_create_instance.sh -p power1_app`
   in a clean iTerm2 window with secrets masked
@@ -72,10 +84,6 @@ hero.jpg — Generated with Google Imagen 3 via Gemini, 2026-04-14.
     Prompt: 'Editorial photograph, three-quarter view of a 14-inch
     silver laptop on a warm walnut desk... [paste full prompt]'
     Original: 1408x768 PNG; downsized to 1600px wide JPEG q85.
-
-ambiance1.jpg — Photo by [Carl Heyerdahl] on Unsplash,
-https://unsplash.com/photos/black-handled-knife-on-white-and-brown-ceramic-plate-cmwZeoYiLSg
-    2026-04-14. Licence: Unsplash Free.
 
 ## Placeholder coffee images (temporary ambiance slots)
 
