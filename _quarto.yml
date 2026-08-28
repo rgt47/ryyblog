@@ -1,0 +1,64 @@
+project:
+  type: website
+  render:
+    - "*.qmd"
+    - "posts/*/index.qmd"
+    - "!_archive"
+  resources:
+    - "images/"
+  output-dir: _site
+
+website:
+  title: "focusonr"
+  site-url: https://focusonr.org
+  draft-mode: visible
+  description: "Technical articles and explorations in statistical computing, data science, and R programming, by Ronald G. Thomas."
+  open-graph:
+    site-name: focusonr
+    image: https://focusonr.org/images/og-card.png
+  twitter-card:
+    card-style: summary_large_image
+    image: https://focusonr.org/images/og-card.png
+    creator: "@rgt47"
+  navbar:
+    background: light
+    foreground: "#212529"
+    left:
+      - href: "/"
+        text: Home
+    right:
+      - href: https://rgtlab.org
+        text: rgtlab.org
+      - icon: twitter
+        href: https://twitter.com/rgt47
+        aria-label: Twitter
+      - icon: github
+        href: https://github.com/rgt47
+        aria-label: GitHub
+  page-footer:
+    border: true
+    left: |
+      © 2026 Ronald G. Thomas.
+    right:
+      - icon: github
+        href: https://github.com/rgt47/ryyblog
+        aria-label: Source on GitHub
+  search:
+    location: navbar
+    type: overlay
+
+format:
+  html:
+    theme:
+      light: [cosmo, custom.scss]
+    toc: true
+    code-copy: true
+    page-layout: full
+    html-math-method: katex
+    include-in-header:
+      file: header.html
+    include-after-body:
+      file: _includes/after-body.html
+
+execute:
+  freeze: auto

@@ -1,0 +1,32 @@
+---
+title: "focusonr"
+subtitle: "Technical articles and explorations in statistical computing, data science, and R"
+page-layout: full
+toc: false
+listing:
+  - id: posts
+    contents: "posts/*/index.qmd"
+    sort: "date desc"
+    type: default
+    categories: true
+    sort-ui: true
+    filter-ui: true
+    feed:
+      items: 20
+      title: "focusonr — Ronald G. Thomas"
+      description: >
+        Technical articles and explorations in statistical computing,
+        data science, and R programming, written from the working
+        notes of Ronald G. Thomas.
+    image-placeholder: "images/og-card.png"
+    image-height: "120px"
+    image-align: right
+    fields: [image, date, title, description, categories, reading-time]
+---
+
+Technical articles and explorations in statistical computing, data science,
+and R programming, written from the working notes of a lab that runs on
+both.
+
+::: {#posts}
+:::
