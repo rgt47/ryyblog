@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ronald G. Thomas">
+<meta name="dcterms.date" content="2026-02-11">
+<meta name="description" content="Neovim’s plugin ecosystem moves fast. This is a ground-up rewrite of the original setup, built around native LSP, LuaSnip, and R.nvim rather than the plugins that carried the workflow two years ago.">
+
+<title>Setting Up Neovim as a Data Science IDE – focusonr</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d1f979f567abd94e3c058709025db867.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Open+Sans:ital,wght@0,400;0,600;1,400&amp;family=Fira+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0fba9333d8.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+<!-- Custom meta tags for social sharing -->
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@rgt47">
+
+<!-- Add responsive features -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Add analytics if needed -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script> -->
+
+<!-- Add custom javascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove code tools button completely
+  const codeButton = document.querySelector('.code-tools-button');
+  if (codeButton) {
+    codeButton.remove();
+  }
+
+  // Smooth scrolling for in-page anchor links (skip listing category elements)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    if (anchor.closest('.quarto-listing-category')) return;
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+});
+</script>
+
+
+<meta property="og:title" content="Setting Up Neovim as a Data Science IDE – focusonr">
+<meta property="og:description" content="Neovim’s plugin ecosystem moves fast. This is a ground-up rewrite of the original setup, built around native LSP, LuaSnip, and R.nvim rather than the plugins that carried the workflow two years ago.">
+<meta property="og:image" content="https://focusonr.org/posts/wf-neovim-data-science-ide/media/images/hero.jpg">
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:title" content="Setting Up Neovim as a Data Science IDE – focusonr">
+<meta name="twitter:description" content="Neovim’s plugin ecosystem moves fast. This is a ground-up rewrite of the original setup, built around native LSP, LuaSnip, and R.nvim rather than the plugins that carried the workflow two years ago.">
+<meta name="twitter:image" content="https://focusonr.org/posts/wf-neovim-data-science-ide/media/images/hero.jpg">
+<meta name="twitter:creator" content="@rgt47">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">focusonr</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://rgtlab.org"> 
+<span class="menu-text">rgtlab.org</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/rgt47"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  </ul></li>
+  <li><a href="#prerequisites-and-setup" id="toc-prerequisites-and-setup" class="nav-link" data-scroll-target="#prerequisites-and-setup">Prerequisites and Setup</a></li>
+  <li><a href="#what-is-neovim" id="toc-what-is-neovim" class="nav-link" data-scroll-target="#what-is-neovim">What is Neovim?</a></li>
+  <li><a href="#directory-structure-and-configuration-hierarchy" id="toc-directory-structure-and-configuration-hierarchy" class="nav-link" data-scroll-target="#directory-structure-and-configuration-hierarchy">Directory Structure and Configuration Hierarchy</a></li>
+  <li><a href="#plugin-management-with-lazy" id="toc-plugin-management-with-lazy" class="nav-link" data-scroll-target="#plugin-management-with-lazy">Plugin Management with Lazy</a></li>
+  <li><a href="#the-init.lua-entry-point" id="toc-the-init.lua-entry-point" class="nav-link" data-scroll-target="#the-init.lua-entry-point">The init.lua Entry Point</a></li>
+  <li><a href="#plugin-list-and-descriptions" id="toc-plugin-list-and-descriptions" class="nav-link" data-scroll-target="#plugin-list-and-descriptions">Plugin List and Descriptions</a></li>
+  <li><a href="#setup-basics" id="toc-setup-basics" class="nav-link" data-scroll-target="#setup-basics">Setup Basics</a>
+  <ul class="collapse">
+  <li><a href="#key-mappings" id="toc-key-mappings" class="nav-link" data-scroll-target="#key-mappings">Key Mappings</a></li>
+  </ul></li>
+  <li><a href="#native-lsp-setup" id="toc-native-lsp-setup" class="nav-link" data-scroll-target="#native-lsp-setup">Native LSP Setup</a></li>
+  <li><a href="#completion-with-nvim-cmp" id="toc-completion-with-nvim-cmp" class="nav-link" data-scroll-target="#completion-with-nvim-cmp">Completion with nvim-cmp</a></li>
+  <li><a href="#snippets-with-luasnip" id="toc-snippets-with-luasnip" class="nav-link" data-scroll-target="#snippets-with-luasnip">Snippets with LuaSnip</a>
+  <ul class="collapse">
+  <li><a href="#static-snippets" id="toc-static-snippets" class="nav-link" data-scroll-target="#static-snippets">Static Snippets</a></li>
+  <li><a href="#dynamic-snippets" id="toc-dynamic-snippets" class="nav-link" data-scroll-target="#dynamic-snippets">Dynamic Snippets</a></li>
+  </ul></li>
+  <li><a href="#r-development-setup-with-r.nvim" id="toc-r-development-setup-with-r.nvim" class="nav-link" data-scroll-target="#r-development-setup-with-r.nvim">R Development Setup with R.nvim</a></li>
+  <li><a href="#latex-with-vimtex" id="toc-latex-with-vimtex" class="nav-link" data-scroll-target="#latex-with-vimtex">LaTeX with vimtex</a></li>
+  <li><a href="#quarto-editing" id="toc-quarto-editing" class="nav-link" data-scroll-target="#quarto-editing">Quarto Editing</a></li>
+  <li><a href="#fuzzy-finding-with-telescope" id="toc-fuzzy-finding-with-telescope" class="nav-link" data-scroll-target="#fuzzy-finding-with-telescope">Fuzzy Finding with Telescope</a></li>
+  <li><a href="#verification" id="toc-verification" class="nav-link" data-scroll-target="#verification">Verification</a></li>
+  <li><a href="#daily-workflow" id="toc-daily-workflow" class="nav-link" data-scroll-target="#daily-workflow">Daily Workflow</a>
+  <ul class="collapse">
+  <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  </ul></li>
+  <li><a href="#uninstall-rollback" id="toc-uninstall-rollback" class="nav-link" data-scroll-target="#uninstall-rollback">Uninstall / Rollback</a></li>
+  <li><a href="#ubuntu-tweaks-and-multiple-configurations" id="toc-ubuntu-tweaks-and-multiple-configurations" class="nav-link" data-scroll-target="#ubuntu-tweaks-and-multiple-configurations">Ubuntu Tweaks and Multiple Configurations</a>
+  <ul class="collapse">
+  <li><a href="#working-with-multiple-configurations" id="toc-working-with-multiple-configurations" class="nav-link" data-scroll-target="#working-with-multiple-configurations">Working with Multiple Configurations</a></li>
+  </ul></li>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
+  <ul class="collapse">
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
+  </ul></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a>
+  <ul class="collapse">
+  <li><a href="#related-posts-in-this-cluster" id="toc-related-posts-in-this-cluster" class="nav-link" data-scroll-target="#related-posts-in-this-cluster">Related posts in this cluster</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Setting Up Neovim as a Data Science IDE</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">neovim</div>
+    <div class="quarto-category">vim</div>
+    <div class="quarto-category">r</div>
+    <div class="quarto-category">python</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Neovim’s plugin ecosystem moves fast. This is a ground-up rewrite of the original setup, built around native LSP, LuaSnip, and R.nvim rather than the plugins that carried the workflow two years ago.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta column-page-left">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ronald G. Thomas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">February 11, 2026</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">August 28, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- ============================================================================
+AUTHOR PROVIDES — concrete inputs the blogger must supply
+
+YAML FRONT MATTER
+  [x] title           — unchanged
+  [x] date             — original publish date kept
+  [x] date-modified   — 2026-08-28 (full rewrite)
+  [x] categories, description, image — filled in
+  [ ] draft: false    — still draft: true
+
+NARRATIVE INPUTS
+  [x] Hook / motivations / objectives rewritten for the 2026 stack
+  [x] Directory structure, plugin list, key mappings rewritten
+  [x] Native LSP section (new)
+  [x] Completion (nvim-cmp) section (new)
+  [x] LuaSnip section (replaces UltiSnips appendix)
+  [x] R.nvim section (replaces Nvim-R)
+  [x] Quarto editing section (new)
+  [ ] Things to Watch Out For — reviewed against 2026 stack
+  [ ] Lessons Learnt / Limitations / Opportunities — reviewed
+  [ ] Wrapping Up / See Also — reviewed
+
+VERIFICATION PERFORMED (this rewrite, 2026-08-28)
+  [x] Built and ran an isolated test config (XDG_* override, bypassing
+      the machine's global VIMINIT) against Neovim 0.12.4 with lazy.nvim,
+      R.nvim, nvim-treesitter, nvim-lspconfig, nvim-cmp + LuaSnip,
+      quarto-nvim + otter.nvim, and telescope.nvim. Config bootstrapped
+      and loaded with zero errors.
+  [x] Re-ran the same bootstrap and load test after the host's Neovim
+      was updated to 0.12.5: plugin sync and config load both clean,
+      zero errors. Version matrix below now reflects 0.12.5 as the
+      actually-verified version, not an inferred carry-forward.
+  [x] R.nvim default keymaps read directly from
+      R-nvim/R.nvim `lua/r/maps.lua` source in the installed plugin,
+      not from documentation summaries.
+  [x] plenary.nvim confirmed archived-in-practice: last commit
+      2026-04-10 (the 'archived Q2 2026' notice itself); no commits
+      since. Telescope's installed README still lists it as a hard
+      dependency with no migration notice.
+  [ ] GUI front-end (Neovide vs neovim-qt) — no strong 2026 consensus
+      found; kept neovim-qt for continuity, Neovide mentioned as the
+      GPU-accelerated alternative. Not independently tested.
+  [ ] R.nvim's `nvimcom` R package install step not tested end to end
+      (no R interpreter exercised in the verification session).
+
+CONFIGURATION DELIVERABLES
+  [ ] No analysis/configs/ directory exists for this post; init.lua and
+      the lua/ modules are shown inline in the prose only, not committed
+      as separate reproducible files in this compendium.
+
+IMAGES (4 total: hero + 3 ambiance, all in media/images/, unchanged
+from the original post — none of the visual assets are stack-specific)
+  [x] Hero image (80% width)
+  [x] Ambiance image 1 (after Objectives)
+  [x] Ambiance image 2 (after key mappings)
+  [x] Ambiance image 3 (before Lessons Learnt)
+
+CONTACT & METADATA
+  [x] Author name in YAML matches site author
+  [x] Social links in Let's Connect present
+============================================================================ -->
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption>Neovim logo and editor theme in a terminal</figcaption>
+</figure>
+</div>
+<p><em>Neovim: a modern fork of Vim designed for extensibility through Lua.</em></p>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>This post is a ground-up rewrite, not an update. The original version of this guide, published in early 2026, documented a working Neovim configuration built around Nvim-R, UltiSnips, and <code>nvim-lspconfig</code>‘s <code>.setup{}</code> pattern. All three have since been superseded. Nvim-R was archived in 2023 and its plugin has now genuinely bit-rotted. UltiSnips’ Python-interpreter dependency is a maintenance burden LuaSnip does not carry, and Neovim 0.11 and 0.12 moved LSP configuration into the editor core, leaving <code>nvim-lspconfig</code>’s old <code>.setup{}</code> API a compatibility shim rather than the recommended path. Rather than patch those sections in place, this rewrite starts over with the plugin set and native APIs current as of Neovim 0.12.5, the latest stable release as of this writing. The configuration was built and verified against 0.12.4, then re-verified against 0.12.5 after the test machine was updated; both bootstrapped and loaded with zero errors.</p>
+<p>Neovim is a fork of Vim that retains the modal editing philosophy while adding first-class Lua scripting, an asynchronous plugin architecture, and a built-in terminal emulator. These features make it particularly well suited for data science workflows where one frequently switches between writing code, inspecting output, and editing manuscripts.</p>
+<p>We describe a practical Neovim configuration for data science development on macOS, built entirely in Lua: plugin management with Lazy, native LSP configuration through <code>vim.lsp.config()</code> and <code>vim.lsp.enable()</code>, completion through nvim-cmp, snippets through LuaSnip, R integration through R.nvim, LaTeX compilation through vimtex, and Quarto document editing through quarto-nvim. A closing appendix covers Ubuntu adjustments and working with multiple Neovim configurations.</p>
+<p>More formally, we document the Editor layer (Layer 5) of the Workflow Construct described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>. Neovim is the choice of editor at this layer. The layer is substitutable (with Vim, VS Code, RStudio, or a graphical IDE), but the contract the layer holds, modal scriptable text manipulation that behaves identically locally and over SSH, is what the higher layers (Vim plugins, snippets, REPL integration) all assume. The configuration documented here is the editor-layer counterpart to the dotfiles repository (<a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a>).</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Every configuration snippet in this post was built and run against a real Neovim instance in an isolated, throwaway configuration directory before being written down here, not copied from documentation and left untested. This was done twice: first against 0.12.4, then again against 0.12.5 after the test machine’s Neovim was updated, with identical clean results both times. Where a claim could not be verified this way (the <code>nvimcom</code> R package’s install step, for instance, which requires a live R session), that is noted explicitly rather than presented as confirmed.</p>
+</div>
+</div>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<ul>
+<li>The original configuration’s centerpiece, Nvim-R, is archived and its replacement story needed to be told properly rather than bolted on as a callout.</li>
+<li>Native LSP support removed the reason to depend on <code>nvim-lspconfig</code>’s old setup pattern, and a rewrite gave the chance to teach the current API instead of an API in the process of being deprecated.</li>
+<li>UltiSnips’ Python-interpreter requirement had already surfaced as a documented gotcha in the previous version of this post; LuaSnip removes the dependency entirely.</li>
+<li>Quarto has become central to this blog’s own publishing workflow, and the original post never covered <code>.qmd</code> editing directly, an omission worth fixing in a rewrite rather than leaving as an appendix.</li>
+<li>I wanted to verify claims empirically this time rather than trust that a two-year-old configuration still reflects current plugin defaults.</li>
+</ul>
+</section>
+<section id="objectives" class="level2">
+<h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
+<ol type="1">
+<li>Install Neovim and set up convenience shell aliases for terminal and GUI modes.</li>
+<li>Build a modular Lua configuration with a clear directory hierarchy under <code>~/.config/nvim</code>, written entirely in native Lua with no <code>vim.cmd([[...]])</code> Vimscript blocks.</li>
+<li>Configure native LSP (<code>vim.lsp.config()</code> / <code>vim.lsp.enable()</code>), completion (nvim-cmp), and snippets (LuaSnip) as the foundation every language-specific integration builds on.</li>
+<li>Configure R.nvim for interactive R development and quarto-nvim for Quarto document editing, with custom key mappings for sending code, inspecting objects, and rendering documents.</li>
+</ol>
+<p>I am documenting my learning process here. If you spot errors or have better approaches, please let me know.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance1.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
+<figcaption>A modular wooden toolbox with individually labeled small drawers, one drawer pulled open to reveal a single well-organized tool inside, on a workbench.</figcaption>
+</figure>
+</div>
+<p><em>A rewrite is also an inventory: deciding what still earns its place in the toolbox and what has been quietly superseded.</em></p>
+</section>
+</section>
+<section id="prerequisites-and-setup" class="level1">
+<h1>Prerequisites and Setup</h1>
+<p>This guide assumes a macOS environment with Homebrew installed and Neovim 0.11 or later (0.12 is assumed throughout for the native LSP and built-in treesitter features; see the callouts in each section for what changes on 0.11).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install neovim neovim-qt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convenience aliases in <code>.zshrc</code> are recommended:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> ng=<span class="st">"nvim-qt"</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> nt=<span class="st">"nvim"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The mnemonic is straightforward: <code>nt</code> for terminal, <code>ng</code> for GUI. <code>neovim-qt</code> remains a reasonable default GUI front end; <code>Neovide</code>, a GPU-accelerated alternative with smooth-scroll and cursor animation, has gained adoption since the original post but was not independently tested for this rewrite, so it is mentioned here rather than substituted in. Ubuntu Linux users should see the appendix at the end of this post for platform-specific adjustments.</p>
+<p><strong>Assumed knowledge.</strong> Basic familiarity with the terminal, a general understanding of what a text editor does, and comfort navigating the file system from the command line. No prior Vim experience is required, though it helps considerably.</p>
+</section>
+<section id="what-is-neovim" class="level1">
+<h1>What is Neovim?</h1>
+<p>Neovim is a modern reimplementation of Vim, the ubiquitous Unix text editor. Where Vim relies on its own scripting language (Vimscript), Neovim treats Lua as a first-class configuration and scripting language, and, as of the 0.11 and 0.12 releases, extends that native surface into LSP configuration, insert-mode autocompletion, and treesitter highlighting that used to require external plugins.</p>
+<p>The core idea behind modal editing is that the keyboard serves different purposes depending on the current mode. In Normal mode, keys move the cursor and manipulate text. In Insert mode, keys type characters. In Visual mode, keys select regions. This separation eliminates the need for modifier-heavy shortcuts and allows rapid text manipulation once the muscle memory develops.</p>
+<p>For data scientists, Neovim offers a compelling combination: a built-in terminal for running REPLs, a rich plugin ecosystem for language-specific tooling, and a configuration system that lives entirely in plain text files under version control.</p>
+</section>
+<section id="directory-structure-and-configuration-hierarchy" class="level1">
+<h1>Directory Structure and Configuration Hierarchy</h1>
+<p>The standard location for Neovim configuration files on Unix-like systems is <code>~/.config/nvim</code>. The main entry point is either <code>init.vim</code> (Vimscript) or <code>init.lua</code> (Lua). In this post we use Lua exclusively, with no embedded Vimscript blocks anywhere in the configuration.</p>
+<p>Below is the file hierarchy we construct. All the code in the <code>lua</code> subdirectory could be bundled into <code>init.lua</code>, but separating concerns into individual files is clearer and easier to maintain.</p>
+<pre><code>.
+|-- ginit.vim
+|-- init.lua
+|-- lazy-lock.json
+|-- lua
+|   |-- basics.lua
+|   |-- lsp-config.lua
+|   |-- cmp-config.lua
+|   |-- luasnip-config.lua
+|   |-- r-config.lua
+|   |-- quarto-config.lua
+|   |-- leap-config.lua
+|   |-- nvim-telescope-config.lua
+|   `-- nvim-tree-config.lua
+|-- snippets
+|   |-- all.lua
+|   |-- r.lua
+|   |-- python.lua
+|   `-- tex.lua
+|-- spell
+|   |-- en.utf-8.add
+|   `-- en.utf-8.add.spl</code></pre>
+<p>Each <code>.lua</code> file under the <code>lua/</code> directory is loaded by name from <code>init.lua</code> using Lua’s <code>require()</code> function. The <code>snippets/</code> directory holds LuaSnip snippet files organized by language, replacing the <code>my_snippets/</code> UltiSnips layout from the previous version of this configuration. The <code>spell/</code> directory contains custom dictionary additions for Neovim’s built-in spell checker and is unchanged from before.</p>
+</section>
+<section id="plugin-management-with-lazy" class="level1">
+<h1>Plugin Management with Lazy</h1>
+<p>Neovim on its own is useful but limited. Plugins extend its capabilities dramatically. To install plugins we need a plugin manager. Neovim 0.12 ships an experimental built-in manager, <code>vim.pack</code>, but it does not yet support lazy-loading on events, commands, or filetypes. We use Lazy, which remains the more capable choice for a configuration this size, and is still the most widely documented plugin manager in the ecosystem.</p>
+<p>To install Lazy, clone its repository into Neovim’s data directory:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/folke/lazy.nvim.git <span class="dt">\</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  ~/.local/share/nvim/lazy/lazy.nvim</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="the-init.lua-entry-point" class="level1">
+<h1>The init.lua Entry Point</h1>
+<p>The <code>init.lua</code> file is the first file Neovim reads on startup. It sets leader keys, prepends Lazy to the runtime path, and then loads each configuration module in sequence.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">g</span><span class="op">.</span><span class="va">mapleader</span> <span class="op">=</span> <span class="st">","</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">g</span><span class="op">.</span><span class="va">maplocalleader</span> <span class="op">=</span> <span class="st">" "</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">rtp</span><span class="op">:</span>prepend<span class="op">(</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"~/.local/share/nvim/lazy/lazy.nvim"</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'plugins'</span><span class="op">)</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'basics'</span><span class="op">)</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'lsp-config'</span><span class="op">)</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'cmp-config'</span><span class="op">)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'luasnip-config'</span><span class="op">)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'r-config'</span><span class="op">)</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'quarto-config'</span><span class="op">)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'nvim-tree-config'</span><span class="op">)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'nvim-telescope-config'</span><span class="op">)</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'leap'</span><span class="op">).</span>add_default_mappings<span class="op">()</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'leap-config'</span><span class="op">)</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'lualine'</span><span class="op">).</span>setup<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The comma leader key and space local leader are personal preferences carried over from the original configuration. The leader key is the prefix for user-defined shortcuts; keeping it on the home row minimizes hand movement. R.nvim’s own default keymaps are bound under <code>&lt;LocalLeader&gt;</code>, so the local leader choice matters more directly here than it did with Nvim-R.</p>
+</section>
+<section id="plugin-list-and-descriptions" class="level1">
+<h1>Plugin List and Descriptions</h1>
+<p>The following block is the plugin specification passed to Lazy. Plugins are grouped by purpose: an LSP and completion core, a data science layer, and Neovim-specific enhancements. This list was installed and bootstrapped without error against both Neovim 0.12.4 and, after the test machine was updated, 0.12.5, while preparing this post.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'lazy'</span><span class="op">).</span>setup<span class="op">({</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- LSP, completion, snippets</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">'neovim/nvim-lspconfig'</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">'hrsh7th/nvim-cmp'</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">'hrsh7th/cmp-nvim-lsp'</span><span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">'hrsh7th/cmp-buffer'</span><span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">'hrsh7th/cmp-path'</span><span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">'L3MON4D3/LuaSnip'</span><span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">'saadparwaiz1/cmp_luasnip'</span><span class="op">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- data science core</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">'R-nvim/R.nvim'</span><span class="op">,</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">'quarto-dev/quarto-nvim'</span><span class="op">,</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">'jmbuhr/otter.nvim'</span><span class="op">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">'lervag/vimtex'</span><span class="op">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">'jalvesaq/vimcmdline'</span><span class="op">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- optional utilities</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">"nvim-lualine/lualine.nvim"</span><span class="op">,</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"bluz71/vim-moonfly-colors"</span><span class="op">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">'junegunn/vim-peekaboo'</span><span class="op">,</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">'tpope/vim-commentary'</span><span class="op">,</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">'machakann/vim-highlightedyank'</span><span class="op">,</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">'tpope/vim-surround'</span><span class="op">,</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">'ggandor/leap.nvim'</span><span class="op">,</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- neovim specific</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="st">'nvim-lua/plenary.nvim'</span><span class="op">,</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="st">'nvim-tree/nvim-web-devicons'</span><span class="op">,</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="st">'nvim-tree/nvim-tree.lua'</span><span class="op">,</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="st">'nvim-telescope/telescope.nvim'</span><span class="op">,</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  <span class="st">'nvim-treesitter/nvim-treesitter'</span><span class="op">,</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>LSP, completion, snippets.</strong> <code>nvim-lspconfig</code> is kept, but only for its bundled <code>lsp/*.lua</code> server definitions (<code>r_language_server</code>, <code>pyright</code>), not for its old <code>.setup{}</code> API. nvim-cmp remains the stable, mature completion engine; <code>blink.cmp</code> is a faster emerging alternative with a growing user base but still ships breaking changes between minor versions, so nvim-cmp is the safer choice for a configuration meant to stay correct without frequent maintenance. LuaSnip replaces UltiSnips as the snippet engine, removing the Python provider dependency documented as a gotcha in the previous version of this post.</p>
+<p><strong>Data science core.</strong> R.nvim replaces the archived Nvim-R as the R development environment; see the dedicated section below. quarto-nvim and its dependency otter.nvim add Quarto document support, new to this post. Vimtex handles LaTeX editing and compilation. Vimcmdline extends REPL support to Python and Julia.</p>
+<p><strong>Optional utilities.</strong> Lualine provides a status bar. Moonfly-colors is a dark color scheme optimized for long editing sessions. Peekaboo previews register contents. Commentary toggles comments. Highlighted-yank provides visual feedback on yanked text. Surround manipulates paired delimiters. Leap enables rapid cursor movement by two-character search. (<code>ranger.vim</code> from the previous configuration is dropped here in favor of nvim-tree, which already covers the same file-browsing need.)</p>
+<p><strong>Neovim specific.</strong> Plenary provides shared Lua utilities that Telescope depends on; see the maintenance note under Fuzzy Finding below. Web-devicons and nvim-tree deliver a file explorer with icons. Telescope is a fuzzy finder for files, buffers, and grep results. <code>nvim-treesitter</code> is kept for textobjects and incremental selection, but as of Neovim 0.12, treesitter parsers and highlighting ship in core and no longer require the plugin for basic syntax highlighting.</p>
+</section>
+<section id="setup-basics" class="level1">
+<h1>Setup Basics</h1>
+<p>The <code>basics.lua</code> file contains core editor settings and key mappings, written in native Lua rather than a <code>vim.cmd([[...]])</code> Vimscript block.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">background</span> <span class="op">=</span> <span class="st">"dark"</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">cmd</span><span class="op">.</span>colorscheme<span class="op">(</span><span class="st">"moonfly"</span><span class="op">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">completeopt</span> <span class="op">=</span> <span class="op">{</span> <span class="st">"menu"</span><span class="op">,</span> <span class="st">"menuone"</span><span class="op">,</span> <span class="st">"noinsert"</span><span class="op">,</span> <span class="st">"noselect"</span> <span class="op">}</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">number</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">relativenumber</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">textwidth</span> <span class="op">=</span> <span class="dv">80</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">cursorline</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">clipboard</span> <span class="op">=</span> <span class="st">"unnamedplus"</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">iskeyword</span><span class="op">:</span><span class="fu">remove</span><span class="op">(</span><span class="st">"_"</span><span class="op">)</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">hlsearch</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">splitright</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">hidden</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">incsearch</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">swapfile</span> <span class="op">=</span> <span class="kw">false</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">showmatch</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">ignorecase</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">smartcase</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">gdefault</span> <span class="op">=</span> <span class="kw">true</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">encoding</span> <span class="op">=</span> <span class="st">"utf-8"</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">backup</span> <span class="op">=</span> <span class="kw">false</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">writebackup</span> <span class="op">=</span> <span class="kw">false</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">updatetime</span> <span class="op">=</span> <span class="dv">300</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">signcolumn</span> <span class="op">=</span> <span class="st">"yes"</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">colorcolumn</span> <span class="op">=</span> <span class="st">"80"</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">timeoutlen</span> <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">opt</span><span class="op">.</span><span class="va">ttimeoutlen</span> <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">api</span><span class="op">.</span>nvim_create_autocmd<span class="op">({</span> <span class="st">"BufWinEnter"</span><span class="op">,</span> <span class="st">"WinEnter"</span> <span class="op">},</span> <span class="op">{</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  <span class="va">pattern</span> <span class="op">=</span> <span class="st">"term://*"</span><span class="op">,</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  <span class="va">command</span> <span class="op">=</span> <span class="st">"startinsert"</span><span class="op">,</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A few settings worth highlighting: <code>relativenumber</code> shows line distances from the cursor, which makes vertical motions (e.g., <code>12j</code> to jump 12 lines down) intuitive. <code>colorcolumn=80</code> draws a vertical guide at 80 characters to encourage readable line lengths. <code>clipboard=unnamedplus</code> connects Neovim’s yank register to the system clipboard (the previous configuration used <code>unnamed</code>; <code>unnamedplus</code> is the more portable choice across the <code>+</code>/<code>*</code> register split on Linux, and works identically on macOS). <code>splitright</code> opens vertical splits to the right, matching the natural left-to-right reading direction.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The old configuration’s <code>iabb</code>/<code>UltiSnips</code> insert-mode abbreviations for <code>%&gt;%</code> and <code>%in%</code> are dropped here in favor of LuaSnip snippets for the same expansions; see the Snippets section below.</p>
+</div>
+</div>
+<section id="key-mappings" class="level2">
+<h2 class="anchored" data-anchor-id="key-mappings">Key Mappings</h2>
+<p>The following mappings are defined in <code>basics.lua</code> using the <code>vim.keymap.set</code> API. Most carry over unchanged from the previous configuration; the UltiSnips-specific mappings (<code>&lt;leader&gt;u</code>, <code>&lt;leader&gt;U</code>) are removed since LuaSnip does not use a comparable snippet-editing workflow.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">map</span> <span class="op">=</span> <span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span><span class="va">set</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">opts</span> <span class="op">=</span> <span class="op">{</span> <span class="va">noremap</span> <span class="op">=</span> <span class="kw">true</span> <span class="op">}</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">':'</span><span class="op">,</span> <span class="st">';'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">';'</span><span class="op">,</span> <span class="st">':'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;localleader&gt;&lt;localleader&gt;'</span><span class="op">,</span> <span class="st">'&lt;C-d&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'-'</span><span class="op">,</span> <span class="st">'$'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;w'</span><span class="op">,</span> <span class="st">'vipgq'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;v'</span><span class="op">,</span> <span class="st">':edit ~/.config/nvim/init.lua&lt;cr&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;n'</span><span class="op">,</span> <span class="st">':edit ~/.config/nvim/lua/basics.lua&lt;cr&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;a'</span><span class="op">,</span> <span class="st">'ggVG'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;t'</span><span class="op">,</span> <span class="st">':tab split&lt;cr&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;0'</span><span class="op">,</span> <span class="st">':ls!&lt;CR&gt;:b&lt;Space&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;&lt;leader&gt;'</span><span class="op">,</span> <span class="st">'&lt;C-w&gt;w'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;1'</span><span class="op">,</span> <span class="st">'&lt;C-w&gt;:b1&lt;cr&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;2'</span><span class="op">,</span> <span class="st">'&lt;C-w&gt;:b2&lt;cr&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;3'</span><span class="op">,</span> <span class="st">'&lt;C-w&gt;:b3&lt;cr&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'t'</span><span class="op">,</span> <span class="st">'ZZ'</span><span class="op">,</span> <span class="st">"q('yes')&lt;CR&gt;"</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'t'</span><span class="op">,</span> <span class="st">'ZQ'</span><span class="op">,</span> <span class="st">"q('no')&lt;CR&gt;"</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'v'</span><span class="op">,</span> <span class="st">'-'</span><span class="op">,</span> <span class="st">'$'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'t'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;0'</span><span class="op">,</span> <span class="st">'&lt;C-</span><span class="sc">\\</span><span class="st">&gt;&lt;C-n&gt;&lt;C-w&gt;:ls!&lt;cr&gt;:b&lt;Space&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'t'</span><span class="op">,</span> <span class="st">'&lt;Escape&gt;'</span><span class="op">,</span> <span class="st">'&lt;C-</span><span class="sc">\\</span><span class="st">&gt;&lt;C-n&gt;'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'t'</span><span class="op">,</span> <span class="st">',,'</span><span class="op">,</span> <span class="st">'&lt;C-</span><span class="sc">\\</span><span class="st">&gt;&lt;C-n&gt;&lt;C-w&gt;w'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>map<span class="op">(</span><span class="st">'i'</span><span class="op">,</span> <span class="st">'&lt;Esc&gt;'</span><span class="op">,</span> <span class="st">'&lt;Esc&gt;`^'</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The semicolon and colon swap (<code>':'</code> to <code>';'</code> and vice versa) deserves special mention. In Vim, the colon enters command mode (one of the most frequent actions). Swapping it to the semicolon key eliminates the need to hold Shift, saving thousands of keystrokes over time.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
+<figcaption>A pianist’s hand resting on a keyboard, captured mid-motion with slight blur on the fingers.</figcaption>
+</figure>
+</div>
+<p><em>A well-configured development environment reduces cognitive overhead and allows sustained focus on the analytical task.</em></p>
+</section>
+</section>
+<section id="native-lsp-setup" class="level1">
+<h1>Native LSP Setup</h1>
+<p>The previous version of this post had no dedicated LSP section: Nvim-R’s own completion covered R, and nothing else was wired up. As of Neovim 0.11, LSP configuration can be done entirely through <code>vim.lsp.config()</code> and <code>vim.lsp.enable()</code>, without calling <code>require('lspconfig').X.setup{}</code> at all. <code>nvim-lspconfig</code> is still useful, but only as a source of <code>lsp/*.lua</code> server definitions that <code>vim.lsp.enable()</code> consumes.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">lsp</span><span class="op">.</span>config<span class="op">(</span><span class="st">'r_language_server'</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">cmd</span> <span class="op">=</span> <span class="op">{</span> <span class="st">'R'</span><span class="op">,</span> <span class="st">'--no-echo'</span><span class="op">,</span> <span class="st">'-e'</span><span class="op">,</span> <span class="st">'languageserver::run()'</span> <span class="op">},</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">filetypes</span> <span class="op">=</span> <span class="op">{</span> <span class="st">'r'</span><span class="op">,</span> <span class="st">'rmd'</span><span class="op">,</span> <span class="st">'quarto'</span> <span class="op">},</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">lsp</span><span class="op">.</span>config<span class="op">(</span><span class="st">'pyright'</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">cmd</span> <span class="op">=</span> <span class="op">{</span> <span class="st">'pyright-langserver'</span><span class="op">,</span> <span class="st">'--stdio'</span> <span class="op">},</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">filetypes</span> <span class="op">=</span> <span class="op">{</span> <span class="st">'python'</span> <span class="op">},</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">lsp</span><span class="op">.</span>enable<span class="op">({</span> <span class="st">'r_language_server'</span><span class="op">,</span> <span class="st">'pyright'</span> <span class="op">})</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">diagnostic</span><span class="op">.</span>config<span class="op">({</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="va">virtual_text</span> <span class="op">=</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="va">signs</span> <span class="op">=</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="va">underline</span> <span class="op">=</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">api</span><span class="op">.</span>nvim_create_autocmd<span class="op">(</span><span class="st">'LspAttach'</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="va">callback</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">args</span><span class="op">)</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">local</span> <span class="va">opts</span> <span class="op">=</span> <span class="op">{</span> <span class="va">buffer</span> <span class="op">=</span> <span class="va">args</span><span class="op">.</span><span class="va">buf</span> <span class="op">}</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span>set<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'gd'</span><span class="op">,</span> <span class="va">vim</span><span class="op">.</span><span class="va">lsp</span><span class="op">.</span><span class="va">buf</span><span class="op">.</span><span class="va">definition</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span>set<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'K'</span><span class="op">,</span> <span class="va">vim</span><span class="op">.</span><span class="va">lsp</span><span class="op">.</span><span class="va">buf</span><span class="op">.</span><span class="va">hover</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span>set<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;rn'</span><span class="op">,</span> <span class="va">vim</span><span class="op">.</span><span class="va">lsp</span><span class="op">.</span><span class="va">buf</span><span class="op">.</span><span class="va">rename</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span>set<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;leader&gt;ca'</span><span class="op">,</span> <span class="va">vim</span><span class="op">.</span><span class="va">lsp</span><span class="op">.</span><span class="va">buf</span><span class="op">.</span><span class="va">code_action</span><span class="op">,</span> <span class="va">opts</span><span class="op">)</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span><span class="op">,</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This block was tested in isolation for syntax and loading correctness (<code>vim.lsp.config</code> and <code>vim.lsp.enable</code> accept and register the definitions without error); actually attaching to a running <code>r_language_server</code> process requires the R <code>languageserver</code> package installed and was not exercised end to end in this verification pass.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>R.nvim ships its own language server, <code>rnvimserver</code>, which is separate from the <code>languageserver</code> R package configured above. R.nvim’s documentation notes that running both <code>rnvimserver</code> and the external <code>languageserver</code> package at once is discouraged; the R section below explains the split.</p>
+</div>
+</div>
+<p><strong>On Neovim 0.11</strong> (rather than 0.12), the API is the same; the difference is mainly in how much of the LSP feature surface (inline completion, workspace diagnostics, document colors) is available without additional plugins. The <code>vim.lsp.config()</code> / <code>vim.lsp.enable()</code> pair itself works identically on both.</p>
+</section>
+<section id="completion-with-nvim-cmp" class="level1">
+<h1>Completion with nvim-cmp</h1>
+<p>nvim-cmp is configured once and shared across every filetype; individual language plugins (R.nvim, the LSP servers above) register as sources rather than each bringing their own completion UI.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">cmp</span> <span class="op">=</span> <span class="fu">require</span><span class="op">(</span><span class="st">'cmp'</span><span class="op">)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">cmp</span><span class="op">.</span>setup<span class="op">({</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">snippet</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">expand</span> <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">args</span><span class="op">)</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">require</span><span class="op">(</span><span class="st">'luasnip'</span><span class="op">).</span>lsp_expand<span class="op">(</span><span class="va">args</span><span class="op">.</span><span class="va">body</span><span class="op">)</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span><span class="op">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">},</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="va">mapping</span> <span class="op">=</span> <span class="va">cmp</span><span class="op">.</span><span class="va">mapping</span><span class="op">.</span><span class="va">preset</span><span class="op">.</span>insert<span class="op">({</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">'&lt;C-Space&gt;'</span><span class="op">]</span> <span class="op">=</span> <span class="va">cmp</span><span class="op">.</span><span class="va">mapping</span><span class="op">.</span>complete<span class="op">(),</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">'&lt;CR&gt;'</span><span class="op">]</span> <span class="op">=</span> <span class="va">cmp</span><span class="op">.</span><span class="va">mapping</span><span class="op">.</span>confirm<span class="op">({</span> <span class="fu">select</span> <span class="op">=</span> <span class="kw">true</span> <span class="op">}),</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">'&lt;Tab&gt;'</span><span class="op">]</span> <span class="op">=</span> <span class="va">cmp</span><span class="op">.</span><span class="va">mapping</span><span class="op">.</span>select_next_item<span class="op">(),</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">'&lt;S-Tab&gt;'</span><span class="op">]</span> <span class="op">=</span> <span class="va">cmp</span><span class="op">.</span><span class="va">mapping</span><span class="op">.</span>select_prev_item<span class="op">(),</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">}),</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="va">sources</span> <span class="op">=</span> <span class="va">cmp</span><span class="op">.</span><span class="va">config</span><span class="op">.</span>sources<span class="op">({</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="va">name</span> <span class="op">=</span> <span class="st">'nvim_lsp'</span> <span class="op">},</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="va">name</span> <span class="op">=</span> <span class="st">'luasnip'</span> <span class="op">},</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="op">},</span> <span class="op">{</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="va">name</span> <span class="op">=</span> <span class="st">'buffer'</span> <span class="op">},</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> <span class="va">name</span> <span class="op">=</span> <span class="st">'path'</span> <span class="op">},</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="op">}),</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This exact block was bootstrapped and loaded without error in the verification session. <code>blink.cmp</code> was considered as an alternative: it is faster and ships with more batteries-included defaults, and is now the completion engine <code>kickstart.nvim</code> recommends. Its 2.x line carries breaking changes relative to 1.x, though, and its LuaSnip integration changed shape between minor versions as recently as this year. nvim-cmp’s slower pace of change is the better fit for a configuration meant to stay accurate without frequent revision; readers comfortable tracking a faster-moving plugin can substitute blink.cmp directly, since both consume the same LSP sources.</p>
+</section>
+<section id="snippets-with-luasnip" class="level1">
+<h1>Snippets with LuaSnip</h1>
+<p>LuaSnip replaces UltiSnips as the snippet engine in this rewrite, removing the Python-interpreter dependency that the previous version of this post documented as a source of silent failures. Snippet files live under <code>~/.config/nvim/snippets/</code>, one Lua file per language.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'luasnip'</span><span class="op">).</span><span class="va">config</span><span class="op">.</span>set_config<span class="op">({</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">history</span> <span class="op">=</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">updateevents</span> <span class="op">=</span> <span class="st">"TextChanged,TextChangedI"</span><span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'luasnip.loaders.from_lua'</span><span class="op">).</span>load<span class="op">({</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">paths</span> <span class="op">=</span> <span class="st">"~/.config/nvim/snippets"</span><span class="op">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span>set<span class="op">({</span> <span class="st">"i"</span><span class="op">,</span> <span class="st">"s"</span> <span class="op">},</span> <span class="st">"&lt;Tab&gt;"</span><span class="op">,</span> <span class="kw">function</span><span class="op">()</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="fu">require</span><span class="op">(</span><span class="st">'luasnip'</span><span class="op">).</span>expand_or_jumpable<span class="op">()</span> <span class="cf">then</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">require</span><span class="op">(</span><span class="st">'luasnip'</span><span class="op">).</span>expand_or_jump<span class="op">()</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span><span class="op">,</span> <span class="op">{</span> <span class="va">silent</span> <span class="op">=</span> <span class="kw">true</span> <span class="op">})</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span>set<span class="op">({</span> <span class="st">"i"</span><span class="op">,</span> <span class="st">"s"</span> <span class="op">},</span> <span class="st">"&lt;S-Tab&gt;"</span><span class="op">,</span> <span class="kw">function</span><span class="op">()</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="fu">require</span><span class="op">(</span><span class="st">'luasnip'</span><span class="op">).</span>jumpable<span class="op">(-</span><span class="dv">1</span><span class="op">)</span> <span class="cf">then</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">require</span><span class="op">(</span><span class="st">'luasnip'</span><span class="op">).</span>jump<span class="op">(-</span><span class="dv">1</span><span class="op">)</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span><span class="op">,</span> <span class="op">{</span> <span class="va">silent</span> <span class="op">=</span> <span class="kw">true</span> <span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="static-snippets" class="level2">
+<h2 class="anchored" data-anchor-id="static-snippets">Static Snippets</h2>
+<p>A snippet definition in LuaSnip’s Lua format specifies a trigger, one or more insert nodes (<code>i(1)</code>, <code>i(2)</code>, …) where the cursor lands after expansion, and static text nodes (<code>t(...)</code>) between them. The equivalent of the old UltiSnips R Markdown YAML header snippet:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">ls</span> <span class="op">=</span> <span class="fu">require</span><span class="op">(</span><span class="st">"luasnip"</span><span class="op">)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">s</span> <span class="op">=</span> <span class="va">ls</span><span class="op">.</span><span class="va">snippet</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">t</span> <span class="op">=</span> <span class="va">ls</span><span class="op">.</span><span class="va">text_node</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">i</span> <span class="op">=</span> <span class="va">ls</span><span class="op">.</span><span class="va">insert_node</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="va">ls</span><span class="op">.</span>add_snippets<span class="op">(</span><span class="st">"rmd"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  s<span class="op">(</span><span class="st">"rheader"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    t<span class="op">({</span> <span class="st">"---"</span><span class="op">,</span> <span class="st">'title: "'</span> <span class="op">}),</span> i<span class="op">(</span><span class="dv">1</span><span class="op">),</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    t<span class="op">({</span> <span class="st">'"'</span><span class="op">,</span> <span class="st">'author: "'</span> <span class="op">}),</span> i<span class="op">(</span><span class="dv">2</span><span class="op">,</span> <span class="st">"R.G. Thomas"</span><span class="op">),</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    t<span class="op">({</span> <span class="st">'"'</span><span class="op">,</span> <span class="st">"date: today"</span><span class="op">,</span> <span class="st">"output:"</span><span class="op">,</span> <span class="st">"  pdf_document:"</span><span class="op">,</span> <span class="st">"    keep_tex: true"</span><span class="op">,</span> <span class="st">"---"</span><span class="op">,</span> <span class="st">""</span> <span class="op">}),</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    i<span class="op">(</span><span class="dv">0</span><span class="op">),</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="op">}),</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Typing <code>rheader</code> and pressing <code>Tab</code> (the configured expand trigger) expands the template; <code>Tab</code> again jumps between insert nodes.</p>
+<p>The pipe and membership-operator abbreviations that lived in <code>basics.lua</code> as <code>iabb</code> mappings in the previous configuration move here as ordinary autosnippets:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="va">ls</span><span class="op">.</span>add_snippets<span class="op">(</span><span class="st">"r"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  s<span class="op">({</span> <span class="va">trig</span> <span class="op">=</span> <span class="st">"%&gt;%"</span><span class="op">,</span> <span class="va">snippetType</span> <span class="op">=</span> <span class="st">"autosnippet"</span> <span class="op">},</span> <span class="op">{</span> t<span class="op">(</span><span class="st">"%&gt;%"</span><span class="op">)</span> <span class="op">}),</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  s<span class="op">({</span> <span class="va">trig</span> <span class="op">=</span> <span class="st">"%in%"</span><span class="op">,</span> <span class="va">snippetType</span> <span class="op">=</span> <span class="st">"autosnippet"</span> <span class="op">},</span> <span class="op">{</span> t<span class="op">(</span><span class="st">"%in%"</span><span class="op">)</span> <span class="op">}),</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="dynamic-snippets" class="level2">
+<h2 class="anchored" data-anchor-id="dynamic-snippets">Dynamic Snippets</h2>
+<p>UltiSnips’ <code>!p</code> Python interpolation blocks have a direct LuaSnip equivalent using <code>function_node</code>, evaluated in Lua rather than a separate Python interpreter, which removes the <code>:checkhealth provider</code> requirement that the previous version of this post documented as a gotcha. The chord-placeholder problem from the original UltiSnips example, translated directly:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">local</span> <span class="va">f</span> <span class="op">=</span> <span class="va">ls</span><span class="op">.</span><span class="va">function_node</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="va">ls</span><span class="op">.</span>add_snippets<span class="op">(</span><span class="st">"all"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  s<span class="op">(</span><span class="st">"chords"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    i<span class="op">(</span><span class="dv">1</span><span class="op">,</span> <span class="st">"1"</span><span class="op">),</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    f<span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">args</span><span class="op">)</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">local</span> <span class="va">n</span> <span class="op">=</span> <span class="fu">tonumber</span><span class="op">(</span><span class="va">args</span><span class="op">[</span><span class="dv">1</span><span class="op">][</span><span class="dv">1</span><span class="op">])</span> <span class="kw">or</span> <span class="dv">0</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">local</span> <span class="va">text</span> <span class="op">=</span> <span class="st">""</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> <span class="cn">_</span> <span class="op">=</span> <span class="dv">1</span><span class="op">,</span> <span class="va">n</span> <span class="cf">do</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">text</span> <span class="op">=</span> <span class="va">text</span> <span class="op">..</span> <span class="st">"&lt; &gt; "</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">end</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="va">text</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span><span class="op">,</span> <span class="op">{</span> <span class="dv">1</span> <span class="op">}),</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  <span class="op">}),</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A simpler pattern inserts the current date at expansion time:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="va">ls</span><span class="op">.</span>add_snippets<span class="op">(</span><span class="st">"all"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  s<span class="op">(</span><span class="st">"today"</span><span class="op">,</span> <span class="op">{</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    f<span class="op">(</span><span class="kw">function</span><span class="op">()</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="fu">os.date</span><span class="op">(</span><span class="st">"%Y-%m-%d"</span><span class="op">)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span><span class="op">,</span> <span class="op">{}),</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">}),</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Debugging.</strong> LuaSnip errors surface as ordinary Lua tracebacks in <code>:messages</code>, the same channel any other plugin error uses, rather than being caught and hidden the way UltiSnips caught Python exceptions. This was confirmed directly: a deliberately broken <code>function_node</code> in the verification session produced an immediate, visible traceback on expansion attempt.</p>
+</section>
+</section>
+<section id="r-development-setup-with-r.nvim" class="level1">
+<h1>R Development Setup with R.nvim</h1>
+<p>R.nvim is the actively maintained, Neovim-native successor in this configuration, replacing the archived Nvim-R that the original version of this post documented. It bundles two components beyond the Lua plugin itself: <code>rnvimserver</code>, a C-based language server communicating over TCP, and <code>nvimcom</code>, an R package that connects to <code>rnvimserver</code> to provide object-browser functionality and completions sourced from the live R environment. Because R.nvim installs a git submodule, the clone step differs slightly from a plain plugin install:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"R-nvim/R.nvim"</span><span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">lazy</span> <span class="op">=</span> <span class="kw">false</span><span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">},</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If installing manually rather than through Lazy, the repository must be cloned with <code>git clone --recurse-submodules</code>; Lazy handles this automatically.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'r.setup'</span><span class="op">).</span>setup<span class="op">({</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">hook</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">on_filetype</span> <span class="op">=</span> <span class="kw">function</span><span class="op">()</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>      <span class="va">vim</span><span class="op">.</span><span class="va">keymap</span><span class="op">.</span>set<span class="op">(</span><span class="st">'n'</span><span class="op">,</span> <span class="st">'&lt;localleader&gt;d'</span><span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span><span class="op">()</span> <span class="fu">require</span><span class="op">(</span><span class="st">'r.send'</span><span class="op">).</span>line<span class="op">(</span><span class="st">'move'</span><span class="op">)</span> <span class="kw">end</span><span class="op">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span> <span class="va">buffer</span> <span class="op">=</span> <span class="kw">true</span> <span class="op">})</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span><span class="op">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="op">},</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>R.nvim’s default keymaps were read directly from the plugin’s own <code>lua/r/maps.lua</code> source rather than assumed from documentation. Under the default <code>&lt;LocalLeader&gt;</code>, they include <code>&lt;LocalLeader&gt;rf</code> (start R), <code>&lt;LocalLeader&gt;d</code> (send the current line and move down), <code>&lt;LocalLeader&gt;ss</code> (send the visual selection), <code>&lt;LocalLeader&gt;ro</code> (toggle the object browser), <code>&lt;LocalLeader&gt;rp</code> / <code>rt</code> / <code>rv</code> / <code>rh</code> / <code>rs</code> (print, str, view data frame, help, summary on the object under cursor), and <code>&lt;LocalLeader&gt;kr</code> (render the document in its default format, including <code>quarto::quarto_render()</code> when the buffer is a <code>.qmd</code> file). These are close enough to the <code>\rf</code>, <code>\d</code>, and <code>\ss</code> bindings from the Nvim-R configuration this replaces that muscle memory mostly transfers, once <code>&lt;LocalLeader&gt;</code> is accounted for.</p>
+</div>
+</div>
+<p><strong>Completion source, not a full LSP.</strong> R.nvim’s <code>nvimcom</code>-backed completions integrate with nvim-cmp as an additional source rather than through the <code>r_language_server</code> LSP configured earlier. R.nvim’s own documentation notes that running the external <code>languageserver</code> R package alongside <code>rnvimserver</code> simultaneously is discouraged; in practice this means choosing one completion backend for R rather than stacking both. This configuration uses R.nvim’s built-in <code>nvimcom</code> path and leaves <code>r_language_server</code> in the LSP section above available but optional for readers who prefer that route instead.</p>
+</section>
+<section id="latex-with-vimtex" class="level1">
+<h1>LaTeX with vimtex</h1>
+<p>The plugin list above already includes <code>lervag/vimtex</code>, which handles LaTeX compilation and forward/inverse search, unchanged from the previous version of this post. Two options are worth setting explicitly:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">g</span><span class="op">.</span><span class="va">vimtex_complete_close_braces</span> <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="va">vim</span><span class="op">.</span><span class="va">g</span><span class="op">.</span><span class="va">vimtex_quickfix_mode</span> <span class="op">=</span> <span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>vimtex_complete_close_braces</code> auto-closes braces after completing a LaTeX command; <code>vimtex_quickfix_mode = 0</code> keeps compilation errors out of the quickfix window, which is less disruptive during an edit-compile-review cycle than having the window steal focus on every compile.</p>
+</section>
+<section id="quarto-editing" class="level1">
+<h1>Quarto Editing</h1>
+<p>The previous version of this post never addressed <code>.qmd</code> editing directly, despite Quarto being the format this blog itself is authored in. <code>quarto-nvim</code> closes that gap, with <code>otter.nvim</code> as its dependency for embedded-language support: code inside a Quarto chunk is written to a shadow buffer of the chunk’s own language (R, Python, Lua, and so on), which is how LSP hover, completion, and diagnostics work inside a chunk that is not, on its own, a complete file in that language.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"quarto-dev/quarto-nvim"</span><span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="va">dependencies</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"jmbuhr/otter.nvim"</span><span class="op">,</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"nvim-treesitter/nvim-treesitter"</span><span class="op">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="op">},</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="op">},</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'quarto'</span><span class="op">).</span>setup<span class="op">({</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">lspFeatures</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">languages</span> <span class="op">=</span> <span class="op">{</span> <span class="st">"r"</span><span class="op">,</span> <span class="st">"python"</span><span class="op">,</span> <span class="st">"lua"</span> <span class="op">},</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">chunks</span> <span class="op">=</span> <span class="st">"curly"</span><span class="op">,</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">diagnostics</span> <span class="op">=</span> <span class="op">{</span> <span class="va">enabled</span> <span class="op">=</span> <span class="kw">true</span><span class="op">,</span> <span class="va">triggers</span> <span class="op">=</span> <span class="op">{</span> <span class="st">"BufWritePost"</span> <span class="op">}</span> <span class="op">},</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">completion</span> <span class="op">=</span> <span class="op">{</span> <span class="va">enabled</span> <span class="op">=</span> <span class="kw">true</span> <span class="op">},</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">},</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">codeRunner</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">enabled</span> <span class="op">=</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">default_method</span> <span class="op">=</span> <span class="st">"molten"</span><span class="op">,</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="op">},</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="op">})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>codeRunner.default_method</code> above assumes a notebook-style execution plugin such as <code>molten-nvim</code>, which is out of scope for this post; readers who only want R.nvim’s send-to-console workflow inside <code>.qmd</code> files can set <code>codeRunner.enabled = false</code> and rely on R.nvim’s own <code>&lt;LocalLeader&gt;d</code> / <code>&lt;LocalLeader&gt;ss</code> mappings, which work inside Quarto R chunks exactly as they do in plain <code>.R</code> files, since R.nvim’s filetype detection already covers <code>quarto</code>.</p>
+<p>This configuration was bootstrapped and loaded without error in the verification session; the chunk-execution and hover-inside-a-chunk behavior specifically was not exercised end to end, since that requires an active R or Python kernel rather than a headless load check.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
+<figcaption>UCSD Geisel Library at dusk</figcaption>
+</figure>
+</div>
+<p><em>The pursuit of an efficient development environment parallels the broader scholarly commitment to refining one’s tools and methods.</em></p>
+</section>
+<section id="fuzzy-finding-with-telescope" class="level1">
+<h1>Fuzzy Finding with Telescope</h1>
+<p>Telescope remains the fuzzy finder in this configuration, unchanged from the previous version.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode lua code-with-copy"><code class="sourceCode lua"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">require</span><span class="op">(</span><span class="st">'telescope'</span><span class="op">).</span>setup<span class="op">({})</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Telescope’s hard dependency, <code>nvim-lua/plenary.nvim</code>, is effectively unmaintained: its own README states it will be archived, with critical bugs addressed only through 2026-06-30. Checking the installed copy’s git history directly during this rewrite showed its last commit was 2026-04-10, the commit that added that notice, with nothing since, and Telescope’s own README (also checked directly) still lists plenary as a hard requirement with no migration plan mentioned. Telescope works correctly today and is kept as the primary recommendation here because it remains the most widely documented picker, but this is worth monitoring. <code>folke/snacks.nvim</code>’s picker module is the most credible fallback if plenary support lapses further: it does not depend on plenary, is actively maintained by the same author as lazy.nvim, and several Neovim users have already migrated to it for this reason. <code>ibhagwan/fzf-lua</code> is a second, dependency-light alternative.</p>
+</div>
+</div>
+</section>
+<section id="verification" class="level1">
+<h1>Verification</h1>
+<p>After installing Neovim and copying the configuration:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Version check</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nvim</span> <span class="at">--version</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Plugin status (inside Neovim)</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># :Lazy          — verify all plugins installed</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># :checkhealth   — diagnose provider and LSP issues</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. LSP smoke test</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Open an .R or .py file and confirm a client attaches:</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co"># :checkhealth vim.lsp</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. R integration smoke test</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Open an .R file:</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a><span class="ex">nvim</span> test.R</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Press &lt;LocalLeader&gt;rf to start R console</span></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Press &lt;LocalLeader&gt;d to send the current line to R</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If <code>:checkhealth</code> shows red for clipboard, install <code>xclip</code> (<code>brew install xclip</code> or <code>sudo apt install xclip</code>).</p>
+</section>
+<section id="daily-workflow" class="level1">
+<h1>Daily Workflow</h1>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Keybinding / Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>&lt;LocalLeader&gt;rf</code></td>
+<td>Start R console</td>
+</tr>
+<tr class="even">
+<td><code>&lt;LocalLeader&gt;d</code></td>
+<td>Send current line to R, move down</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;LocalLeader&gt;ss</code></td>
+<td>Send selection to R</td>
+</tr>
+<tr class="even">
+<td><code>&lt;LocalLeader&gt;ro</code></td>
+<td>Toggle R object browser</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;LocalLeader&gt;rv</code></td>
+<td>View data frame under cursor</td>
+</tr>
+<tr class="even">
+<td><code>&lt;LocalLeader&gt;kr</code></td>
+<td>Render current document (Quarto/Rmd)</td>
+</tr>
+<tr class="odd">
+<td><code>gd</code></td>
+<td>Go to LSP definition</td>
+</tr>
+<tr class="even">
+<td><code>K</code></td>
+<td>LSP hover documentation</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;C-p&gt;</code></td>
+<td>Fuzzy-find files (Telescope)</td>
+</tr>
+<tr class="even">
+<td><code>&lt;C-n&gt;</code></td>
+<td>Toggle file tree</td>
+</tr>
+<tr class="odd">
+<td><code>:Lazy update</code></td>
+<td>Update all plugins</td>
+</tr>
+<tr class="even">
+<td><code>:Lazy restore</code></td>
+<td>Restore pinned versions</td>
+</tr>
+<tr class="odd">
+<td><code>NVIM_APPNAME=test nvim</code></td>
+<td>Launch alternate config</td>
+</tr>
+</tbody>
+</table>
+<section id="things-to-watch-out-for" class="level2">
+<h2 class="anchored" data-anchor-id="things-to-watch-out-for">Things to Watch Out For</h2>
+<ol type="1">
+<li><p><strong>Plugin version conflicts.</strong> Lazy locks plugin versions in <code>lazy-lock.json</code>. If a plugin update breaks something, restore the lock file from version control and run <code>:Lazy restore</code>.</p></li>
+<li><p><strong>Clipboard integration.</strong> On headless Linux servers, <code>clipboard=unnamedplus</code> requires <code>xclip</code> or <code>xsel</code> to be installed. Without these, yanking to the system clipboard silently fails.</p></li>
+<li><p><strong>Terminal mode escape.</strong> The default escape sequence in Neovim’s built-in terminal is <code>&lt;C-\&gt;&lt;C-n&gt;</code>, which is awkward. The mapping <code>map('t', '&lt;Escape&gt;', '&lt;C-\\&gt;&lt;C-n&gt;', opts)</code> in our configuration fixes this, but it means a literal Escape cannot be typed in terminal mode without an alternative binding.</p></li>
+<li><p><strong>Two completion sources for R.</strong> Running R.nvim’s <code>nvimcom</code>-backed completion and the <code>r_language_server</code> LSP configured earlier at the same time is discouraged by R.nvim’s own documentation; pick one. This configuration defaults to <code>nvimcom</code> and leaves <code>r_language_server</code> available but unused for R buffers.</p></li>
+<li><p><strong>plenary.nvim’s maintenance status.</strong> As detailed in the Fuzzy Finding section above, Telescope’s core dependency is effectively unmaintained as of this writing. This is not yet a functional problem, but a reader returning to this post in a year should check whether Telescope has moved off plenary or whether a switch to snacks.nvim’s picker is warranted.</p></li>
+<li><p><strong>LuaSnip autosnippets and cmp interaction.</strong> The <code>%&gt;%</code> / <code>%in%</code> autosnippets shown above expand as you type the trigger text, which can surprise a reader typing R code that legitimately contains <code>%in%</code> as normal syntax rather than wanting it expanded; this is expected behavior, not a bug, but worth knowing before enabling autosnippets broadly.</p></li>
+</ol>
+</section>
+</section>
+<section id="uninstall-rollback" class="level1">
+<h1>Uninstall / Rollback</h1>
+<p>To remove Neovim and its configuration:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Remove configuration</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-ri</span> ~/.config/nvim</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-ri</span> ~/.local/share/nvim   <span class="co"># plugin data</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-ri</span> ~/.cache/nvim          <span class="co"># cache</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Uninstall Neovim</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> uninstall neovim          <span class="co"># macOS</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt remove neovim         <span class="co"># Ubuntu / Debian</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>To keep Neovim but reset to defaults, rename the config:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> ~/.config/nvim ~/.config/nvim.backup</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Neovim will start with no plugins and default settings.</p>
+</section>
+<section id="ubuntu-tweaks-and-multiple-configurations" class="level1">
+<h1>Ubuntu Tweaks and Multiple Configurations</h1>
+<p>On Ubuntu, Neovim is available through the system package manager, though the version may lag behind the latest release; 0.11+ is required for the native LSP APIs used throughout this post, so check the packaged version before relying on it. For the most current version, use the Neovim PPA or download the AppImage directly from the <a href="https://github.com/neovim/neovim/releases">Neovim releases page</a>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> add-apt-repository ppa:neovim-ppa/unstable</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install neovim</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="working-with-multiple-configurations" class="level2">
+<h2 class="anchored" data-anchor-id="working-with-multiple-configurations">Working with Multiple Configurations</h2>
+<p>Neovim supports the <code>NVIM_APPNAME</code> environment variable, which allows running entirely separate configurations side by side. This is useful for testing new plugin setups without disturbing a working configuration, and is exactly how the verification for this post’s own configuration snippets was isolated from the author’s real, working Neovim setup.</p>
+<p>For a thorough walkthrough, see <a href="https://michaeluloth.com/neovim-switch-configs/">Switching Configs in Neovim</a> by Michael Uloth.</p>
+<p>To start Neovim with an alternative configuration stored in <code>~/.config/test_nvim</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="va">NVIM_APPNAME</span><span class="op">=</span>test_nvim <span class="ex">nvim</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This tells Neovim to read its configuration from <code>~/.config/test_nvim/init.lua</code> instead of the default <code>~/.config/nvim/init.lua</code>. Each configuration maintains its own plugin state, cache, and data directories.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>NVIM_APPNAME</code> changes the config <em>subdirectory</em> Neovim looks for under <code>$XDG_CONFIG_HOME</code>, but it does not override a <code>$VIMINIT</code> environment variable if one is set globally in the shell profile; <code>$VIMINIT</code> takes precedence over both <code>init.lua</code> and <code>NVIM_APPNAME</code> entirely. A machine with <code>$VIMINIT</code> set to <code>source ~/.config/vim/vimrc</code> will load that file regardless of <code>NVIM_APPNAME</code>, which is worth knowing before assuming an alternate config is fully isolated. Passing <code>nvim -u &lt;path&gt;</code> explicitly bypasses <code>$VIMINIT</code> when true isolation is required, as it was for the verification work behind this post.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
+<p><strong>Conceptual Understanding:</strong></p>
+<ul>
+<li>Modal editing is not merely a different interface; it represents a fundamentally different model of text manipulation where composable commands replace mouse-driven selection.</li>
+<li>Neovim’s native LSP API has absorbed most of what <code>nvim-lspconfig</code> used to be responsible for; the plugin’s remaining role is as a curated source of server definitions, not as a configuration framework.</li>
+<li>The REPL-integrated workflow (edit code, send to console, inspect output) collapses the feedback loop in interactive data analysis to a single keystroke, and this held true across the plugin migration from Nvim-R to R.nvim, since both authors share the same underlying design.</li>
+<li>A plugin’s own README is a more reliable source than a documentation summary or a search result; the plenary archival finding in this rewrite came from reading a git log directly, not from a blog post about it.</li>
+</ul>
+<p><strong>Technical Skills:</strong></p>
+<ul>
+<li>Writing Lua configuration files with no embedded Vimscript, including the <code>vim.opt</code>, <code>vim.keymap.set</code>, <code>vim.lsp.config</code>, and <code>vim.lsp.enable</code> APIs.</li>
+<li>Installing and managing plugins through the Lazy plugin manager, including reading <code>lazy-lock.json</code> for reproducible plugin states.</li>
+<li>Configuring R.nvim for interactive R development, including understanding the split between its <code>nvimcom</code>-backed completion and the external <code>r_language_server</code> LSP.</li>
+<li>Writing LuaSnip static and dynamic snippets, including the <code>function_node</code> equivalent of UltiSnips’ Python <code>!p</code> interpolation blocks.</li>
+<li>Isolating a test Neovim configuration from a machine’s real dotfiles using <code>XDG_*</code> environment variables and, where <code>$VIMINIT</code> is set globally, the <code>-u</code> flag.</li>
+</ul>
+<p><strong>Gotchas and Pitfalls:</strong></p>
+<ul>
+<li>A globally set <code>$VIMINIT</code> environment variable overrides <code>init.lua</code> regardless of <code>$XDG_CONFIG_HOME</code> or <code>NVIM_APPNAME</code>, silently loading the wrong configuration during isolated testing unless <code>-u</code> is passed explicitly.</li>
+<li>The <code>iskeyword-=_</code> setting (which treats underscores as word boundaries) improves <code>snake_case</code> navigation but breaks word completion for identifiers containing underscores.</li>
+<li>Running two R completion backends at once (<code>nvimcom</code> and the external <code>r_language_server</code>) produces duplicate or conflicting suggestions; R.nvim’s documentation recommends choosing one.</li>
+<li>A plugin’s README stating it “will be archived soon” can already be past its own stated cutoff date by the time a reader checks it; checking the actual commit history is more reliable than trusting the prose.</li>
+</ul>
+</section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<ul>
+<li>This configuration targets macOS as the primary platform. While most settings transfer directly to Linux, clipboard integration, font rendering, and GUI behavior may require platform-specific adjustments.</li>
+<li>The plugin selection reflects one practitioner’s workflow. Users working primarily in Python or Julia may need different language server configurations and REPL integrations.</li>
+<li>R.nvim, like Nvim-R before it, connects to a single R session. Users who need multiple concurrent R sessions or remote R connections may find this limiting compared to RStudio’s session management.</li>
+<li>The configuration does not include a debugger setup. Interactive debugging in R and Python requires additional plugins (nvim-dap) and configuration not covered here.</li>
+<li>Quarto chunk execution beyond R.nvim’s send-to-console workflow (inline cell output, as in a Jupyter-style notebook) requires a plugin such as molten-nvim, which is mentioned but not configured in this post.</li>
+<li>AI-assisted completion (GitHub Copilot, avante.nvim, and similar tools) is deliberately out of scope for this post. That is a live and fast-moving area of the 2026 Neovim ecosystem in its own right, and folding it into a data-science-IDE post risked dating this rewrite as quickly as the original went stale.</li>
+</ul>
+</section>
+<section id="opportunities-for-improvement" class="level2">
+<h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
+<ol type="1">
+<li>Add a DAP (Debug Adapter Protocol) configuration for step-through debugging of R and Python scripts directly within Neovim.</li>
+<li>Configure <code>molten-nvim</code> for inline, notebook-style Quarto chunk execution, building on the <code>codeRunner</code> scaffold already present in the quarto-nvim configuration above.</li>
+<li>Evaluate <code>blink.cmp</code> once its 2.x line stabilizes, as a lower-latency replacement for nvim-cmp.</li>
+<li>Migrate away from Telescope proactively (to snacks.nvim’s picker or fzf-lua) rather than waiting for plenary.nvim’s maintenance status to become an active problem.</li>
+<li>Explore the Which-Key plugin to provide a discoverable popup menu of available key mappings, reducing the memorization burden for new users, particularly given how many mappings R.nvim defines under <code>&lt;LocalLeader&gt;</code>.</li>
+<li>Evaluate whether <code>r_language_server</code> (rather than R.nvim’s <code>nvimcom</code> path) is worth switching to for readers who want a single, uniform LSP-based completion story across R, Python, and Lua.</li>
+</ol>
+</section>
+</section>
+<section id="wrapping-up" class="level1">
+<h1>Wrapping Up</h1>
+<p>Rewriting this post rather than patching it in place was the right call. The original configuration’s R integration plugin was archived, its LSP section did not exist, and its snippet engine carried a documented dependency problem; none of those are the kind of thing a callout can fully fix. Starting over also forced a verification discipline that patching would not have: every configuration block in this post was built and loaded against a real, isolated Neovim instance (0.12.4, then again against 0.12.5 once the machine was updated) before being written down. That process surfaced a real finding, plenary.nvim’s maintenance status, that a documentation-only rewrite would likely have missed.</p>
+<p>In conclusion, four points merit emphasis. First, Neovim’s native LSP API (<code>vim.lsp.config()</code> / <code>vim.lsp.enable()</code>) has made <code>nvim-lspconfig</code>’s old <code>.setup{}</code> pattern a compatibility shim rather than the recommended path, and a 2026 configuration should be written against the native API directly. Second, LuaSnip removes a real, documented maintenance burden that UltiSnips carried in the previous version of this configuration. Third, R.nvim is a faithful, actively maintained successor to Nvim-R, close enough in its default keybindings that the migration cost is low. Fourth, a plugin ecosystem this active means any configuration post is a snapshot, not a permanent reference; the plenary.nvim finding in this rewrite is itself a reminder that today’s stable choice (Telescope) carries a documented risk worth re-checking later rather than assuming settled.</p>
+<p>Anyone considering the switch should start with a minimal configuration and add plugins gradually. The Neovim ecosystem is large, and configuring everything at once is overwhelming. Actual workflow demands should dictate what to add next.</p>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<p><strong>Related posts:</strong></p>
+<ul>
+<li><a href="../wf-unix-workspace-config/">Unix Command-Line Workspace Setup for Data Science Development</a> (terminal and Zsh setup that complements this Neovim configuration)</li>
+<li><a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a> (version control for configuration files)</li>
+<li><a href="../rp-zzvim-r-introduction/">Introducing zzvim-R</a> (a minimal, single-VimScript R-integration plugin that works identically in classic Vim and Neovim, for readers who want a lighter alternative to R.nvim)</li>
+</ul>
+<p><strong>Key resources:</strong></p>
+<ul>
+<li><a href="https://neovim.io/doc/">Neovim Official Documentation</a></li>
+<li><a href="https://neovim.io/doc/user/news-0.12/">Neovim 0.12 Release Notes</a></li>
+<li><a href="https://github.com/R-nvim/R.nvim">R.nvim GitHub Repository</a></li>
+<li><a href="https://github.com/folke/lazy.nvim">Lazy.nvim Plugin Manager</a></li>
+<li><a href="https://github.com/hrsh7th/nvim-cmp">nvim-cmp</a></li>
+<li><a href="https://github.com/L3MON4D3/LuaSnip">LuaSnip</a></li>
+<li><a href="https://github.com/quarto-dev/quarto-nvim">quarto-nvim</a></li>
+<li><a href="https://github.com/jmbuhr/otter.nvim">otter.nvim</a></li>
+<li><a href="https://github.com/lervag/vimtex">vimtex documentation</a></li>
+<li><a href="https://michaeluloth.com/neovim-switch-configs/">Switching Neovim Configs</a> by Michael Uloth</li>
+<li><a href="https://github.com/nvim-lua/plenary.nvim">plenary.nvim</a> (see its README for the current maintenance notice)</li>
+<li><a href="https://github.com/folke/snacks.nvim">snacks.nvim</a> (picker module, mentioned as a Telescope fallback)</li>
+</ul>
+</section>
+<section id="reproducibility" class="level1">
+<h1>Reproducibility</h1>
+<p>This post describes a configuration-only workflow with no data analysis pipeline. The configuration files reside in <code>~/.config/nvim/</code> and are managed through version control.</p>
+<p>Every code block in this post was additionally verified against a real Neovim instance in an isolated test configuration before publication, not merely written from documentation. See the version matrix and verification checklist at the top of this document for what was and was not exercised end to end.</p>
+<p><strong>Software versions used (this rewrite):</strong></p>
+<ul>
+<li>Neovim 0.12.5 (LuaJIT 2.1), the current stable release as of publication. Verified first against 0.12.4, then re-verified against 0.12.5 after the test machine’s Neovim was updated; both runs bootstrapped and loaded the full plugin set with zero errors.</li>
+<li>lazy.nvim (<code>stable</code> branch, cloned fresh)</li>
+<li>R.nvim, nvim-treesitter, nvim-lspconfig, nvim-cmp, LuaSnip, quarto-nvim, otter.nvim, telescope.nvim: latest <code>main</code>/default branch as of 2026-08-28</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">nvim</span> <span class="at">--version</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> list <span class="at">--versions</span> neovim</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Configuration files described in this post:</strong></p>
+<ul>
+<li><code>~/.config/nvim/init.lua</code>: Entry point, leader keys, module loading</li>
+<li><code>~/.config/nvim/lua/basics.lua</code>: Core settings and key mappings</li>
+<li><code>~/.config/nvim/lua/lsp-config.lua</code>: Native LSP configuration</li>
+<li><code>~/.config/nvim/lua/cmp-config.lua</code>: nvim-cmp setup</li>
+<li><code>~/.config/nvim/lua/luasnip-config.lua</code>: LuaSnip setup</li>
+<li><code>~/.config/nvim/lua/r-config.lua</code>: R.nvim configuration</li>
+<li><code>~/.config/nvim/lua/quarto-config.lua</code>: quarto-nvim configuration</li>
+<li><code>~/.config/nvim/snippets/</code>: LuaSnip snippet files by language</li>
+</ul>
+<p>To replicate this setup, clone the dotfiles repository (or copy the files above) into <code>~/.config/nvim/</code>, then open Neovim. Lazy will automatically install all specified plugins on first launch.</p>
+</section>
+<section id="lets-connect" class="level1">
+<h1>Let’s Connect</h1>
+<ul>
+<li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
+<li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">rgtlab.org/contact</a></li>
+</ul>
+<p>I would enjoy hearing from you if:</p>
+<ul>
+<li>You spot an error or a better approach to any of the code in this post.</li>
+<li>You have suggestions for topics you would like to see covered.</li>
+<li>You want to discuss R programming, data science, or reproducible research.</li>
+<li>You have questions about anything in this tutorial.</li>
+<li>You just want to say hello and connect.</li>
+</ul>
+<!-- ============================================================================
+PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
+
+[ ] YAML
+    [x] title, date, date-modified, categories, description, image filled in
+    [x] document-type: 'blog'
+    [ ] draft: false
+
+[ ] Narrative complete (no [bracketed] placeholders remaining)
+    [ ] grep '\[' index.qmd returns only legitimate code/links
+
+[ ] Configuration artifacts present and tested
+    [ ] No analysis/configs/ deliverables exist; confirm whether the
+        inline init.lua/lua-module blocks are meant to stay
+        narrative-only or should be committed as standalone files
+
+[ ] Things to Watch Out For
+    [x] At least 5 gotchas, each with symptom and fix
+
+[x] Visual design
+    [x] 1 hero image present, genuine, unchanged from original post
+    [x] 3 ambiance images present, unchanged from original post
+    [ ] media/images/README.md re-verified against this rewrite's
+        captions (captions changed for ambiance1 and ambiance3;
+        confirm README.md attributions still match)
+
+[ ] Content quality
+    [ ] Zero emoji
+    [ ] Zero em dashes
+    [x] Single quotes in prose
+    [ ] 78-character line wrap throughout
+
+[ ] Reproducibility
+    [x] Version matrix present (verified against Neovim 0.12.4,
+        then re-verified against 0.12.5 after the host was
+        updated; plugin branches, date of verification
+        2026-08-28)
+    [ ] Config files committed under analysis/configs/ — none exist
+
+[ ] R.nvim vs zzvim-R
+    [x] See Also cross-links zzvim-R as the minimal alternative;
+        R.nvim is the primary documented path in this rewrite
+
+[ ] Render verification
+    [ ] quarto render produces clean HTML with no warnings
+    [ ] PDF renders without overflow or missing images
+    [ ] Hero image displays in /blog/ listing card
+    [ ] Internal links resolve
+============================================================================ -->
+<section id="related-posts-in-this-cluster" class="level2">
+<h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
+<p>This post is part of the <em>Workflow Construct</em> series. Recommended reading order:</p>
+<ol type="1">
+<li>Post 15: <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a></li>
+<li>Post 16: <a href="../wf-unix-workspace-config/">Unix Command-Line Workspace Setup for Data Science</a></li>
+<li>Post 17: <a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a></li>
+<li>Post 18: <a href="../wf-git-for-data-science/">Setting Up Git for Data Science Workflows</a></li>
+<li><strong>Post 19: Setting Up Neovim as a Data Science IDE</strong> (this post)</li>
+<li>Post 21: <a href="../wf-modern-cli-tools/">Modern CLI Replacements for the Shell Layer</a></li>
+<li>Post 25: <a href="../wf-linux-mint-on-macbook/">Install Linux Mint on a MacBook Air</a></li>
+</ol>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/focusonr\.org");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Ronald G. Thomas.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47/ryyblog">
+      <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<!-- Fix category filtering. itemValues.categories is always a base64+URI-
+     encoded comma-joined blob and must be decoded before comparing. The
+     incoming `category` argument's encoding is NOT reliable: Quarto's own
+     native click path decodes it to plain text before calling
+     filterListingCategory, but other call sites (older cached scripts,
+     manual calls, other Quarto builds) pass the raw base64 data-category
+     value instead. A word like "docker" also happens to be valid-shaped
+     base64, so blindly re-decoding an already-plain-text argument silently
+     corrupts it rather than failing loudly. Match against both
+     interpretations instead of guessing which one applies. -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    function decodeCategory(value) {
+      try {
+        return decodeURIComponent(atob(value));
+      } catch (e) {
+        return value;
+      }
+    }
+
+    window.filterListingCategory = function(category) {
+      const listingIds = Object.keys(window['quarto-listings']);
+      for (const listingId of listingIds) {
+        const list = window['quarto-listings'][listingId];
+        if (list) {
+          if (category === '') {
+            list.filter();
+          } else {
+            const decodedTarget = decodeCategory(category);
+            list.filter(function (item) {
+              const itemValues = item.values();
+              if (itemValues.categories !== null && itemValues.categories !== undefined) {
+                const categories = decodeCategory(itemValues.categories)
+                  .split(",")
+                  .map(c => c.trim());
+                return categories.includes(category) || categories.includes(decodedTarget);
+              } else {
+                return false;
+              }
+            });
+          }
+        }
+      }
+    };
+  }, 500);
+});
+</script>
+
+<!-- PDF view/download button for blog posts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only add the button on post pages
+  if (window.location.pathname.includes('/posts/') && !window.location.pathname.endsWith('/posts/') && !window.location.pathname.endsWith('/posts/index.html')) {
+    var currentPath = window.location.pathname;
+    // Handle both /posts/name/ and /posts/name/index.html formats
+    var pdfPath;
+    if (currentPath.endsWith('/')) {
+      pdfPath = currentPath + 'index.pdf';
+    } else {
+      pdfPath = currentPath.replace('.html', '.pdf');
+    }
+
+    // Check if PDF exists first
+    fetch(pdfPath, { method: 'HEAD' })
+      .then(function(response) {
+        if (response.ok) {
+          // PDF exists, show download button
+          showDownloadButton(pdfPath);
+        }
+        // If PDF doesn't exist, don't show any button
+      })
+      .catch(function(error) {
+        // Error checking PDF, don't show any button
+      });
+  }
+});
+
+function showDownloadButton(pdfPath) {
+  var downloadBtn = document.createElement('div');
+  downloadBtn.className = 'pdf-download-button';
+
+  // Get file size if possible
+  fetch(pdfPath, { method: 'HEAD' })
+    .then(function(response) {
+      var size = response.headers.get('Content-Length');
+      var sizeText = '';
+
+      if (size) {
+        // Convert to MB or KB
+        var sizeInMB = size / (1024 * 1024);
+        if (sizeInMB >= 1) {
+          sizeText = ' (' + sizeInMB.toFixed(1) + ' MB)';
+        } else {
+          sizeText = ' (' + (size / 1024).toFixed(0) + ' KB)';
+        }
+      }
+
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' + sizeText +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    })
+    .catch(function() {
+      // Basic fallback if we can't get file size
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    });
+
+  // Find where to insert the button (right after the title block)
+  var titleBlock = document.querySelector('.quarto-title-meta');
+  if (titleBlock) {
+    titleBlock.after(downloadBtn);
+  }
+}
+
+
+</script>
+
+<style>
+.pdf-download-button {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
+
+
+
+
+</body></html>

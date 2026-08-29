@@ -154,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-<meta name="quarto:status" content="draft">
 
 
 <meta property="og:title" content="Hosting a Shiny App in Production: Docker Compose, Caddy, and Automatic HTTPS – focusonr">
@@ -171,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -243,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#uninstall-rollback" id="toc-uninstall-rollback" class="nav-link" data-scroll-target="#uninstall-rollback">Uninstall / Rollback</a></li>
   <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
   <ul class="collapse">
-  <li><a href="#lessons-learnt" id="toc-lessons-learnt" class="nav-link" data-scroll-target="#lessons-learnt">Lessons Learnt</a></li>
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
   <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
   </ul></li>
@@ -312,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
 <p>I did not really know what stood between a working Shiny app and a ‘Go to app’ link a collaborator could actually click until I had both pieces separately and no path connecting them. <a href="../cln-aws-ec2-provisioning/">Provisioning AWS EC2 Instances</a> covers the first half: a running Ubuntu instance with a static IP, a firewall, and Docker installed. That post explicitly defers the second half, ‘installing a web server, obtaining an SSL certificate, and configuring a reverse proxy,’ to a companion post. This is that post.</p>
-<p>The gap matters because the two halves fail in different ways. A misconfigured security group returns a connection timeout; a missing reverse proxy returns a working app that only its own operator can reach, over plain HTTP, with no certificate and no authentication. The server exists. Nothing points a browser at it correctly. Getting from ‘the app runs on port 3838’ to ‘the app is available at <code>https://example.org/</code>, encrypted, authenticated, and unattended’ is its own set of decisions, not a footnote to provisioning.</p>
+<p>The gap matters because the two halves fail in different ways. A misconfigured security group returns a connection timeout. A missing reverse proxy instead returns a working app that only its own operator can reach, over plain HTTP, with no certificate and no authentication. The server exists. Nothing points a browser at it correctly. Getting from ‘the app runs on port 3838’ to ‘the app is available at <code>https://example.org/</code>, encrypted, authenticated, and unattended’ is its own set of decisions, not a footnote to provisioning.</p>
 <p>This post documents that path end to end: a minimal Dockerfile for the Shiny app, a <code>docker-compose.yml</code> that wires the app together with a Caddy reverse proxy and a Watchtower auto-updater, and a Caddyfile that handles TLS certificate acquisition and basic authentication in about a dozen lines. We build a small proof-of-concept app locally, then walk it through to a production deployment reachable at a custom domain.</p>
 <p>We cover the remainder of Layer 11 (Cloud) of the workflow architecture described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>, continuing directly from <a href="../cln-aws-ec2-provisioning/">Provisioning AWS EC2 Instances</a>.</p>
 <section id="motivations" class="level2">
@@ -667,15 +666,12 @@ Tip
 <h1>Things to Watch Out For</h1>
 <ol type="1">
 <li><p><strong>The Shiny container’s port must stay internal.</strong> Publishing <code>3838</code> directly to the host bypasses TLS termination and basic auth entirely. Only <code>caddy</code> should have published ports.</p></li>
-<li><p><strong>Caddy needs port 80 open, not only 443.</strong> Let’s Encrypt’s HTTP-01 challenge, and Caddy’s own HTTP-to-HTTPS redirect, both use port</p>
-<ol start="80" type="1">
-<li>Restricting the firewall to 443 only breaks certificate issuance.</li>
-</ol></li>
+<li><p><strong>Caddy needs port 80 open, not only 443.</strong> Let’s Encrypt’s HTTP-01 challenge, and Caddy’s own HTTP-to-HTTPS redirect, both use port 80 as well. Restricting the firewall to 443 only breaks certificate issuance.</p></li>
 <li><p><strong>The domain’s <code>A</code> record must resolve before the first Caddy start.</strong> Caddy requests a certificate on startup; if DNS has not propagated yet, the request fails and Caddy will keep retrying with exponential backoff rather than serving over HTTPS immediately.</p></li>
 <li><p><strong>A stale bcrypt hash locks everyone out, including the operator.</strong> Regenerate it with <code>caddy hash-password</code> and confirm the new hash is copied correctly; a single mistyped character produces a silent authentication failure with no useful error message.</p></li>
 <li><p><strong>Watchtower needs read access to the registry credentials, not write access.</strong> Mount <code>config.json</code> read-only; Watchtower only pulls images, never pushes them.</p></li>
 <li><p><strong><code>docker-compose.yml</code> and the Caddyfile both hardcode the domain name.</strong> Renaming the domain requires editing both files and restarting the stack; there is no single source of truth for the hostname in this minimal setup.</p></li>
-<li><p><strong>An <code>.pem</code> platform mismatch produces a container that starts and immediately exits.</strong> On Apple Silicon, forgetting <code>--platform linux/amd64</code> during the build produces an image that runs locally under emulation but may behave differently once deployed to an amd64 server; always build for the target platform explicitly.</p></li>
+<li><p><strong>An <code>.pem</code> platform mismatch produces a container that starts and immediately exits.</strong> On Apple Silicon, forgetting <code>--platform linux/amd64</code> during the build produces an image that runs locally under emulation but may behave differently once deployed to an amd64 server. Always build for the target platform explicitly.</p></li>
 </ol>
 </section>
 <section id="uninstall-rollback" class="level1">
@@ -707,8 +703,8 @@ Warning
 </section>
 <section id="what-did-we-learn" class="level1">
 <h1>What Did We Learn?</h1>
-<section id="lessons-learnt" class="level2">
-<h2 class="anchored" data-anchor-id="lessons-learnt">Lessons Learnt</h2>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
 <p><strong>Conceptual Understanding:</strong></p>
 <ul>
 <li>A reverse proxy is the single point of contact between the internet and every backend service behind it; getting its configuration right is a precondition for everything else working, not a final polish step.</li>

@@ -119,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-<meta name="quarto:status" content="draft">
 
 
 <meta property="og:title" content="Introducing zzvim-R – focusonr">
@@ -136,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -317,7 +316,7 @@ CLAIMS VERIFICATION
 </section>
 <section id="what-is-zzvim-r" class="level1">
 <h1>What is zzvim-R?</h1>
-<p>zzvim-R is a single VimScript implementation that targets both Vim 8+ and Neovim, with no Lua or external runtime dependency beyond R itself. It is closest in spirit to <a href="https://github.com/jpalardy/vim-slime">vim-slime</a>: a terminal-centric REPL bridge rather than a client-server integration like R.nvim or ESS. What sets it apart from vim-slime is R-specific intelligence built directly into the plugin: it parses the buffer well enough to recognize a function body, a pipe chain, or a control block and submit the whole unit on <code>&lt;CR&gt;</code>, rather than a single line. It does not attempt to replace RStudio’s viewer, R.nvim’s object browser, or a GUI debugger. It is useful where the editing surface is already Vim or Neovim and staying there outweighs the convenience of a heavier IDE.</p>
+<p>zzvim-R is a single VimScript implementation that targets both Vim 8+ and Neovim, with no Lua or external runtime dependency beyond R itself. It is closest in spirit to <a href="https://github.com/jpalardy/vim-slime">vim-slime</a>: a terminal-centric REPL bridge rather than a client-server integration like R.nvim or ESS. What sets it apart from vim-slime is R-specific intelligence built directly into the plugin. It parses the buffer well enough to recognize a function body, a pipe chain, or a control block, and submits the whole unit on <code>&lt;CR&gt;</code> rather than a single line. It does not attempt to replace RStudio’s viewer, R.nvim’s object browser, or a GUI debugger. It is useful where the editing surface is already Vim or Neovim and staying there outweighs the convenience of a heavier IDE.</p>
 </section>
 <section id="from-line-submission-to-a-workspace" class="level1">
 <h1>From Line Submission to a Workspace</h1>
@@ -331,7 +330,7 @@ CLAIMS VERIFICATION
 </section>
 <section id="how-it-compares" class="level1">
 <h1>How It Compares</h1>
-<p>zzvim-R does not try to be everything. Against R.nvim (the Neovim-only, actively maintained successor to the archived Nvim-R), it gives up an object browser, richer completion, and inline help lookup in exchange for working identically in Vim and Neovim and for shipping the plot pipeline and Docker awareness R.nvim does not have. Against RStudio and VS Code, it gives up a graphical debugger, viewer pane, and polish in exchange for editing speed, a smaller footprint, and working the same way over SSH as it does locally. Against vim-slime, its closest relative, it trades generality across languages for R-specific pattern detection, chunk navigation, and the HUD. None of these are close calls in every direction; which one is right depends on whether the editing surface is already Vim, and how much the convenience features are worth relative to staying there.</p>
+<p>zzvim-R does not try to be everything. Against R.nvim (the Neovim-only, actively maintained successor to the archived Nvim-R), it gives up an object browser, richer completion, and inline help lookup. In exchange, it works identically in Vim and Neovim and ships the plot pipeline and Docker awareness R.nvim does not have. Against RStudio and VS Code, it gives up a graphical debugger, viewer pane, and polish in exchange for editing speed, a smaller footprint, and working the same way over SSH as it does locally. Against vim-slime, its closest relative, it trades generality across languages for R-specific pattern detection, chunk navigation, and the HUD. None of these are close calls in every direction; which one is right depends on whether the editing surface is already Vim, and how much the convenience features are worth relative to staying there.</p>
 </section>
 <section id="wrapping-up" class="level1">
 <h1>Wrapping Up</h1>

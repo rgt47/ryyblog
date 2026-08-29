@@ -154,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 </script>
-<meta name="quarto:status" content="draft">
 
 
 <meta property="og:title" content="Constructing a reproducible blog post using zzcollab tools – focusonr">
@@ -175,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <body class="nav-fixed quarto-light">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -247,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
   </ul></li>
   <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
   <ul class="collapse">
-  <li><a href="#lessons-learnt" id="toc-lessons-learnt" class="nav-link" data-scroll-target="#lessons-learnt">Lessons Learnt</a></li>
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
   <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
   </ul></li>
@@ -336,7 +335,7 @@ NARRATIVE INPUTS
   [ ] Motivations     — exactly 4 bullets, each personal/specific
   [ ] Objectives      — exactly 4 numbered, measurable goals
   [ ] Conceptual definition of the topic + 1 analogy + 1 concrete example
-  [ ] Lessons Learnt  — 4 conceptual + 4 technical + 4 gotcha bullets
+  [ ] Lessons Learned  — 4 conceptual + 4 technical + 4 gotcha bullets
   [ ] Limitations     — 5 bullets, honest
   [ ] Opportunities for Improvement — 6 numbered future directions
   [ ] Wrapping Up     — 3-paragraph conclusion + "Main takeaways" + "If you're trying this yourself"
@@ -370,7 +369,7 @@ IMAGES (4 total — hero + 3 ambiance, all in media/images/)
   [ ] Hero image (80% width)                — sets tone, appears in blog listing
   [ ] Ambiance image 1 (100% width)         — after Objectives
   [ ] Ambiance image 2 (100% width)         — after first analysis figure
-  [ ] Ambiance image 3 (100% width)         — before Lessons Learnt
+  [ ] Ambiance image 3 (100% width)         — before Lessons Learned
   [ ] media/images/README.md                — sources + attribution for every image
 
 CONTACT & METADATA
@@ -605,7 +604,7 @@ predictions for new people. That's what linear regression does."
 <h1>Getting Started: Initial Exploration</h1>
 <!-- TEMPLATE INSTRUCTION: FIRST ANALYSIS SECTION
 
-This is where the real analysis begins!
+This is where the real analysis begins.
 
 STRUCTURE:
 - CODE FIRST (show it)
@@ -643,7 +642,7 @@ INCLUDE SUMMARY TABLE: Show key statistics from prepared data
 <h1>Exploring the Data</h1>
 <!-- TEMPLATE INSTRUCTION: RESULTS VISUALIZATION SECTION
 
-Here's where your pre-generated figures come in!
+This is where your pre-generated figures come in.
 See analysis/scripts/03_generate_figures.R for how these were created.
 
 PATTERN:
@@ -659,7 +658,7 @@ FIGURE SIZING:
 DON'T: re-create these figures inline (they're already generated!)
 DO: reference the pre-generated files and focus on interpretation
 -->
-<p>We visualise these patterns using pre-generated figures from <code>analysis/scripts/03_generate_figures.R</code>:</p>
+<p>We visualize these patterns using pre-generated figures from <code>analysis/scripts/03_generate_figures.R</code>:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"figures/eda-overview.png"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
@@ -703,7 +702,7 @@ PURPOSE: Mental break, maintain engagement, visual balance
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(correlations <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="dv">5</span>),</span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">caption =</span> <span class="st">"Top 5 Correlations with MPG (fuel efficiency)"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Weight has the strongest correlation with MPG (r = -0.87). We visualise that relationship:</p>
+<p>Weight has the strongest correlation with MPG (r = -0.87). We visualize that relationship:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"figures/correlation-plot.png"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
@@ -884,12 +883,12 @@ THREE CATEGORIES:
 2. Technical Skills (what tools/techniques did you master?)
 3. Gotchas and Pitfalls (what could go wrong?)
 -->
-<section id="lessons-learnt" class="level2">
-<h2 class="anchored" data-anchor-id="lessons-learnt">Lessons Learnt</h2>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
 <p>The main takeaways from this exploration:</p>
 <p><strong>Conceptual Understanding:</strong> - Vehicle weight is a strong predictor of fuel efficiency (R² = 0.75) - Each 1,000 lbs reduces MPG by ~5.3 miles (95% CI: [-6.5, -4.1]) - Cylinder count effects are partially mediated through weight - Simple models can be surprisingly effective with the right predictor</p>
 <p><strong>Technical Skills:</strong> - Using <code>broom::tidy()</code> for clean model output formatting - Calculating and interpreting confidence intervals for predictions - Creating diagnostic plots to validate regression assumptions - Combining multiple ggplot visualizations with <code>patchwork</code></p>
-<p><strong>Gotchas and Pitfalls:</strong> - Always check residual plots - R² alone isn’t enough! - Extrapolation beyond data range is dangerous - Small sample sizes (n=32) require cautious interpretation - Correlation doesn’t prove causation (confounding variables matter)</p>
+<p><strong>Gotchas and Pitfalls:</strong> - Always check residual plots; R² alone is not sufficient. - Extrapolation beyond data range is dangerous - Small sample sizes (n=32) require cautious interpretation - Correlation doesn’t prove causation (confounding variables matter)</p>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
@@ -947,7 +946,7 @@ End with a warm, brief closing line.
 -->
 <p>This exploration confirms that vehicle weight is a powerful predictor of fuel efficiency, accounting for 75% of the variance. The model is simple but effective, though the limitations noted above apply.</p>
 <p>Working through this analysis clarified [specific technical skill you gained]. Additional extensions (more predictors, non-linear models, modern data) would all be instructive next steps.</p>
-<p><strong>For those attempting this themselves:</strong> - Begin with exploration before modelling. - Plot residuals before trusting the fit. - High R² alone does not validate a model. - Report confidence intervals alongside point estimates.</p>
+<p><strong>For those attempting this themselves:</strong> - Begin with exploration before modeling. - Plot residuals before trusting the fit. - High R² alone does not validate a model. - Report confidence intervals alongside point estimates.</p>
 </section>
 <section id="see-also" class="level1">
 <h1>See Also</h1>
@@ -1157,7 +1156,7 @@ top of this file. If anything below is unchecked, the post is not ready.
     [ ] 1 hero image (width=80%) immediately after AUTHOR PROVIDES block
     [ ] Exactly 3 ambiance images ({.img-fluid} only, no width=NN%,
         no fig-align): after Objectives, after first analysis figure,
-        before Lessons Learnt
+        before Lessons Learned
     [ ] Hero and ambiance captions describe the actual image (not a
         placeholder description)
     [ ] No hand-coded "Download PDF" link in body. The site auto-injects

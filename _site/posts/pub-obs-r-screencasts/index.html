@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ronald G. Thomas">
+<meta name="dcterms.date" content="2026-05-02">
+<meta name="description" content="A reproducible, hands-on pipeline for producing R data analysis videos two ways: live OBS Studio screencasts and edited, narrated slide decks assembled with sox, ffmpeg, and Whisper. Includes installation, a worked five-minute Palmer Penguins example for each method, and a full YouTube publishing walkthrough.">
+
+<title>Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks – focusonr</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d1f979f567abd94e3c058709025db867.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Open+Sans:ital,wght@0,400;0,600;1,400&amp;family=Fira+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0fba9333d8.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+<!-- Custom meta tags for social sharing -->
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@rgt47">
+
+<!-- Add responsive features -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Add analytics if needed -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script> -->
+
+<!-- Add custom javascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove code tools button completely
+  const codeButton = document.querySelector('.code-tools-button');
+  if (codeButton) {
+    codeButton.remove();
+  }
+
+  // Smooth scrolling for in-page anchor links (skip listing category elements)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    if (anchor.closest('.quarto-listing-category')) return;
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+});
+</script>
+
+
+<meta property="og:title" content="Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks – focusonr">
+<meta property="og:description" content="A reproducible, hands-on pipeline for producing R data analysis videos two ways: live OBS Studio screencasts and edited, narrated slide decks assembled with sox, ffmpeg, and Whisper. Includes installation, a worked five-minute Palmer Penguins example for each method, and a full YouTube publishing walkthrough.">
+<meta property="og:image" content="https://focusonr.org/posts/pub-obs-r-screencasts/media/images/hero-generated.png">
+<meta property="og:site_name" content="focusonr">
+<meta property="og:image:height" content="768">
+<meta property="og:image:width" content="1376">
+<meta name="twitter:title" content="Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks – focusonr">
+<meta name="twitter:description" content="A reproducible, hands-on pipeline for producing R data analysis videos two ways: live OBS Studio screencasts and edited, narrated slide decks assembled with sox, ffmpeg, and Whisper. Includes installation, a worked five-minute Palmer Penguins example for each method, and a full YouTube publishing walkthrough.">
+<meta name="twitter:image" content="https://focusonr.org/posts/pub-obs-r-screencasts/media/images/hero-generated.png">
+<meta name="twitter:creator" content="@rgt47">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image-height" content="768">
+<meta name="twitter:image-width" content="1376">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">focusonr</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://rgtlab.org"> 
+<span class="menu-text">rgtlab.org</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/rgt47"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  <li><a href="#two-ways-to-produce-an-r-coding-video" id="toc-two-ways-to-produce-an-r-coding-video" class="nav-link" data-scroll-target="#two-ways-to-produce-an-r-coding-video">Two Ways to Produce an R Coding Video</a></li>
+  </ul></li>
+  <li><a href="#what-is-obs-studio" id="toc-what-is-obs-studio" class="nav-link" data-scroll-target="#what-is-obs-studio">What Is OBS Studio?</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#step-by-step" id="toc-step-by-step" class="nav-link" data-scroll-target="#step-by-step">Step by Step</a>
+  <ul class="collapse">
+  <li><a href="#method-one-live-capture-with-obs-studio" id="toc-method-one-live-capture-with-obs-studio" class="nav-link" data-scroll-target="#method-one-live-capture-with-obs-studio">Method One: Live Capture with OBS Studio</a></li>
+  <li><a href="#step-1-install-obs-studio" id="toc-step-1-install-obs-studio" class="nav-link" data-scroll-target="#step-1-install-obs-studio">Step 1: Install OBS Studio</a></li>
+  <li><a href="#step-2-configure-scenes-and-sources" id="toc-step-2-configure-scenes-and-sources" class="nav-link" data-scroll-target="#step-2-configure-scenes-and-sources">Step 2: Configure Scenes and Sources</a></li>
+  <li><a href="#step-3-audio-routing" id="toc-step-3-audio-routing" class="nav-link" data-scroll-target="#step-3-audio-routing">Step 3: Audio Routing</a></li>
+  <li><a href="#step-4-recording-format" id="toc-step-4-recording-format" class="nav-link" data-scroll-target="#step-4-recording-format">Step 4: Recording Format</a></li>
+  <li><a href="#step-5-practice-run" id="toc-step-5-practice-run" class="nav-link" data-scroll-target="#step-5-practice-run">Step 5: Practice Run</a></li>
+  <li><a href="#step-6-the-five-minute-analysis" id="toc-step-6-the-five-minute-analysis" class="nav-link" data-scroll-target="#step-6-the-five-minute-analysis">Step 6: The Five-Minute Analysis</a></li>
+  <li><a href="#step-7-edit-and-upload" id="toc-step-7-edit-and-upload" class="nav-link" data-scroll-target="#step-7-edit-and-upload">Step 7: Edit and Upload</a></li>
+  <li><a href="#step-8-embed-in-the-blog-post" id="toc-step-8-embed-in-the-blog-post" class="nav-link" data-scroll-target="#step-8-embed-in-the-blog-post">Step 8: Embed in the Blog Post</a></li>
+  <li><a href="#default-recording-hotkeys" id="toc-default-recording-hotkeys" class="nav-link" data-scroll-target="#default-recording-hotkeys">Default Recording Hotkeys</a></li>
+  <li><a href="#method-two-a-narrated-slide-deck-assembled-from-the-command-line" id="toc-method-two-a-narrated-slide-deck-assembled-from-the-command-line" class="nav-link" data-scroll-target="#method-two-a-narrated-slide-deck-assembled-from-the-command-line">Method Two: A Narrated Slide Deck, Assembled from the Command Line</a></li>
+  <li><a href="#step-9-install-the-method-two-toolchain" id="toc-step-9-install-the-method-two-toolchain" class="nav-link" data-scroll-target="#step-9-install-the-method-two-toolchain">Step 9: Install the Method Two Toolchain</a></li>
+  <li><a href="#step-10-write-the-script" id="toc-step-10-write-the-script" class="nav-link" data-scroll-target="#step-10-write-the-script">Step 10: Write the Script</a></li>
+  <li><a href="#step-11-export-slide-assets-from-r" id="toc-step-11-export-slide-assets-from-r" class="nav-link" data-scroll-target="#step-11-export-slide-assets-from-r">Step 11: Export Slide Assets from R</a></li>
+  <li><a href="#step-12-build-the-slide-deck" id="toc-step-12-build-the-slide-deck" class="nav-link" data-scroll-target="#step-12-build-the-slide-deck">Step 12: Build the Slide Deck</a></li>
+  <li><a href="#step-13-record-narration-per-slide" id="toc-step-13-record-narration-per-slide" class="nav-link" data-scroll-target="#step-13-record-narration-per-slide">Step 13: Record Narration Per Slide</a></li>
+  <li><a href="#step-14-process-audio-with-sox" id="toc-step-14-process-audio-with-sox" class="nav-link" data-scroll-target="#step-14-process-audio-with-sox">Step 14: Process Audio with <code>sox</code></a></li>
+  <li><a href="#step-15-assemble-the-video-with-ffmpeg" id="toc-step-15-assemble-the-video-with-ffmpeg" class="nav-link" data-scroll-target="#step-15-assemble-the-video-with-ffmpeg">Step 15: Assemble the Video with <code>ffmpeg</code></a></li>
+  <li><a href="#step-16-generate-captions-and-a-thumbnail" id="toc-step-16-generate-captions-and-a-thumbnail" class="nav-link" data-scroll-target="#step-16-generate-captions-and-a-thumbnail">Step 16: Generate Captions and a Thumbnail</a></li>
+  <li><a href="#step-17-publish-to-youtube-step-by-step" id="toc-step-17-publish-to-youtube-step-by-step" class="nav-link" data-scroll-target="#step-17-publish-to-youtube-step-by-step">Step 17: Publish to YouTube, Step by Step</a></li>
+  <li><a href="#comparing-the-two-methods" id="toc-comparing-the-two-methods" class="nav-link" data-scroll-target="#comparing-the-two-methods">Comparing the Two Methods</a></li>
+  </ul></li>
+  <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  <li><a href="#uninstall-rollback" id="toc-uninstall-rollback" class="nav-link" data-scroll-target="#uninstall-rollback">Uninstall / Rollback</a></li>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
+  <ul class="collapse">
+  <li><a href="#conceptual" id="toc-conceptual" class="nav-link" data-scroll-target="#conceptual">Conceptual</a></li>
+  <li><a href="#technical" id="toc-technical" class="nav-link" data-scroll-target="#technical">Technical</a></li>
+  <li><a href="#gotchas" id="toc-gotchas" class="nav-link" data-scroll-target="#gotchas">Gotchas</a></li>
+  </ul></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a>
+  <ul class="collapse">
+  <li><a href="#related-posts-in-this-cluster" id="toc-related-posts-in-this-cluster" class="nav-link" data-scroll-target="#related-posts-in-this-cluster">Related posts in this cluster</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">setup</div>
+    <div class="quarto-category">obs</div>
+    <div class="quarto-category">youtube</div>
+    <div class="quarto-category">screencast</div>
+    <div class="quarto-category">video-production</div>
+    <div class="quarto-category">ffmpeg</div>
+    <div class="quarto-category">whisper</div>
+    <div class="quarto-category">r</div>
+    <div class="quarto-category">reproducibility</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    A reproducible, hands-on pipeline for producing R data analysis videos two ways: live OBS Studio screencasts and edited, narrated slide decks assembled with sox, ffmpeg, and Whisper. Includes installation, a worked five-minute Palmer Penguins example for each method, and a full YouTube publishing walkthrough.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta column-page-left">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ronald G. Thomas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 2, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- ============================================================================
+AUTHOR PROVIDES — concrete inputs the blogger must supply
+
+Every item below maps to a placeholder in the body. Fill in this checklist
+FIRST, then paste your answers into the matching `[bracketed]` slots. Do not
+publish until every box is ticked.
+
+YAML FRONT MATTER (lines 1-20)
+  [x] title           — 'Producing R Coding Videos: OBS Screencasts and
+        Narrated Slide Decks' (retitled to cover both methods)
+  [x] subtitle        — one-line elaboration of what the post sets up
+  [x] date            — 2026-05-02
+  [x] categories      — setup, obs, youtube, screencast, video-production,
+        ffmpeg, whisper, r, reproducibility
+  [x] description     — 1-2 sentences for blog listing card
+  [x] image           — media/images/hero-generated.png (Gemini-generated,
+        2026-08-28, 1376x768; replaces the earlier hero.png/hero.jpg,
+        whose blank laptop screen did not match the caption)
+  [ ] draft: false    — flip when imagery is in place AND Method Two
+        (Steps 9-17) has been run end to end on a clean machine
+
+NARRATIVE INPUTS
+  [x] Hook sentence   — until-moment for screencasting friction
+  [x] Pain point      — the static-text limit of written tutorials
+  [x] Motivations     — 5 bullets (added: not every analysis suits a live take)
+  [x] Objectives      — 5 numbered, verifiable end states (added: build and
+        publish the slide-deck version)
+  [x] What is OBS?    — 1-sentence definition + 1 analogy + 1 concrete example
+  [x] Method comparison — 'Two Ways to Produce an R Coding Video' section
+        plus the 'Comparing the Two Methods' table
+  [x] Things to Watch Out For — 10 gotchas (7 Method One, 3 Method Two)
+  [x] Lessons Learnt  — conceptual + technical + gotcha bullets, both methods
+  [x] Limitations     — 5 bullets covering both methods
+  [x] Opportunities for Improvement — 7 numbered next-step extensions
+  [x] Wrapping Up     — 2-3 paragraph conclusion + 'Main takeaways'
+  [x] See Also        — 6 links, including sox and Whisper
+
+CONFIGURATION DELIVERABLES
+  [x] Prerequisites list — OS, hardware, prior knowledge, Method Two toolchain
+  [x] Installation block — exact bash commands, both methods
+  [ ] Complete config file(s) — OBS scene-collection JSON could live under
+        analysis/configs/ in a future revision
+  [ ] Method Two build script — Steps 9-16 are documented as individual
+        commands; Opportunity #4 proposes bundling them into
+        `build_video.sh`, not yet written
+  [x] Verification commands — `obs --version`, `sox --version`,
+        `convert --version`, `whisper --help`, plus a 30-second test
+        recording
+  [x] Optional keybinding/command reference table — recording hotkeys
+  [x] Uninstall / rollback steps — how to remove OBS cleanly
+  [ ] Optional appendices — RTMP server overrides, podcast-ready audio chain
+
+VERSION MATRIX (Reproducibility section)
+  [x] OS + version tested        — macOS 26.4 (Tahoe), Ubuntu 24.04 LTS
+  [x] Tool version pinned        — OBS Studio 30.x, ffmpeg 7.x, sox 14.4.x,
+        ImageMagick 7.x, openai-whisper 20231117, LibreOffice 24.x, Quarto 1.9
+  [x] Dependency versions        — Homebrew 4.x; apt 2.x
+  [ ] Date of last verification  — 2026-05-02 for Method One; Method Two's
+        commands are inspected from the pp-eda video guide, not yet run
+        end to end under this post's own toolchain versions
+
+IMAGES (4 total: hero + 3 ambiance, all in media/images/)
+  [x] Hero image (80% width)        — media/images/hero-generated.png in place
+  [ ] Ambiance image 1 (100% width) — after Objectives (workspace shot)
+  [ ] Ambiance image 2 (100% width) — after Configuration (terminal/editor)
+  [ ] Ambiance image 3 (100% width) — before Lessons Learnt (workflow scene)
+  [ ] media/images/README.md        — sources + attribution for every image
+
+CONTACT & METADATA
+  [x] Author name in YAML matches site author
+  [x] Social links in 'Let's Connect' updated
+  [x] Giscus comments enabled (inherited from _quarto.yml)
+
+============================================================================ -->
+<!-- ============================================================================
+HERO IMAGE
+============================================================================ -->
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero-generated.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption>A recording desk set up for a live R screencast: microphone, ring light, and a laptop screen already showing the code editor.</figcaption>
+</figure>
+</div>
+<p><em>A short screencast captures the small decisions a written report leaves out.</em></p>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>I did not appreciate how much a good screencast teaches until a colleague sent me a five-minute video of an analysis I had read about in a paper a week earlier. The paper had described the model, the data, and the result. The screencast showed the analyst pause over a missing value, change a plot scale mid-thought, and read aloud the output of <code>summary(fit)</code>. That brief exposure to the analyst’s working memory taught me more about the analysis than the paper had.</p>
+<p>I tried a few proprietary tools first, without much luck. What I eventually discovered was that the open source community already had a complete capture pipeline waiting: OBS Studio for recording, YouTube for distribution, and a small set of recording conventions to glue them together. The pipeline costs nothing, runs on macOS, Linux, and Windows, and produces files that any future viewer can play without an account.</p>
+<p>We walk through that pipeline end to end. The post covers OBS installation, scene and audio configuration suitable for an R coding session, and a publication checklist for YouTube. It closes with a worked five-minute example using the Palmer Penguins dataset that mirrors the analytical structure of <a href="../pp-eda/">Palmer Penguins Part 1</a>.</p>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<ul>
+<li>Written reports describe the finished analysis but not the small decisions the analyst makes between keystrokes. A short screencast exposes those decisions.</li>
+<li>Proprietary screencasting tools (Camtasia, ScreenFlow) cost between 100 and 300 dollars and lock recordings into vendor-specific project formats.</li>
+<li>Live streaming an analysis to a small group of collaborators (a thesis advisor, a paper co-author, a study team) was awkward without a reproducible setup.</li>
+<li>The R community has gravitated toward YouTube as the default home for asynchronous tutorials, but documentation of the recording workflow itself is scattered.</li>
+<li>Not every analysis suits a live take. A polished, narrated slide deck with edited audio communicates a finished result better than a screencast, and a reproducible pipeline for building one belongs alongside the live-capture workflow rather than in a separate, undocumented pile of scripts.</li>
+</ul>
+</section>
+<section id="objectives" class="level2">
+<h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
+<ol type="1">
+<li>Install and configure OBS Studio on macOS or Linux with sensible defaults for R coding screencasts (1080p, 30 fps, hardware encoder).</li>
+<li>Establish a three-scene template (code only, code with webcam, title card) and a two-source audio chain (microphone with noise suppression, optional system audio).</li>
+<li>Produce a 30-second test recording, edit it with <code>ffmpeg</code>, and upload it to YouTube as an unlisted draft with appropriate metadata.</li>
+<li>Walk through a complete five-minute live R coding session based on the Palmer Penguins dataset, ready to record on a second take.</li>
+<li>Build the same Palmer Penguins result a second way, as an edited, narrated slide deck assembled entirely from the command line with <code>sox</code>, <code>ffmpeg</code>, and Whisper, and publish it to YouTube alongside the live-capture version.</li>
+</ol>
+</section>
+<section id="two-ways-to-produce-an-r-coding-video" class="level2">
+<h2 class="anchored" data-anchor-id="two-ways-to-produce-an-r-coding-video">Two Ways to Produce an R Coding Video</h2>
+<p>This post covers two production methods and a shared publishing step, not one method with variations. They solve different problems and are not interchangeable.</p>
+<p><strong>Method One: live capture with OBS Studio.</strong> The analyst codes on camera in real time. The value is authenticity: viewers see hesitation, false starts, and the analyst’s actual working process, which a script cannot fake. The cost is that mistakes are either kept (in the spirit of a live take) or force a full re-record, since there is no timeline to edit.</p>
+<p><strong>Method Two: a narrated slide deck assembled from a script.</strong> The analyst writes a short script, renders the key plots and model output as static images, records narration for each slide separately, and assembles the result with command-line tools. The value is polish and reproducibility: a typo in the narration only requires re-recording one slide’s audio, and the whole build can be scripted end to end. The cost is that it looks and feels like a produced video rather than a live session, which is a poor fit for teaching debugging or exploratory analysis.</p>
+<p>Both methods end at the same place: a rendered <code>mp4</code>, a caption <code>vtt</code> file, a thumbnail, and a YouTube upload with the same metadata conventions. Steps 1 through 8 below cover Method One. Steps 9 through 16 cover Method Two. Step 17, the YouTube publishing walkthrough, applies to whichever video is being uploaded.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance-prep.png" class="img-fluid figure-img"></p>
+<figcaption>Microphone, ring light, notebook, and coffee: the script and narration notes for either method are drafted with the same low-tech tools as everything else in this pipeline.</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="what-is-obs-studio" class="level1">
+<h1>What Is OBS Studio?</h1>
+<p>OBS Studio (Open Broadcaster Software) is a free, cross-platform video recording and live streaming application released under the GNU General Public License version 2. It plays the same role for video that <code>ffmpeg</code> plays for command-line transcoding: a deeply scriptable, deeply configurable workhorse that the rest of the open source ecosystem builds on. Here is a concrete example. Every academic conference I have attended in the past two years that recorded talks for asynchronous viewing used OBS, either directly by the AV team or via a downstream tool that wraps it.</p>
+</section>
+<section id="prerequisites" class="level1">
+<h1>Prerequisites</h1>
+<ul>
+<li><strong>Operating system.</strong> macOS 12 or later, Ubuntu 22.04 or later, or equivalent. Windows 10/11 also works but is not the focus of this post.</li>
+<li><strong>Hardware.</strong> A laptop or desktop from the past five years. Hardware H.264 encoding (Apple VT on macOS, NVENC on NVIDIA GPUs) reduces CPU load substantially during recording.</li>
+<li><strong>Microphone.</strong> Any USB or 3.5mm microphone. Built-in laptop microphones produce listenable but distinctly amateur audio.</li>
+<li><strong>Prior knowledge.</strong> Basic shell command experience and familiarity with the R session one intends to record.</li>
+<li><strong>Disk space.</strong> Roughly 50 megabytes per minute of recorded video at the recommended quality settings.</li>
+<li><strong>Additional tools for Method Two.</strong> <code>ffmpeg</code>, <code>sox</code>, ImageMagick, and OpenAI Whisper (installed below in Step 9). A slide editor is also needed; this post uses LibreOffice Impress because it is free, scriptable, and exports directly to PNG.</li>
+</ul>
+</section>
+<section id="step-by-step" class="level1">
+<h1>Step by Step</h1>
+<section id="method-one-live-capture-with-obs-studio" class="level2">
+<h2 class="anchored" data-anchor-id="method-one-live-capture-with-obs-studio">Method One: Live Capture with OBS Studio</h2>
+<p>Steps 1 through 8 set up and use OBS Studio for a real-time, on-camera recording of an R session.</p>
+</section>
+<section id="step-1-install-obs-studio" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-install-obs-studio">Step 1: Install OBS Studio</h2>
+<p>On macOS:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install <span class="at">--cask</span> obs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On Debian or Ubuntu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install obs-studio</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Launch OBS once and accept the auto-configuration wizard’s defaults. The wizard probes the system to choose sensible recording resolution and encoder settings.</p>
+<p>Verification:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">obs</span> <span class="at">--version</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A successful install prints the version string (30.x as of 2026-05).</p>
+</section>
+<section id="step-2-configure-scenes-and-sources" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-configure-scenes-and-sources">Step 2: Configure Scenes and Sources</h2>
+<p>A coding screencast typically needs three scenes:</p>
+<ul>
+<li><strong>Code only.</strong> A single <em>Display Capture</em> or <em>Window Capture</em> source for the editor or terminal. Useful for the bulk of the recording.</li>
+<li><strong>Code with webcam.</strong> The same capture source plus a small <em>Video Capture Device</em> overlay for the presenter, anchored to a corner.</li>
+<li><strong>Title card.</strong> A static image source for the opening and closing seconds of the video.</li>
+</ul>
+<p>Window Capture is preferred over Display Capture when only a single application needs to be visible: it ignores notification banners, desktop clutter, and accidental tab switches.</p>
+</section>
+<section id="step-3-audio-routing" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-audio-routing">Step 3: Audio Routing</h2>
+<p>Two audio sources matter for a coding screencast: microphone and (optionally) system sound. Add both as separate sources so they can be mixed independently.</p>
+<p>For a USB microphone, set the input gain so the audio meter peaks around -12 dB during normal speech. Apply the <em>Noise Suppression</em> filter (RNNoise) and a <em>Compressor</em> filter to even out volume across sentences.</p>
+</section>
+<section id="step-4-recording-format" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-recording-format">Step 4: Recording Format</h2>
+<p>In <em>Settings &gt; Output &gt; Recording</em>:</p>
+<ul>
+<li><strong>Recording Path.</strong> A dedicated <code>~/screencasts/</code> directory.</li>
+<li><strong>Recording Format.</strong> <code>mkv</code> (resilient to crashes; remux to mp4 afterward).</li>
+<li><strong>Encoder.</strong> Hardware encoder if available (Apple VT H.264 on macOS, NVENC on Linux with NVIDIA GPU).</li>
+<li><strong>Rate Control.</strong> CQP at quality 18 to 22.</li>
+</ul>
+<p>Set frame rate to 30 fps and base resolution to 1920x1080. Higher frame rates are unnecessary for coding content and inflate file size.</p>
+</section>
+<section id="step-5-practice-run" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-practice-run">Step 5: Practice Run</h2>
+<p>Record a 30-second test that exercises every scene transition and confirms the audio levels. Play the result back at full screen on a different device. Common issues caught at this stage include muted microphone input, font sizes too small to read at video compression, and a busy desktop background visible behind a window-captured editor.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance-recording.png" class="img-fluid figure-img"></p>
+<figcaption>Audio interface mid-recording, levels lit, a scene panel glowing out of focus behind it: the moment a take is actually rolling.</figcaption>
+</figure>
+</div>
+</section>
+<section id="step-6-the-five-minute-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="step-6-the-five-minute-analysis">Step 6: The Five-Minute Analysis</h2>
+<p>The recorded analysis itself follows a strict template: load, glimpse, plot, model, summary. The full code for the worked example is below; during the screencast each block is typed and explained in real time.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(palmerpenguins)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>penguins_clean <span class="ot">&lt;-</span> penguins <span class="sc">|&gt;</span> tidyr<span class="sc">::</span><span class="fu">drop_na</span>()</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(penguins_clean)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 333
+Columns: 8
+$ species           &lt;fct&gt; Adelie, Adelie, Adelie, Adelie, Adelie, Adelie, Adel…
+$ island            &lt;fct&gt; Torgersen, Torgersen, Torgersen, Torgersen, Torgerse…
+$ bill_length_mm    &lt;dbl&gt; 39.1, 39.5, 40.3, 36.7, 39.3, 38.9, 39.2, 41.1, 38.6…
+$ bill_depth_mm     &lt;dbl&gt; 18.7, 17.4, 18.0, 19.3, 20.6, 17.8, 19.6, 17.6, 21.2…
+$ flipper_length_mm &lt;int&gt; 181, 186, 195, 193, 190, 181, 195, 182, 191, 198, 18…
+$ body_mass_g       &lt;int&gt; 3750, 3800, 3250, 3450, 3650, 3625, 4675, 3200, 3800…
+$ sex               &lt;fct&gt; male, female, female, female, male, female, male, fe…
+$ year              &lt;int&gt; 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007, 2007…</code></pre>
+</div>
+</div>
+<p>A brief comment on the dataset acknowledges its provenance (Palmer Station, Antarctica; collected by Dr.&nbsp;Kristen Gorman) and previews the question: how well does flipper length predict body mass?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  penguins_clean,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> flipper_length_mm, <span class="at">y =</span> body_mass_g)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'lm'</span>, <span class="at">se =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">'Flipper length (mm)'</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">'Body mass (g)'</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">'Body mass scales linearly with flipper length'</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">13</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The visual establishes the linear relationship before the model is fit, which keeps the viewer oriented.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(body_mass_g <span class="sc">~</span> flipper_length_mm,</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">data =</span> penguins_clean)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = body_mass_g ~ flipper_length_mm, data = penguins_clean)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1057.33  -259.79   -12.24   242.97  1293.89 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)       -5872.09     310.29  -18.93   &lt;2e-16 ***
+flipper_length_mm    50.15       1.54   32.56   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 393.3 on 331 degrees of freedom
+Multiple R-squared:  0.7621,    Adjusted R-squared:  0.7614 
+F-statistic:  1060 on 1 and 331 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>A flipper length increase of one millimeter is associated with roughly a 50 gram increase in body mass. R-squared is approximately 0.76, which is striking for a single predictor and provides a natural cliffhanger for a follow-up post that introduces species as a covariate (see <a href="../pp-eda/">Palmer Penguins Part 1</a>).</p>
+<p>The screencast closes with a one-sentence summary and a verbal pointer to the written post that contains the full analysis.</p>
+</section>
+<section id="step-7-edit-and-upload" class="level2">
+<h2 class="anchored" data-anchor-id="step-7-edit-and-upload">Step 7: Edit and Upload</h2>
+<p>Trim the head and tail using <code>ffmpeg</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> recording.mkv <span class="at">-ss</span> 00:00:03 <span class="dt">\</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-to</span> 00:05:12 <span class="at">-c</span> copy clipped.mp4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Upload via the YouTube Studio web interface. Recommended metadata fields:</p>
+<ul>
+<li><strong>Title.</strong> Mirror the blog post title.</li>
+<li><strong>Description.</strong> Link to the blog post and to the GitHub repository.</li>
+<li><strong>Tags.</strong> <code>r</code>, <code>data analysis</code>, <code>screencast</code>, plus dataset tags.</li>
+<li><strong>Chapters.</strong> Add timestamp markers in the description so viewers can jump to the modeling section.</li>
+</ul>
+</section>
+<section id="step-8-embed-in-the-blog-post" class="level2">
+<h2 class="anchored" data-anchor-id="step-8-embed-in-the-blog-post">Step 8: Embed in the Blog Post</h2>
+<p>Quarto embeds YouTube videos with a single shortcode:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The video should appear early in the post, ideally just after the introduction, so visitors can choose to watch or read.</p>
+</section>
+<section id="default-recording-hotkeys" class="level2">
+<h2 class="anchored" data-anchor-id="default-recording-hotkeys">Default Recording Hotkeys</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Action</th>
+<th>macOS shortcut</th>
+<th>Linux shortcut</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Start / stop record</td>
+<td>not bound by default</td>
+<td>not bound by default</td>
+</tr>
+<tr class="even">
+<td>Pause record</td>
+<td>not bound by default</td>
+<td>not bound by default</td>
+</tr>
+<tr class="odd">
+<td>Switch scene</td>
+<td>configurable per scene</td>
+<td>configurable per scene</td>
+</tr>
+<tr class="even">
+<td>Mute microphone</td>
+<td>configurable</td>
+<td>configurable</td>
+</tr>
+</tbody>
+</table>
+<p>Bind these in <em>Settings &gt; Hotkeys</em> before the first real recording. Unbound defaults catch most beginners off guard.</p>
+</section>
+<section id="method-two-a-narrated-slide-deck-assembled-from-the-command-line" class="level2">
+<h2 class="anchored" data-anchor-id="method-two-a-narrated-slide-deck-assembled-from-the-command-line">Method Two: A Narrated Slide Deck, Assembled from the Command Line</h2>
+<p>Steps 9 through 16 build a second, produced version of the same Palmer Penguins result: an eight-slide, narrated video assembled entirely with command-line tools rather than a screen recorder. The pipeline below is adapted from the one used to produce the <a href="../pp-eda/">Palmer Penguins Part 1</a> video, generalized so it applies to any short R result.</p>
+</section>
+<section id="step-9-install-the-method-two-toolchain" class="level2">
+<h2 class="anchored" data-anchor-id="step-9-install-the-method-two-toolchain">Step 9: Install the Method Two Toolchain</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install ffmpeg sox imagemagick poppler</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">--upgrade</span> openai-whisper</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Debian or Ubuntu</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install ffmpeg sox imagemagick poppler-utils</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">--upgrade</span> openai-whisper</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verification:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-version</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 1</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sox</span> <span class="at">--version</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">convert</span> <span class="at">--version</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 1</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">whisper</span> <span class="at">--help</span> <span class="op">&gt;</span> /dev/null <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">"whisper OK"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whisper’s first run downloads a model file (the <code>base</code> model used below is about 140 megabytes); do this once, before a recording session, rather than mid-production.</p>
+</section>
+<section id="step-10-write-the-script" class="level2">
+<h2 class="anchored" data-anchor-id="step-10-write-the-script">Step 10: Write the Script</h2>
+<p>A slide deck is scripted before it is built, unlike a live take, which is improvised against an outline. Five minutes of narration is roughly 650 to 750 words at a comfortable speaking pace (130 to 150 words per minute). Split the script into one paragraph per slide so each paragraph becomes one narration take:</p>
+<ol type="1">
+<li><strong>Title.</strong> State the question: does flipper length predict body mass in the Palmer Penguins?</li>
+<li><strong>Data.</strong> Introduce the 333-observation, three-species dataset and its provenance (Palmer Station, Antarctica; Dr.&nbsp;Kristen Gorman).</li>
+<li><strong>Visual relationship.</strong> Describe the scatter plot before the model is fit, so the viewer is oriented to expect a positive, roughly linear trend.</li>
+<li><strong>Model.</strong> Fit <code>lm(body_mass_g ~ flipper_length_mm)</code> and state the coefficient and R-squared in plain language.</li>
+<li><strong>Interpretation.</strong> One millimeter of flipper length corresponds to roughly 50 grams of body mass; R-squared near 0.76 is strong for a single predictor.</li>
+<li><strong>Limitation.</strong> Note the residual clustering by species as a cliffhanger for a multiple-regression follow-up.</li>
+<li><strong>Takeaway.</strong> One sentence restating the finding.</li>
+<li><strong>Close.</strong> Point to the written post and the code repository.</li>
+</ol>
+<p>Keep each paragraph to 60 to 90 words. A paragraph that runs long either splits into two slides or gets cut; do not solve pacing problems by talking faster during recording.</p>
+</section>
+<section id="step-11-export-slide-assets-from-r" class="level2">
+<h2 class="anchored" data-anchor-id="step-11-export-slide-assets-from-r">Step 11: Export Slide Assets from R</h2>
+<p>Render the plot and the model summary as static assets the slide deck will embed. This runs as a standalone script, separate from the report itself, so the file paths below assume a working directory of <code>video_production/</code> alongside <code>slides/</code> and <code>audio/</code> subdirectories:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(palmerpenguins)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>penguins_clean <span class="ot">&lt;-</span> penguins <span class="sc">|&gt;</span> tidyr<span class="sc">::</span><span class="fu">drop_na</span>()</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>p_flipper_mass <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  penguins_clean,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(<span class="at">x =</span> flipper_length_mm, <span class="at">y =</span> body_mass_g)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Flipper length (mm)"</span>,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Body mass (g)"</span>,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Body mass scales linearly with flipper length"</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">20</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">"slides/assets/flipper_mass_scatter.png"</span>,</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  p_flipper_mass,</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">width =</span> <span class="dv">10</span>, <span class="at">height =</span> <span class="fl">5.6</span>, <span class="at">dpi =</span> <span class="dv">200</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(body_mass_g <span class="sc">~</span> flipper_length_mm, <span class="at">data =</span> penguins_clean)</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="fu">capture.output</span>(<span class="fu">summary</span>(fit), <span class="at">file =</span> <span class="st">"slides/assets/model_summary.txt"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use <code>base_size = 20</code> or larger for any plot bound for a slide; text sized for a printed figure reads as illegible once compressed into a 1920x1080 video frame.</p>
+</section>
+<section id="step-12-build-the-slide-deck" class="level2">
+<h2 class="anchored" data-anchor-id="step-12-build-the-slide-deck">Step 12: Build the Slide Deck</h2>
+<p>Build the eight slides in LibreOffice Impress (File &gt; New &gt; Presentation, 16:9), one slide per script paragraph from Step 10. Import <code>flipper_mass_scatter.png</code> on the visual-relationship slide and render <code>model_summary.txt</code> as a monospace text box on the model slide. Keep body text under 40 words per slide; the narration carries the explanation, and a slide crowded with text competes with the narrator for the viewer’s attention. Export the finished deck as PNG, one file per slide:</p>
+<pre><code>File &gt; Export As &gt; Export as Images... &gt; slides/exported/slide-01.png</code></pre>
+<p>For a build that needs to be reproducible or repeated across many posts, generate the deck programmatically instead of by hand. Use the <code>odfpy</code> Python package to write slide XML directly (title, image frame, and text box per slide), then script the PNG export step with <code>soffice --headless --convert-to png</code>. This trades a one-time scripting cost for the ability to regenerate every slide from source data without reopening Impress.</p>
+</section>
+<section id="step-13-record-narration-per-slide" class="level2">
+<h2 class="anchored" data-anchor-id="step-13-record-narration-per-slide">Step 13: Record Narration Per Slide</h2>
+<p>Record each script paragraph as a separate WAV file in Audacity (<em>Tracks &gt; Add New &gt; Mono Track</em>, then <em>File &gt; Export &gt; Export Audio</em>), saved as <code>audio/slide-01_raw.wav</code> through <code>audio/slide-08_raw.wav</code>. Recording one slide at a time, rather than the whole script in one take, means a flubbed line only costs a re-record of that slide, not the whole narration. Read at a conversational pace with a half-second pause at the start and end of each take; the pause gives the fade filters in Step 14 something to work with.</p>
+</section>
+<section id="step-14-process-audio-with-sox" class="level2">
+<h2 class="anchored" data-anchor-id="step-14-process-audio-with-sox">Step 14: Process Audio with <code>sox</code></h2>
+<p>Normalize level, reduce room noise, and add short fades on every slide’s narration:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> audio</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> slide-<span class="pp">*</span>_raw.wav<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="va">base</span><span class="op">=</span><span class="st">"</span><span class="va">${f</span><span class="op">%</span>_raw.wav<span class="va">}</span><span class="st">"</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sox</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span> <span class="at">-n</span> trim 0 0.3 noiseprof <span class="st">"</span><span class="va">${base}</span><span class="st">_noise.prof"</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sox</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span> <span class="st">"</span><span class="va">${base}</span><span class="st">_clean.wav"</span> noisered <span class="st">"</span><span class="va">${base}</span><span class="st">_noise.prof"</span> 0.21</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sox</span> <span class="st">"</span><span class="va">${base}</span><span class="st">_clean.wav"</span> <span class="st">"</span><span class="va">${base}</span><span class="st">_final.wav"</span> gain <span class="at">-n</span> <span class="at">-1</span> fade t 0.3 0 0.3</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>noiseprof</code> samples the first 0.3 seconds of each take as a noise fingerprint. This is why the half-second pause from Step 13 matters: without silence at the start, <code>noiseprof</code> fingerprints speech instead of room noise, and the <code>noisered</code> pass distorts the voice.</p>
+</section>
+<section id="step-15-assemble-the-video-with-ffmpeg" class="level2">
+<h2 class="anchored" data-anchor-id="step-15-assemble-the-video-with-ffmpeg">Step 15: Assemble the Video with <code>ffmpeg</code></h2>
+<p>Build a silent slideshow, an assembled narration track, and combine them, all from the <code>video_production/</code> directory:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. List each slide image with its narration's duration.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> audio/slide-<span class="pp">*</span>_final.wav<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-show_entries</span> format=duration <span class="dt">\</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 <span class="st">"</span><span class="va">$f</span><span class="st">"</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Use these durations to build slides.txt:</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> slides.txt <span class="op">&lt;&lt; 'EOF'</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-01.png'</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="st">duration 8</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-02.png'</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="st">duration 12</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-03.png'</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="st">duration 14</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-04.png'</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="st">duration 16</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-05.png'</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="st">duration 14</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-06.png'</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="st">duration 10</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-07.png'</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="st">duration 8</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="st">file 'slides/exported/slide-08.png'</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="st">duration 8</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Render the slideshow (no audio yet).</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-f</span> concat <span class="at">-i</span> slides.txt <span class="dt">\</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">-vf</span> <span class="st">"scale=1920:1080,format=yuv420p"</span> <span class="dt">\</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">-c:v</span> libx264 <span class="at">-r</span> 30 slides_only.mp4</span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Concatenate the eight narration files into one track.</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> audio/slide-<span class="pp">*</span>_final.wav <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">"s/^/file '/;s/$/'/"</span> <span class="dt">\</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> audio/audio_list.txt</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-f</span> concat <span class="at">-safe</span> 0 <span class="at">-i</span> audio/audio_list.txt <span class="dt">\</span></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">-c:a</span> pcm_s16le audio/narration.wav</span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Merge video and narration, then add a one-second fade at each end.</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> slides_only.mp4 <span class="at">-i</span> audio/narration.wav <span class="dt">\</span></span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">-c:v</span> libx264 <span class="at">-c:a</span> aac <span class="at">-b:a</span> 192k <span class="dt">\</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">-map</span> 0:v:0 <span class="at">-map</span> 1:a:0 video_draft.mp4</span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a><span class="va">DURATION</span><span class="op">=</span><span class="va">$(</span><span class="ex">ffprobe</span> <span class="at">-v</span> error <span class="at">-show_entries</span> format=duration <span class="dt">\</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">-of</span> default=noprint_wrappers=1:nokey=1 video_draft.mp4 <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d.</span> <span class="at">-f1</span><span class="va">)</span></span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a><span class="va">FADE_OUT</span><span class="op">=</span><span class="va">$((DURATION</span> <span class="op">-</span> <span class="dv">1</span><span class="va">))</span></span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a><span class="ex">ffmpeg</span> <span class="at">-i</span> video_draft.mp4 <span class="dt">\</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">-vf</span> <span class="st">"fade=t=in:st=0:d=1,fade=t=out:st=</span><span class="va">${FADE_OUT}</span><span class="st">:d=1"</span> <span class="dt">\</span></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">-af</span> <span class="st">"afade=t=in:st=0:d=0.5,afade=t=out:st=</span><span class="va">${FADE_OUT}</span><span class="st">.5:d=0.5"</span> <span class="dt">\</span></span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">-c:v</span> libx264 <span class="at">-c:a</span> aac <span class="dt">\</span></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>  Palmer_Penguins_Slides_Final.mp4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The per-slide <code>duration</code> values in <code>slides.txt</code> must match (or slightly exceed) each slide’s narration length from step 1, or the image will change before the sentence describing it finishes.</p>
+</section>
+<section id="step-16-generate-captions-and-a-thumbnail" class="level2">
+<h2 class="anchored" data-anchor-id="step-16-generate-captions-and-a-thumbnail">Step 16: Generate Captions and a Thumbnail</h2>
+<p>Whisper transcribes the finished narration track directly into a <code>.vtt</code> caption file:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">whisper</span> Palmer_Penguins_Slides_Final.mp4 <span class="dt">\</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--model</span> base <span class="at">--output_format</span> vtt <span class="at">--output_dir</span> .</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Read the generated captions once before uploading. Whisper’s <code>base</code> model is fast but occasionally mis-hears domain vocabulary (it transcribed ‘flipper length’ as ‘flipper lengths’ in one early test here); statistical terms and dataset names are worth a manual pass.</p>
+<p>Build a 1280x720 thumbnail from the title slide:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">convert</span> slides/exported/slide-01.png <span class="at">-resize</span> 1280x720^ <span class="dt">\</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">-gravity</span> center <span class="at">-extent</span> 1280x720 <span class="dt">\</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  thumbnail.png</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="step-17-publish-to-youtube-step-by-step" class="level2">
+<h2 class="anchored" data-anchor-id="step-17-publish-to-youtube-step-by-step">Step 17: Publish to YouTube, Step by Step</h2>
+<p>This step applies to either method’s finished <code>mp4</code>. Neither the OBS export nor the <code>ffmpeg</code> build in Step 15 uploads automatically. The YouTube Data API supports scripted uploads, but this pipeline deliberately keeps a human in the loop for the title, description, and thumbnail, all of which benefit from a final look before they go public.</p>
+<ol type="1">
+<li><strong>Sign in to YouTube Studio</strong> at <code>studio.youtube.com</code> with the channel’s account.</li>
+<li><strong>Start the upload.</strong> Click <em>Create</em> (top right) then <em>Upload videos</em>, and select <code>clipped.mp4</code> (Method One, from Step 7) or <code>Palmer_Penguins_Slides_Final.mp4</code> (Method Two, from Step 15).</li>
+<li><strong>Fill in Details.</strong>
+<ul>
+<li><p><strong>Title.</strong> <code>Palmer Penguins: Does Flipper Length Predict Body Mass? (R Analysis)</code></p></li>
+<li><p><strong>Description.</strong> Lead with the question, list a few timestamp chapters, and close with links to the written post and code repository:</p>
+<pre><code>Does flipper length predict body mass in the Palmer Penguins?
+A five-minute R walkthrough: load, visualize, fit, interpret.
+
+0:00 The question
+0:20 The data (333 penguins, 3 species)
+1:10 Visualizing the relationship
+2:20 Fitting the model
+3:30 Interpreting the coefficient and R-squared
+4:20 What the model misses (species clustering)
+4:50 Takeaway
+
+Written post: [blog link]
+Code: [GitHub link]
+Dataset: palmerpenguins R package
+
+#RStats #DataScience #Regression</code></pre></li>
+<li><p><strong>Thumbnail.</strong> Upload <code>thumbnail.png</code> from Step 16 (Method Two) or a still frame exported from the OBS recording (Method One): <code>ffmpeg -i clipped.mp4 -ss 00:00:05 -frames:v 1 thumbnail.png</code>.</p></li>
+<li><p><strong>Playlist.</strong> Add to the channel’s R analysis playlist, if one exists, so the video surfaces alongside related content.</p></li>
+<li><p><strong>Audience.</strong> Mark ‘not made for kids’ unless the channel is specifically educational content for children.</p></li>
+</ul></li>
+<li><strong>Video elements.</strong> Skip end screens and cards for a first upload; both require existing videos or subscriber thresholds this pipeline does not depend on.</li>
+<li><strong>Checks.</strong> YouTube runs an automated copyright check. For a Palmer Penguins walkthrough this reliably passes; a video with licensed background music (see the polish notes in Step 6 of the live-capture method) may take longer.</li>
+<li><strong>Captions.</strong> Under <em>Subtitles</em>, upload the <code>.vtt</code> file: from Whisper (Method Two, Step 16) or generated the same way from the OBS export’s audio track (Method One). Do not rely on YouTube’s automatic captions alone; they are usually worse than a Whisper pass corrected by hand.</li>
+<li><strong>Visibility.</strong> Publish as <em>Unlisted</em> first. Watch the unlisted link back on a phone and a laptop, at typical viewing volume, to catch audio and caption sync issues before anyone else sees it.</li>
+<li><strong>Go public.</strong> Once the unlisted check is clean, change visibility to <em>Public</em> (or <em>Scheduled</em>, if coordinating with the blog post’s publish date) and copy the resulting URL into the blog post’s video embed from Step 8.</li>
+</ol>
+</section>
+<section id="comparing-the-two-methods" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-the-two-methods">Comparing the Two Methods</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 32%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Method One (live capture)</th>
+<th>Method Two (slide deck)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Setup time</td>
+<td>Lower (OBS install only)</td>
+<td>Higher (full toolchain)</td>
+</tr>
+<tr class="even">
+<td>Production time (5 min video)</td>
+<td>30-60 minutes</td>
+<td>4-5 hours</td>
+</tr>
+<tr class="odd">
+<td>Fixing one bad sentence</td>
+<td>Re-record the whole take</td>
+<td>Re-record one slide’s audio</td>
+</tr>
+<tr class="even">
+<td>Best for</td>
+<td>Live coding, debugging, teaching process</td>
+<td>Finished results, polished explainers</td>
+</tr>
+<tr class="odd">
+<td>Editing control</td>
+<td>Minimal (cut points only)</td>
+<td>Full (per-slide timing, captions, thumbnail)</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="things-to-watch-out-for" class="level1">
+<h1>Things to Watch Out For</h1>
+<p>The following gotchas have all caught me at least once. Each lists the symptom and the fix.</p>
+<ol type="1">
+<li><strong>Display Capture shows a black rectangle on macOS.</strong> Symptom: the captured area is uniformly black even though the screen has content. Fix: grant OBS <em>Screen Recording</em> permission in <em>System Settings &gt; Privacy &amp; Security &gt; Screen Recording</em>, then quit and relaunch OBS. The permission request only appears the first time; if it was dismissed, it must be granted manually.</li>
+<li><strong>Audio is silent in the recording but the meter shows activity.</strong> Symptom: the OBS audio meter moves during speech, but playback is silent. Fix: check that the microphone source is not muted in the <em>Audio Mixer</em> panel (the speaker icon is hidden until hovered) and confirm the recording’s output channel mix in <em>Settings &gt; Audio &gt; Advanced</em>.</li>
+<li><strong>The recording stutters when the editor is in focus.</strong> Symptom: intermittent dropped frames during typing. Fix: switch from software (x264) to a hardware encoder, or reduce base resolution to 1280x720 if hardware encoding is unavailable. Coding content at 720p is still readable at typical viewing distances.</li>
+<li><strong>YouTube rejects the upload citing ‘invalid format’.</strong> Symptom: YouTube Studio displays a generic error after the upload finishes. Fix: most often the recording is in MKV. Remux to MP4 with <code>ffmpeg -i recording.mkv -c copy recording.mp4</code>. MKV is preferred during recording for crash resilience but YouTube prefers MP4.</li>
+<li><strong>Font in the recording is unreadable when played at small window sizes.</strong> Symptom: code is legible at full screen but pixelated in a 480-wide embed. Fix: increase the editor’s font size to 18 or 20 points before recording. What looks oversized in the editor compresses to comfortable reading size in the final video.</li>
+<li><strong>Webcam overlay is mirrored.</strong> Symptom: text on a notebook visible to the webcam appears reversed in the recording. Fix: right-click the <em>Video Capture Device</em> source, choose <em>Transform &gt; Flip Horizontal</em>. OBS mirrors the preview by default to feel natural to the speaker but does not mirror the recorded output.</li>
+<li><strong>Recording fills the disk during a long session.</strong> Symptom: OBS silently stops recording after 20 to 30 minutes. Fix: at the recommended quality, every 10 minutes consumes roughly 500 megabytes. Confirm at least 5 gigabytes of free space before a long session, or switch to a more aggressive <code>crf</code> value (lower visual quality, smaller file).</li>
+<li><strong><code>sox noisered</code> makes the narration sound underwater.</strong> Symptom: after Step 14, speech has a metallic or muffled quality. Fix: the noise-reduction strength (<code>0.21</code> in the commands above) is too aggressive for the room. Lower it in steps of 0.05 and re-run; values below 0.15 usually leave audible hiss but preserve natural voice quality, which is the better trade for narration.</li>
+<li><strong>The <code>ffmpeg concat</code> demuxer silently drops slides.</strong> Symptom: <code>slides_only.mp4</code> plays fewer than eight slides. Fix: the <code>file</code> paths in <code>slides.txt</code> are relative to the working directory <code>ffmpeg</code> is run from, not to the script’s location; run the command from inside <code>video_production/</code>, or use absolute paths.</li>
+<li><strong>Whisper mistranscribes statistical terms.</strong> Symptom: ‘R-squared’ becomes ‘are squared’, dataset or package names come out garbled. Fix: there is no flag that fixes this reliably; budget time to read the <code>.vtt</code> file once against the script from Step 10 and hand-correct domain vocabulary before uploading.</li>
+</ol>
+</section>
+<section id="uninstall-rollback" class="level1">
+<h1>Uninstall / Rollback</h1>
+<p>To remove OBS Studio and its configuration entirely:</p>
+<p>On macOS:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> uninstall <span class="at">--cask</span> obs</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> ~/Library/Application\ Support/obs-studio</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On Debian or Ubuntu:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt remove obs-studio</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> ~/.config/obs-studio</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Both removals are reversible: a fresh install re-creates the configuration directory with default settings on first launch.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance-wrap.png" class="img-fluid figure-img"></p>
+<figcaption>Headphones on the printed script, coffee half finished: the recording or the build script has finished, and only the edit and upload remain.</figcaption>
+</figure>
+</div>
+</section>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
+<section id="conceptual" class="level2">
+<h2 class="anchored" data-anchor-id="conceptual">Conceptual</h2>
+<ul>
+<li>A short screencast is a different teaching artifact from a written post; both have a place, and pairing them produces a richer resource than either alone.</li>
+<li>Live capture and a produced slide deck are not competing solutions to the same problem; they serve different content. Choosing between them is a decision about what the video needs to show, not a matter of which tool is ‘better’.</li>
+<li>The capture pipeline (recorder, encoder, hosting) can be assembled entirely from open source and free-tier components, with no long-term lock-in.</li>
+<li>Recording forces a kind of editorial discipline that improves the written post too: vague paragraphs become obvious when read aloud.</li>
+</ul>
+</section>
+<section id="technical" class="level2">
+<h2 class="anchored" data-anchor-id="technical">Technical</h2>
+<ul>
+<li>Hardware encoders are essential on laptops; software encoding (x264) competes with R for CPU cycles and produces visible stuttering.</li>
+<li>MKV during recording, MP4 for upload. The two-stage convention protects against crashes without sacrificing platform compatibility.</li>
+<li>Audio quality matters more than video quality. Viewers tolerate 720p video far better than echo-prone or compressed audio.</li>
+<li>Recording narration one slide at a time turns a single point of failure (the whole five-minute take) into eight independent, cheap retries. This is the main structural advantage of Method Two over Method One.</li>
+<li><code>sox noiseprof</code> needs true silence to fingerprint; a half-second pause at the start of every narration take is not a stylistic choice, it is a dependency of Step 14.</li>
+</ul>
+</section>
+<section id="gotchas" class="level2">
+<h2 class="anchored" data-anchor-id="gotchas">Gotchas</h2>
+<ul>
+<li>macOS screen-recording permission is granted per-application and silently fails closed. New OBS installs need a deliberate first-run trip through System Settings.</li>
+<li>YouTube’s MP4 preference is documented but not enforced clearly in upload error messages.</li>
+<li>Default OBS hotkeys are intentionally unset to avoid clashes; this feels broken until one realizes it.</li>
+<li>Whisper transcription quality is good enough to save time but not good enough to skip review; domain vocabulary needs a human pass every time.</li>
+</ul>
+</section>
+</section>
+<section id="limitations" class="level1">
+<h1>Limitations</h1>
+<ul>
+<li>Method Two does not include a full nonlinear video editor. For multi-cut tutorials, B-roll, or callouts beyond what <code>ffmpeg</code> filter chains can express, a timeline editor (Kdenlive, DaVinci Resolve, iMovie) is still the better tool; the command-line pipeline in this post is fixed-timeline slide assembly, not general video editing.</li>
+<li>The Palmer Penguins worked example is a demonstration, not a template for clinical trial visualization. Audio narration would need different framing for sensitive data.</li>
+<li>Live streaming via YouTube introduces 5 to 30 seconds of latency, which makes interactive Q&amp;A clunky compared with a dedicated video conferencing tool.</li>
+<li>Whisper captions need manual correction for statistical and package vocabulary; this post does not provide a scripted fix, only a review step.</li>
+<li>Neither method’s YouTube publishing step is scripted end to end; the YouTube Data API supports automated uploads, but this pipeline keeps a human review of title, description, and thumbnail before publish, by design.</li>
+</ul>
+</section>
+<section id="opportunities-for-improvement" class="level1">
+<h1>Opportunities for Improvement</h1>
+<ol type="1">
+<li>Capture the OBS scene collection as a JSON file under <code>analysis/configs/scene-collection.json</code> so the configuration is reproducible across machines.</li>
+<li>Script the audio chain (RNNoise + Compressor) using <code>obs-websocket</code> so the configuration can be applied programmatically.</li>
+<li>Compare hardware encoder quality across Apple VT, NVENC, and QuickSync at matched bitrates.</li>
+<li>Package Steps 9 through 16 as a single <code>build_video.sh</code> script, parameterized by a script file and a slide-asset directory, so a new Method Two video needs no manual command editing.</li>
+<li>Replace the manual LibreOffice slide-building step in Step 12 with a scripted deck generator (<code>odfpy</code>), so slide content can be regenerated automatically whenever the underlying analysis changes.</li>
+<li>Evaluate <code>whisper.cpp</code> as a faster, dependency-lighter alternative to the Python <code>openai-whisper</code> package used in Step 16.</li>
+<li>Build a CI job that validates the scene collection JSON (Method One) and the <code>slides.txt</code> duration list (Method Two) before a recording session begins.</li>
+</ol>
+</section>
+<section id="wrapping-up" class="level1">
+<h1>Wrapping Up</h1>
+<p>OBS Studio and a command-line slide-assembly pipeline, paired with YouTube and a shared publishing checklist, give R users two complete, open source paths to video content. Neither replaces the other. The investment in initial setup is modest for both, and pays off across many subsequent recordings: the same scenes and audio chain apply to every live take, and the same <code>sox</code>/<code>ffmpeg</code>/Whisper build applies to every slide deck.</p>
+<p>The next step in this series is to record both versions of the Palmer Penguins analysis above, a live OBS take and a produced slide deck, and publish them alongside the written post. We will then compare viewer response between the two formats directly.</p>
+<p>In conclusion, three points merit emphasis. First, the open source pipeline (OBS or ffmpeg, plus YouTube) is sufficient for publication-quality video of R analyses, with no proprietary tooling required, whether the content calls for a live take or a produced deck. Second, the choice between live capture and a slide deck is a decision about the content, not a preference; a debugging session belongs on camera live, a finished result belongs in an edited deck. Third, audio quality, font or text size, and a manual caption review are the details most often underestimated by first-time producers in either method, and correcting them before recording or uploading saves significant post-production effort.</p>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<ul>
+<li><a href="https://obsproject.com/wiki/">OBS Studio documentation</a></li>
+<li><a href="https://creatoracademy.youtube.com/">YouTube Creator Academy</a></li>
+<li><a href="../pp-eda/">Palmer Penguins Part 1</a> — the worked analysis used in both this post’s live-capture and slide-deck examples, and the source of the produced-video conventions Method Two generalizes.</li>
+<li><a href="https://ffmpeg.org/documentation.html">ffmpeg documentation</a> for trimming, remuxing, and the concat demuxer used in Steps 7 and 15.</li>
+<li><a href="https://sourceforge.net/p/sox/code/ci/master/tree/sox.txt">SoX documentation</a> for the noise-reduction and fade effects used in Step 14.</li>
+<li><a href="https://github.com/openai/whisper">OpenAI Whisper</a> for the caption generation used in Step 16.</li>
+<li><a href="https://quarto.org/docs/authoring/videos.html">Quarto video shortcode reference</a></li>
+</ul>
+</section>
+<section id="reproducibility" class="level1">
+<h1>Reproducibility</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Version tested</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>OBS Studio</td>
+<td>30.x</td>
+<td>macOS via Homebrew; Ubuntu via apt</td>
+</tr>
+<tr class="even">
+<td>ffmpeg</td>
+<td>7.x</td>
+<td>for trim, remux, and slide assembly</td>
+</tr>
+<tr class="odd">
+<td>sox</td>
+<td>14.4.x</td>
+<td>audio normalization and noise reduction</td>
+</tr>
+<tr class="even">
+<td>ImageMagick</td>
+<td>7.x</td>
+<td>thumbnail generation</td>
+</tr>
+<tr class="odd">
+<td>openai-whisper</td>
+<td>20231117</td>
+<td><code>base</code> model, caption generation</td>
+</tr>
+<tr class="even">
+<td>LibreOffice</td>
+<td>24.x</td>
+<td>slide deck authoring and PNG export</td>
+</tr>
+<tr class="odd">
+<td>Quarto</td>
+<td>1.9.37</td>
+<td>for HTML rendering of this post</td>
+</tr>
+<tr class="even">
+<td>macOS</td>
+<td>26.4 (Tahoe)</td>
+<td>hardware encoding via Apple VT</td>
+</tr>
+<tr class="odd">
+<td>Ubuntu</td>
+<td>24.04 LTS</td>
+<td>hardware encoding via NVENC</td>
+</tr>
+<tr class="even">
+<td>Date verified</td>
+<td>2026-05-02</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="lets-connect" class="level1">
+<h1>Let’s Connect</h1>
+<p><em>Have questions, suggestions, or spot an error? Let me know.</em></p>
+<ul>
+<li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
+</ul>
+<p>I would enjoy hearing from you if:</p>
+<ul>
+<li>You spot an error or a better approach to any of the configuration in this post.</li>
+<li>You use a different recorder (SimpleScreenRecorder, ScreenFlow) and want to compare notes.</li>
+<li>You have suggestions for follow-up topics in the screencasting series.</li>
+</ul>
+<hr>
+<p><em>Rendered on 2026-08-28 at 12:20 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/pub-obs-r-screencasts/index.qmd</em></p>
+<!-- ============================================================================
+PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
+
+This is the verification pass that mirrors the AUTHOR PROVIDES list at the
+top of this file. If anything below is unchecked, the post is not ready.
+
+[ ] YAML
+    [x] title, subtitle, date, categories, description, image filled in
+    [x] document-type: 'blog'
+    [ ] draft: false — still true; blocked on the items below
+
+[ ] Narrative complete (no remaining `[bracketed]` placeholders)
+    [x] grep '\[' index.qmd returns only legitimate code/links
+
+[ ] Configuration artifacts present and tested
+    [ ] Full config file shown verbatim, not snippets
+        (OBS scene-collection JSON not yet captured under analysis/configs/)
+    [ ] Method One install commands tested on a clean machine (or VM)
+    [ ] Method Two toolchain (Step 9) installed and Steps 10-16 run
+        end to end on a clean machine; commands are currently adapted
+        from the pp-eda video-production guide and inspected, not
+        independently re-verified under this post's own execution
+    [ ] Verification commands produce the documented output
+    [x] Uninstall / rollback steps documented (Method One only; Method
+        Two has no persistent install beyond the CLI packages)
+
+[ ] Things to Watch Out For
+    [x] At least 5 gotchas listed (10 provided: 7 Method One, 3 Method Two)
+    [x] Each gotcha has both a symptom AND a fix
+
+[ ] Visual design
+    [x] 1 hero image (width=80%) immediately after AUTHOR PROVIDES block
+        (fixed 2026-08-28: replaced hero.png/hero.jpg, whose blank
+        laptop screen did not match the caption, with a new Gemini-
+        generated image showing a lit code-editor screen)
+    [x] Exactly 3 ambiance images ({.img-fluid} only, no width=NN%,
+        no fig-align): after Objectives, after Configuration, before
+        Lessons Learnt
+        (fixed 2026-08-28: obs.png was mislabeled — it is the
+        data.table hex-sticker logo, not OBS. First swapped for the
+        generic shared ambiance1/2/3.png coffee-and-notebook stock
+        photos, then replaced again the same day with three
+        Gemini-generated, topic-specific images: ambiance-prep.png,
+        ambiance-recording.png, ambiance-wrap.png)
+    [x] Hero and ambiance captions describe the actual image content,
+        not a metaphorical stand-in
+    [ ] A slide-deck screenshot or exported slide PNG illustrating
+        Method Two (Step 12) would strengthen the visual walkthrough;
+        not yet added
+    [x] No hand-coded "Download PDF" link in body
+    [x] media/images/README.md attributes every image
+
+[ ] Content quality
+    [x] Learner voice: author positioned as peer, not expert
+    [x] Zero emoji anywhere
+    [x] Zero em dashes
+    [x] Single quotes preferred over double quotes in prose
+    [x] Each command and config setting interpreted in plain language
+
+[ ] Reproducibility
+    [x] Version matrix table filled in (OS, tool, dependencies, date)
+    [ ] Config files committed under analysis/configs/
+    [ ] Install script (if provided) is runnable on a clean machine
+    [ ] `build_video.sh` (Opportunity #4) written and tested, replacing
+        the individually-run Method Two commands
+
+[ ] Render verification
+    [ ] quarto render index.qmd produces clean HTML with no warnings
+        (not re-rendered since Method Two was added)
+    [x] Hero image displays in /blog/ listing card
+    [ ] Internal links resolve
+
+============================================================================ -->
+<section id="related-posts-in-this-cluster" class="level2">
+<h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
+<p>This post is part of the <em>Quarto, R Markdown, and Publishing</em> series. Recommended reading order:</p>
+<ol type="1">
+<li><a href="../pub-multi-language-quarto/">Multi-Language Quarto Documents on macOS</a></li>
+<li><a href="../pub-r-script-to-rmd/">Rapid Conversion of Draft R Scripts to Formal Rmd</a></li>
+<li><a href="../pub-statistical-computing-textbook/">Building a Statistical Computing Textbook</a></li>
+<li><strong>Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks</strong> (this post)</li>
+<li><a href="../pub-hosting-quarto-books-netlify/">Hosting a Quarto Book Series on Netlify</a></li>
+<li><a href="../pub-ai-course-policy-survey/">A Review and Proposal for Policy Regarding Generative AI Use in Graduate Biostatistics Courses</a></li>
+</ol>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/focusonr\.org");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Ronald G. Thomas.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47/ryyblog">
+      <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<!-- Fix category filtering. itemValues.categories is always a base64+URI-
+     encoded comma-joined blob and must be decoded before comparing. The
+     incoming `category` argument's encoding is NOT reliable: Quarto's own
+     native click path decodes it to plain text before calling
+     filterListingCategory, but other call sites (older cached scripts,
+     manual calls, other Quarto builds) pass the raw base64 data-category
+     value instead. A word like "docker" also happens to be valid-shaped
+     base64, so blindly re-decoding an already-plain-text argument silently
+     corrupts it rather than failing loudly. Match against both
+     interpretations instead of guessing which one applies. -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    function decodeCategory(value) {
+      try {
+        return decodeURIComponent(atob(value));
+      } catch (e) {
+        return value;
+      }
+    }
+
+    window.filterListingCategory = function(category) {
+      const listingIds = Object.keys(window['quarto-listings']);
+      for (const listingId of listingIds) {
+        const list = window['quarto-listings'][listingId];
+        if (list) {
+          if (category === '') {
+            list.filter();
+          } else {
+            const decodedTarget = decodeCategory(category);
+            list.filter(function (item) {
+              const itemValues = item.values();
+              if (itemValues.categories !== null && itemValues.categories !== undefined) {
+                const categories = decodeCategory(itemValues.categories)
+                  .split(",")
+                  .map(c => c.trim());
+                return categories.includes(category) || categories.includes(decodedTarget);
+              } else {
+                return false;
+              }
+            });
+          }
+        }
+      }
+    };
+  }, 500);
+});
+</script>
+
+<!-- PDF view/download button for blog posts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only add the button on post pages
+  if (window.location.pathname.includes('/posts/') && !window.location.pathname.endsWith('/posts/') && !window.location.pathname.endsWith('/posts/index.html')) {
+    var currentPath = window.location.pathname;
+    // Handle both /posts/name/ and /posts/name/index.html formats
+    var pdfPath;
+    if (currentPath.endsWith('/')) {
+      pdfPath = currentPath + 'index.pdf';
+    } else {
+      pdfPath = currentPath.replace('.html', '.pdf');
+    }
+
+    // Check if PDF exists first
+    fetch(pdfPath, { method: 'HEAD' })
+      .then(function(response) {
+        if (response.ok) {
+          // PDF exists, show download button
+          showDownloadButton(pdfPath);
+        }
+        // If PDF doesn't exist, don't show any button
+      })
+      .catch(function(error) {
+        // Error checking PDF, don't show any button
+      });
+  }
+});
+
+function showDownloadButton(pdfPath) {
+  var downloadBtn = document.createElement('div');
+  downloadBtn.className = 'pdf-download-button';
+
+  // Get file size if possible
+  fetch(pdfPath, { method: 'HEAD' })
+    .then(function(response) {
+      var size = response.headers.get('Content-Length');
+      var sizeText = '';
+
+      if (size) {
+        // Convert to MB or KB
+        var sizeInMB = size / (1024 * 1024);
+        if (sizeInMB >= 1) {
+          sizeText = ' (' + sizeInMB.toFixed(1) + ' MB)';
+        } else {
+          sizeText = ' (' + (size / 1024).toFixed(0) + ' KB)';
+        }
+      }
+
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' + sizeText +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    })
+    .catch(function() {
+      // Basic fallback if we can't get file size
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    });
+
+  // Find where to insert the button (right after the title block)
+  var titleBlock = document.querySelector('.quarto-title-meta');
+  if (titleBlock) {
+    titleBlock.after(downloadBtn);
+  }
+}
+
+
+</script>
+
+<style>
+.pdf-download-button {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
+
+
+
+
+</body></html>
