@@ -1,3 +1,0 @@
-Rubin's rules, estimand, estimands, MMRM, multiple imputation, MNAR,
-missing at random, missing not at random, ADAS-Cog, tipping point analysis,
-biostatistics
