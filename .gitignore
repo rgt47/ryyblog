@@ -14,3 +14,16 @@ _publish.yml
 posts/*/
 !posts/_metadata.yml
 _freeze/posts/
+
+# Operational security documents. This repository is PUBLIC
+# (github.com/rgt47/ryyblog). These documents map where credentials
+# live on the author's machines: GPG key ids, private-key paths,
+# plaintext credential filenames, and current backup gaps. They now
+# live at ~/.local/share/rgtlab/security/ (local, not synced, not a
+# repo). These patterns are a standing guard in case a copy is ever
+# brought back into the tree, deliberately or by an automated
+# `git add -A`. The rgtlab style white paper in docs/ is publishable
+# and is deliberately not listed.
+**/HOME_CLEANUP_PLAN.*
+**/PASS_STORE_RECOVERY.*
+**/MULTI_LAPTOP_PLAN.*
