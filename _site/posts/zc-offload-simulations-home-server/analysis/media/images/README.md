@@ -1,0 +1,14 @@
+# Images: Offloading R Simulations to a Home Server
+*2026-10-04 10:43 PDT*
+
+All four images were generated for this post with Google Gemini
+(model `gemini-3-pro-image-preview`) on 2026-10-04, then resized to
+1600 px wide and saved as JPEG (quality 85) with ImageMagick. No third
+party holds rights in them; they may be reused with the post.
+
+| File | Used | Prompt |
+|---|---|---|
+| `hero.jpg` | Hero, top of post | Generate a 16:9 landscape image with the following description: a small closed laptop and a compact desktop computer sitting on a wooden shelf in a dark study at night, the desktop's single status light glowing a soft amber while the rest of the room is in deep blue shadow, faint warm light spilling from a hallway at the left edge, shallow depth of field with the status light in sharp focus and the shelf edges softly blurred, muted palette of slate blue and warm amber, evoking work that continues quietly while the house sleeps; editorial still life, 50mm lens, no people, no logos, no readable text. |
+| `ambiance1.jpg` | After Objectives | Generate a 16:9 landscape image with the following description: a row of sealed glass laboratory jars on a steel bench, each holding a neatly folded slip of paper, arranged in a careful line under cool overhead light from the upper right, one jar at the end of the row catching a warm amber reflection, shallow depth of field with the nearest jars sharp and the far ones dissolving into soft blue haze, muted palette of slate blue and warm amber, suggesting identical sealed environments waiting their turn in a queue; editorial still life, 85mm lens, no people, no logos, no readable text. |
+| `ambiance2.jpg` | Before Progress Reporting | Generate a 16:9 landscape image with the following description: an old brass hourglass on a dark wooden desk beside a coiled network cable, sand partway through falling, lit by a single warm amber desk lamp from the left against a deep slate-blue background, macro depth of field with the falling stream of sand in sharp focus and the cable softly blurred, muted palette of slate blue and warm amber, a quiet image of measured progress toward a finish that can be estimated; macro editorial still life, 100mm macro lens, no people, no logos, no readable text. |
+| `ambiance3.jpg` | Before Limitations | Generate a 16:9 landscape image with the following description: early dawn light through a window falling on a tidy desk where a closed laptop rests next to a cup of coffee and a small stack of printed charts turned face down, the first pale amber sunlight from the right meeting the cool blue shadows of night, shallow depth of field with the laptop lid sharp and the window frame softly out of focus, muted palette of slate blue and warm amber, the calm of results that arrived overnight; architectural interior photography, 35mm lens, no people, no logos, no readable text. (The generated laptop is open rather than closed.) |

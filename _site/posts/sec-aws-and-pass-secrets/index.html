@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-17">
-<meta name="description" content="An open-source secrets-management scheme for the Workflow Construct. The post documents the installation and configuration of pass (the Unix password store), the AWS IAM Identity Center workflow that replaces plaintext credentials, and the secret-injection patterns that keep API keys and tokens out of dotfiles, shell history, and the working tree.">
+<meta name="description" content="Where API keys, cloud credentials, and OAuth tokens may live on a multi-machine research fleet, how to load them on demand from pass, and the rotation discipline that a real credential exposure taught: a printed secret is an exposed secret, an old credential is live until a test says otherwise, and revoking an OAuth grant logs out every machine at once.">
 
 <title>Secrets Management for the Workflow Construct – focusonr</title>
 <style>
@@ -157,11 +157,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Secrets Management for the Workflow Construct – focusonr">
-<meta property="og:description" content="An open-source secrets-management scheme for the Workflow Construct. The post documents the installation and configuration of pass (the Unix password store), the AWS IAM Identity Center workflow that replaces plaintext credentials, and the secret-injection patterns that keep API keys and tokens out of dotfiles, shell history, and the working tree.">
+<meta property="og:description" content="Where API keys, cloud credentials, and OAuth tokens may live on a multi-machine research fleet, how to load them on demand from pass, and the rotation discipline that a real credential exposure taught: a printed secret is an exposed secret, an old credential is live until a test says otherwise, and revoking an OAuth grant logs out every machine at once.">
 <meta property="og:image" content="https://focusonr.org/posts/sec-aws-and-pass-secrets/media/images/hero.jpg">
 <meta property="og:site_name" content="focusonr">
 <meta name="twitter:title" content="Secrets Management for the Workflow Construct – focusonr">
-<meta name="twitter:description" content="An open-source secrets-management scheme for the Workflow Construct. The post documents the installation and configuration of pass (the Unix password store), the AWS IAM Identity Center workflow that replaces plaintext credentials, and the secret-injection patterns that keep API keys and tokens out of dotfiles, shell history, and the working tree.">
+<meta name="twitter:description" content="Where API keys, cloud credentials, and OAuth tokens may live on a multi-machine research fleet, how to load them on demand from pass, and the rotation discipline that a real credential exposure taught: a printed secret is an exposed secret, an old credential is live until a test says otherwise, and revoking an OAuth grant logs out every machine at once.">
 <meta name="twitter:image" content="https://focusonr.org/posts/sec-aws-and-pass-secrets/media/images/hero.jpg">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -225,56 +225,43 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
   <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
   </ul></li>
-  <li><a href="#what-is-the-scheme" id="toc-what-is-the-scheme" class="nav-link" data-scroll-target="#what-is-the-scheme">What Is the Scheme?</a>
-  <ul class="collapse">
-  <li><a href="#tier-1-long-lived-api-keys-and-tokens-pass" id="toc-tier-1-long-lived-api-keys-and-tokens-pass" class="nav-link" data-scroll-target="#tier-1-long-lived-api-keys-and-tokens-pass">Tier 1: Long-Lived API Keys and Tokens (<code>pass</code>)</a></li>
-  <li><a href="#tier-2-short-lived-cloud-credentials-aws-iam-identity-center" id="toc-tier-2-short-lived-cloud-credentials-aws-iam-identity-center" class="nav-link" data-scroll-target="#tier-2-short-lived-cloud-credentials-aws-iam-identity-center">Tier 2: Short-Lived Cloud Credentials (AWS IAM Identity Center)</a></li>
-  <li><a href="#tier-3-residual-safety-net-gitleaks-at-staging" id="toc-tier-3-residual-safety-net-gitleaks-at-staging" class="nav-link" data-scroll-target="#tier-3-residual-safety-net-gitleaks-at-staging">Tier 3: Residual Safety Net (<code>gitleaks</code> at Staging)</a></li>
-  </ul></li>
+  <li><a href="#what-counts-as-a-secret-and-where-it-may-live" id="toc-what-counts-as-a-secret-and-where-it-may-live" class="nav-link" data-scroll-target="#what-counts-as-a-secret-and-where-it-may-live">What Counts as a Secret, and Where It May Live</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a>
+  <li><a href="#loading-secrets-on-demand" id="toc-loading-secrets-on-demand" class="nav-link" data-scroll-target="#loading-secrets-on-demand">Loading Secrets on Demand</a>
   <ul class="collapse">
-  <li><a href="#tier-1-pass-and-gpg" id="toc-tier-1-pass-and-gpg" class="nav-link" data-scroll-target="#tier-1-pass-and-gpg">Tier 1: <code>pass</code> and GPG</a>
+  <li><a href="#the-with-secret-pattern" id="toc-the-with-secret-pattern" class="nav-link" data-scroll-target="#the-with-secret-pattern">The <code>with-secret</code> Pattern</a></li>
+  <li><a href="#the-r-.renviron-question" id="toc-the-r-.renviron-question" class="nav-link" data-scroll-target="#the-r-.renviron-question">The R <code>.Renviron</code> Question</a></li>
+  <li><a href="#passphrase-caching" id="toc-passphrase-caching" class="nav-link" data-scroll-target="#passphrase-caching">Passphrase Caching</a></li>
+  </ul></li>
+  <li><a href="#tokens-held-by-tools-the-github-cli" id="toc-tokens-held-by-tools-the-github-cli" class="nav-link" data-scroll-target="#tokens-held-by-tools-the-github-cli">Tokens Held by Tools: the GitHub CLI</a>
   <ul class="collapse">
-  <li><a href="#generating-a-gpg-key" id="toc-generating-a-gpg-key" class="nav-link" data-scroll-target="#generating-a-gpg-key">Generating a GPG Key</a></li>
-  <li><a href="#initializing-the-git-remote" id="toc-initializing-the-git-remote" class="nav-link" data-scroll-target="#initializing-the-git-remote">Initializing the git Remote</a></li>
-  <li><a href="#guard-the-store-against-accidental-commits" id="toc-guard-the-store-against-accidental-commits" class="nav-link" data-scroll-target="#guard-the-store-against-accidental-commits">Guard the Store Against Accidental Commits</a></li>
+  <li><a href="#the-right-home" id="toc-the-right-home" class="nav-link" data-scroll-target="#the-right-home">The Right Home</a></li>
+  <li><a href="#how-it-escaped" id="toc-how-it-escaped" class="nav-link" data-scroll-target="#how-it-escaped">How It Escaped</a></li>
   </ul></li>
-  <li><a href="#tier-2-aws-iam-identity-center" id="toc-tier-2-aws-iam-identity-center" class="nav-link" data-scroll-target="#tier-2-aws-iam-identity-center">Tier 2: AWS IAM Identity Center</a></li>
-  </ul></li>
-  <li><a href="#configuration" id="toc-configuration" class="nav-link" data-scroll-target="#configuration">Configuration</a>
+  <li><a href="#cloud-credentials-prefer-short-lived-tokens" id="toc-cloud-credentials-prefer-short-lived-tokens" class="nav-link" data-scroll-target="#cloud-credentials-prefer-short-lived-tokens">Cloud Credentials: Prefer Short-Lived Tokens</a></li>
+  <li><a href="#rotation-discipline" id="toc-rotation-discipline" class="nav-link" data-scroll-target="#rotation-discipline">Rotation Discipline</a>
   <ul class="collapse">
-  <li><a href="#pass-daily-use" id="toc-pass-daily-use" class="nav-link" data-scroll-target="#pass-daily-use"><code>pass</code> Daily Use</a></li>
-  <li><a href="#gpg-agent-caching" id="toc-gpg-agent-caching" class="nav-link" data-scroll-target="#gpg-agent-caching">GPG Agent Caching</a></li>
-  <li><a href="#aws-iam-identity-center-profile-usage" id="toc-aws-iam-identity-center-profile-usage" class="nav-link" data-scroll-target="#aws-iam-identity-center-profile-usage">AWS IAM Identity Center: Profile Usage</a></li>
+  <li><a href="#when-to-rotate" id="toc-when-to-rotate" class="nav-link" data-scroll-target="#when-to-rotate">When to Rotate</a></li>
+  <li><a href="#the-procedure" id="toc-the-procedure" class="nav-link" data-scroll-target="#the-procedure">The Procedure</a></li>
+  <li><a href="#a-printed-secret-is-an-exposed-secret" id="toc-a-printed-secret-is-an-exposed-secret" class="nav-link" data-scroll-target="#a-printed-secret-is-an-exposed-secret">A Printed Secret Is an Exposed Secret</a></li>
+  <li><a href="#test-that-the-old-credential-is-dead" id="toc-test-that-the-old-credential-is-dead" class="nav-link" data-scroll-target="#test-that-the-old-credential-is-dead">Test That the Old Credential Is Dead</a></li>
+  <li><a href="#revoking-an-oauth-grant-logs-out-every-machine" id="toc-revoking-an-oauth-grant-logs-out-every-machine" class="nav-link" data-scroll-target="#revoking-an-oauth-grant-logs-out-every-machine">Revoking an OAuth Grant Logs Out Every Machine</a></li>
+  <li><a href="#the-exposure-as-a-worked-example" id="toc-the-exposure-as-a-worked-example" class="nav-link" data-scroll-target="#the-exposure-as-a-worked-example">The Exposure as a Worked Example</a></li>
   </ul></li>
+  <li><a href="#catching-mistakes-before-they-leave-secret-scanning" id="toc-catching-mistakes-before-they-leave-secret-scanning" class="nav-link" data-scroll-target="#catching-mistakes-before-they-leave-secret-scanning">Catching Mistakes Before They Leave: Secret Scanning</a></li>
   <li><a href="#verification" id="toc-verification" class="nav-link" data-scroll-target="#verification">Verification</a></li>
   <li><a href="#daily-workflow" id="toc-daily-workflow" class="nav-link" data-scroll-target="#daily-workflow">Daily Workflow</a></li>
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
-  <li><a href="#uninstall-rollback" id="toc-uninstall-rollback" class="nav-link" data-scroll-target="#uninstall-rollback">Uninstall / Rollback</a></li>
-  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
   <ul class="collapse">
-  <li><a href="#conceptual" id="toc-conceptual" class="nav-link" data-scroll-target="#conceptual">Conceptual</a></li>
-  <li><a href="#technical" id="toc-technical" class="nav-link" data-scroll-target="#technical">Technical</a></li>
-  <li><a href="#gotcha-shaped" id="toc-gotcha-shaped" class="nav-link" data-scroll-target="#gotcha-shaped">Gotcha-shaped</a></li>
-  </ul></li>
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
-  <li><a href="#alternatives" id="toc-alternatives" class="nav-link" data-scroll-target="#alternatives">Alternatives</a>
-  <ul class="collapse">
-  <li><a href="#gopass" id="toc-gopass" class="nav-link" data-scroll-target="#gopass"><code>gopass</code></a></li>
-  <li><a href="#bitwarden-cli-against-self-hosted-vaultwarden" id="toc-bitwarden-cli-against-self-hosted-vaultwarden" class="nav-link" data-scroll-target="#bitwarden-cli-against-self-hosted-vaultwarden"><code>bitwarden-cli</code> Against Self-Hosted <code>vaultwarden</code></a></li>
-  <li><a href="#password-cli-proprietary" id="toc-password-cli-proprietary" class="nav-link" data-scroll-target="#password-cli-proprietary">1Password CLI (Proprietary)</a></li>
-  </ul></li>
   <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
+  </ul></li>
   <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
   <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
   <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
-  <li><a href="#appendix-a" id="toc-appendix-a" class="nav-link" data-scroll-target="#appendix-a">Appendix A: iOS Sync with Pass for iOS</a></li>
-  <li><a href="#appendix-b" id="toc-appendix-b" class="nav-link" data-scroll-target="#appendix-b">Appendix B: GPG Subkey Architecture and Hardware Tokens</a></li>
-  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a>
-  <ul class="collapse">
-  <li><a href="#related-posts-in-this-cluster" id="toc-related-posts-in-this-cluster" class="nav-link" data-scroll-target="#related-posts-in-this-cluster">Related posts in this cluster</a></li>
-  </ul></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
     </div>
@@ -297,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    An open-source secrets-management scheme for the Workflow Construct. The post documents the installation and configuration of pass (the Unix password store), the AWS IAM Identity Center workflow that replaces plaintext credentials, and the secret-injection patterns that keep API keys and tokens out of dotfiles, shell history, and the working tree.
+    Where API keys, cloud credentials, and OAuth tokens may live on a multi-machine research fleet, how to load them on demand from pass, and the rotation discipline that a real credential exposure taught: a printed secret is an exposed secret, an old credential is live until a test says otherwise, and revoking an OAuth grant logs out every machine at once.
   </div>
 </div>
 
@@ -327,58 +314,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- ============================================================
-AUTHOR PROVIDES -- concrete inputs the blogger must supply
+AUTHOR NOTES
 
-YAML FRONT MATTER
-  [x] title           -- replaced with actual title, < 70 chars
-  [x] date            -- YYYY-MM-DD of intended publication
-  [x] categories      -- setup, security, secrets, gpg, unix, cloud, aws
-  [x] description     -- 1-2 sentences for blog listing card
-  [x] image           -- genuine hero.jpg generated 2026-08-25
-  [x] draft: false    -- flip when ready
+Part 3 of the security series. Scope: secrets other than personal
+passwords (API keys, cloud credentials, OAuth tokens and CLI logins).
+Passwords and the GPG key belong to sec-pass-password-manager; the
+exposure narrative belongs to sec-dropbox-to-portable-sync; backup
+passphrases belong to sec-three-tier-backup-architecture.
 
-NARRATIVE INPUTS
-  [x] Hook sentence
-  [x] Pain point
-  [x] Motivations (5 bullets)
-  [x] Objectives (4 numbered)
-  [x] What is the scheme? (3-tier overview)
-  [x] Daily-workflow table
-  [x] Things to Watch Out For (6 gotchas)
-  [x] Lessons Learnt (3 buckets)
-  [x] Limitations (6 bullets)
-  [x] Opportunities (6 items)
-  [x] Wrapping Up + main takeaways
-  [x] See Also
-
-CONFIGURATION DELIVERABLES
-  [x] Prerequisites list
-  [x] Installation blocks
-  [x] Complete config file (.zshrc helpers, gpg-agent.conf)
-  [x] Verification commands
-  [x] Daily workflow table
-  [x] Uninstall / rollback steps
-
-VERSION MATRIX
-  [x] OS + version tested
-  [x] Tool versions pinned
-  [ ] Date of last verification (update before publish)
-
-IMAGES (4 total)
-  [x] Hero image (80% width) -- done (Gemini, 2026-08-25): leather
-      satchel with keys
-  [x] Ambiance image 1 (100%) -- done (Gemini, 2026-08-25): open
-      brass padlock and torn ticket
-  [x] Ambiance image 2 (100%) -- done (Gemini, 2026-08-25): pegboard
-      with an empty key hook
-  [x] Ambiance image 3 (100%) -- done (Gemini, 2026-08-25): GPG wax
-      seal and envelope
-  [x] media/images/README.md -- attribution for every image
-
-============================================================ -->
-<p><em>2026-05-17 17:08 PDT</em></p>
-<!-- ============================================================
-HERO IMAGE
+Rewritten 2026-10-01 against the series guide. Images: hero.jpg and
+ambiance1-3.jpg (Gemini, 2026-08-25; see media/images/README.md).
+Untested on the fleet and labeled as such in the text: AWS IAM
+Identity Center commands, gitleaks hook.
 ============================================================ -->
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -386,33 +333,42 @@ HERO IMAGE
 <figcaption>A small leather satchel with a brass buckle, open just enough to reveal several distinct small keys and a folded paper ticket inside.</figcaption>
 </figure>
 </div>
-<p><em>Secrets are state. They deserve the same backup, audit, and recovery discipline as any other state in the workflow construct.</em></p>
+<p><em>Secrets are state. They deserve the same inventory, backup, and recovery discipline as any other state on the machine.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>A working data scientist’s laptop accumulates secrets the way a cluttered desk accumulates pens: silently, in multiple drawers, with no inventory of what is where. By the time the laptop is two years old it holds an AWS access-key pair in <code>~/.aws/credentials</code>, an Anthropic API key in <code>~/.zshrc</code> exported as a shell variable, an OpenAI key in a project-specific <code>.env</code> file, a Zotero API token in a Quarto YAML, a GitHub personal-access token in the keyring, an institutional VPN certificate in <code>~/.vpn/</code>, and one or two SSH private keys in <code>~/.ssh/</code>. Each was placed there in good faith by a past version of the operator who had a specific task to complete and no inclination to engineer a generic solution. The accumulated state has no inventory, no rotation schedule, no recovery plan if the laptop is lost, and no shared abstraction across the construct’s other layers.</p>
-<p>The cost of this state of affairs is paid in three predictable failure modes. First, secrets leak: an API key exported in <code>.zshrc</code> is sourced into every subshell, including the ones that scrape <code>env</code> for diagnostics, and eventually a stack trace or a verbose-logging script prints the variable verbatim. Second, secrets rot: a long-lived AWS access key issued in 2023 is still in <code>credentials</code> in 2026. No automation reminds the operator to rotate it, and no audit trail records which scripts have used it in the meantime. Third, secrets are lost when the laptop is: a fresh machine has no <code>~/.zshrc</code>, no <code>~/.aws/credentials</code>, and no <code>~/.env</code>. Each must be manually reconstructed from memory or from another machine that has not yet been wiped.</p>
-<p>We document an open-source three-tier secrets scheme that addresses all three failure modes. The first tier is a single encrypted store (<code>pass</code>, the Unix password store) for long-lived API keys and tokens, synchronized across machines via a private git remote. The second tier is short-lived credentials for AWS, obtained via AWS IAM Identity Center (formerly SSO), expiring automatically without operator action. The third tier is the residual safety net of <code>gitleaks</code>-at- staging, which catches the cases where the first two tiers have already failed.</p>
-<p>More formally, we document here an extension to the Cloud and File-system layers of the Workflow Construct described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>, specifically the secrets-management concern that cuts across both. The recommendation is deliberately open-source: the construct’s other layers are auditable down to the source, and the secrets layer should be too.</p>
+<p>A research workstation accumulates secrets without anyone deciding that it should. An API key for a language model is exported in a shell startup file so that one script will run; an R environment file gains a second key for a package that wraps another service; a cloud provider’s access key sits in <code>~/.aws</code>; the GitHub command-line tool quietly stores a login token; a backup tool keeps OAuth tokens for three cloud drives. Each was placed in good faith, for one task, and together they form an unrecorded inventory with no rotation schedule and no plan for what happens when one of them leaks.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Part 3 of the security series; start with <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a> for the overview.</p>
+</div>
+</div>
+<p>This post covers the secrets that are not personal passwords: API keys, cloud credentials, and the OAuth tokens that command-line tools hold on our behalf. Personal passwords and the GPG key that protects them are the subject of <a href="../sec-pass-password-manager/">Setting Up pass</a>. The material here comes from running a five-machine fleet (three Macs, a Linux laptop, and a Linux home server) and from one concrete incident: settings folders that had been symlinked into a cloud sync folder for months, which put several live credentials somewhere they should never have been. That incident, which this series calls the exposure, is told in full in <a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox</a>. Here it serves as the worked example for rotation.</p>
 <section id="motivations" class="level2">
 <h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
 <ul>
-<li>The laptop’s <code>~/.aws/credentials</code> file holds long-lived access keys for an IAM user with substantial permissions. If the laptop is stolen, the recovery procedure is not ‘log into AWS and rotate’ but rather ‘log into AWS from a different machine, panic, rotate everything, audit the logs for unauthorized use.’</li>
-<li>API keys exported in <code>.zshrc</code> are visible to every process the user starts. A diagnostic script that runs <code>env | sort</code> will print the keys to its log; a collaborator who joins a screen-shared session will see them in <code>printenv</code> output.</li>
-<li>Multi-machine work (laptop, ThinkPad, EC2 instance, HPC cluster) creates pressure to copy <code>.aws/credentials</code> across machines, which doubles or triples the blast-radius of a single key compromise.</li>
-<li>The <code>zzgit</code> secret scanner catches accidentally-committed secrets at staging time, which is necessary but not sufficient.</li>
-<li>The construct’s other layers are open-source and auditable. A proprietary CLI for the secrets layer would be a foreign body in an otherwise transparent stack.</li>
+<li>Credentials leak through channels nobody designed as channels: a synced settings folder, a diagnostic command that prints the environment, a tool that writes its token into a directory that happens to be tracked by git.</li>
+<li>A credential that has leaked must be replaced everywhere it is used. Without an inventory, nobody knows where that is.</li>
+<li>Several tools in daily use (the GitHub CLI, the backup tool <code>rclone</code>, editor plugins) hold OAuth tokens that the operator never sees or types, and those tokens are as powerful as passwords.</li>
+<li>Revocation behaves differently from what intuition suggests: an old key can still be live, and revoking one machine’s grant can log out every machine.</li>
 </ul>
 </section>
 <section id="objectives" class="level2">
 <h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
-<p>The post sets out to deliver:</p>
 <ol type="1">
-<li>A reproducible installation and configuration of <code>pass</code> (the Unix password store) for non-AWS API keys and tokens, synchronized across machines via a private git remote.</li>
-<li>A walk-through of AWS IAM Identity Center (SSO) configuration that replaces the long-lived <code>~/.aws/credentials</code> file with short-lived tokens obtained via <code>aws sso login</code>.</li>
-<li>A small set of secret-injection patterns that move secrets from environment variables to per-process injection.</li>
-<li>A failure-mode catalog covering GPG-key loss, sync-conflict resolution, and the macOS Keychain / gpg-agent interaction, plus a documented recovery procedure for a lost laptop.</li>
+<li>A placement rule for every class of secret: where it may live, and where it must never live.</li>
+<li>A small, tested pattern for loading a secret from <code>pass</code> into one command’s environment rather than the whole shell session.</li>
+<li>A practical answer to the R <code>.Renviron</code> question, where a tool insists on reading secrets from a file at startup.</li>
+<li>A rotation procedure that holds up under a real exposure, including the checks that confirm an old credential is actually dead.</li>
+<li>Two recommended practices for the residual risk: short-lived cloud credentials and pre-commit secret scanning.</li>
 </ol>
-<p>The reader should be able to install and configure the scheme in approximately two hours: thirty minutes for <code>pass</code> and GPG, thirty minutes for AWS IAM Identity Center configuration (one-time, requires admin access), and an hour for per-tool migrations and verification.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance1.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -421,181 +377,229 @@ HERO IMAGE
 </div>
 </section>
 </section>
-<section id="what-is-the-scheme" class="level1">
-<h1>What Is the Scheme?</h1>
-<p>The scheme has three tiers, distinguished by the characteristics of the secrets they hold.</p>
-<section id="tier-1-long-lived-api-keys-and-tokens-pass" class="level2">
-<h2 class="anchored" data-anchor-id="tier-1-long-lived-api-keys-and-tokens-pass">Tier 1: Long-Lived API Keys and Tokens (<code>pass</code>)</h2>
-<p>Most non-AWS secrets are long-lived API keys: the Anthropic key issued at signup, the OpenAI key minted from the dashboard, the GitHub personal-access token created last quarter for a CI pipeline, the Zotero API token copied from the user-preferences page. They have no automatic expiration, are reissued infrequently, and are reused across multiple invocations.</p>
-<p>The <code>pass</code> store, also known as the Unix password store, is the canonical open-source home for them. It is a thin shell wrapper around GPG: each secret is a small text file encrypted with a user GPG key, stored in <code>~/.password-store/</code>, and optionally synchronized to a private git remote. The interface is a small set of verbs: <code>pass insert anthropic/api-key</code> to add, <code>pass anthropic/api-key</code> to retrieve, <code>pass git push</code> to sync. The implementation is approximately 700 lines of bash; the audit surface is small and the behavior is predictable.</p>
-</section>
-<section id="tier-2-short-lived-cloud-credentials-aws-iam-identity-center" class="level2">
-<h2 class="anchored" data-anchor-id="tier-2-short-lived-cloud-credentials-aws-iam-identity-center">Tier 2: Short-Lived Cloud Credentials (AWS IAM Identity Center)</h2>
-<p>AWS credentials are different in kind from API keys: they authorize broad permissions and are best replaced rather than guarded. AWS IAM Identity Center (the service formerly known as AWS SSO) issues short-lived tokens by default, configurable per-user, with eight-hour sessions as the conventional default. The tokens are obtained via <code>aws sso login</code> and stored under <code>~/.aws/sso/cache/</code> rather than in <code>~/.aws/credentials</code>; they expire automatically and re-authentication is a single command.</p>
-</section>
-<section id="tier-3-residual-safety-net-gitleaks-at-staging" class="level2">
-<h2 class="anchored" data-anchor-id="tier-3-residual-safety-net-gitleaks-at-staging">Tier 3: Residual Safety Net (<code>gitleaks</code> at Staging)</h2>
-<p>Tiers 1 and 2 prevent the most common ways secrets reach the working tree. Despite this, secrets occasionally slip through: a credential pasted into a notebook output cell, an SSH private key copied into a project directory for testing, a <code>.env</code> file that was supposed to be gitignored but was not. The <code>gitleaks</code>-at-staging integration is the residual safety net, covered by the <code>zzgit</code> secret scanner rather than documented in this post.</p>
-</section>
+<section id="what-counts-as-a-secret-and-where-it-may-live" class="level1">
+<h1>What Counts as a Secret, and Where It May Live</h1>
+<p>The useful unit of analysis is not the individual secret but its class, because each class has a natural home and a characteristic way of leaking.</p>
+<table class="table-striped caption-top table">
+<caption>Secret classes and their placement.</caption>
+<colgroup>
+<col style="width: 17%">
+<col style="width: 24%">
+<col style="width: 14%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Class</th>
+<th style="text-align: left;">Examples</th>
+<th style="text-align: left;">Home</th>
+<th style="text-align: left;">Must never be in</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Personal passwords</td>
+<td style="text-align: left;">web accounts, app passwords</td>
+<td style="text-align: left;"><code>pass</code></td>
+<td style="text-align: left;">browser exports, notes</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">API keys</td>
+<td style="text-align: left;">language-model APIs, data APIs</td>
+<td style="text-align: left;"><code>pass</code>, loaded on demand</td>
+<td style="text-align: left;">shell startup files, notebooks</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Cloud credentials</td>
+<td style="text-align: left;">AWS access</td>
+<td style="text-align: left;">short-lived tokens; <code>~/.aws</code> only if unavoidable</td>
+<td style="text-align: left;">synced folders, dotfiles</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tool OAuth tokens</td>
+<td style="text-align: left;">GitHub CLI, <code>rclone</code></td>
+<td style="text-align: left;">the tool’s own store (macOS Keychain where supported)</td>
+<td style="text-align: left;">dotfiles, logs</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">SSH private keys</td>
+<td style="text-align: left;">per-relationship keys</td>
+<td style="text-align: left;"><code>~/.ssh</code>, one key per relationship</td>
+<td style="text-align: left;">any synced folder</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Backup passphrases</td>
+<td style="text-align: left;">Borg repositories</td>
+<td style="text-align: left;"><code>pass</code> (and nowhere on the storage host)</td>
+<td style="text-align: left;">the machine holding the repository</td>
+</tr>
+</tbody>
+</table>
+<p>Three rules sit underneath the table and apply to every row.</p>
+<ul>
+<li><strong>Secrets never live in a synced folder or in a dotfiles repository.</strong> Sync clients and git remotes copy files to places with different access controls, retention, and audit trails. A secret that reaches either must be treated as exposed.</li>
+<li><strong>Load on demand, do not export globally.</strong> A secret exported in <code>~/.zshrc</code> is present in every process the shell starts for the rest of the session, including the ones that print their environment.</li>
+<li><strong>Never print a secret, and rotate any secret that has been printed.</strong> Terminal scrollback, shell history, screen sharing, and session transcripts all retain output.</li>
+</ul>
+<p>SSH key policy (one key per relationship, restricted keys enforced on the server) is part of the control set described in the <a href="../sec-multi-laptop-threat-model/">series overview</a>; backup passphrases are covered in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>. The rest of this post concerns the API keys, cloud credentials, and tool tokens.</p>
 </section>
 <section id="prerequisites" class="level1">
 <h1>Prerequisites</h1>
-<p>The scheme assumes:</p>
 <ul>
-<li><strong>GPG key.</strong> A user GPG key is required for <code>pass</code>. Users who already sign git commits with GPG can reuse the existing key; users without one can generate a fresh key during installation. The key is the single point of failure for the entire encrypted store and warrants careful backup (see Things to Watch Out For below).</li>
-<li><strong>AWS account with IAM Identity Center enabled.</strong> The identity-center configuration is a one-time, AWS account-level setup that requires admin permissions. For personal AWS accounts the setup is straightforward; for institutional accounts the user may need to coordinate with an administrator.</li>
-<li><strong>Existing construct setup.</strong> The dotfiles repository (<a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a>) and the zsh setup (<a href="../wf-unix-workspace-config/">Unix Command-Line Workspace Setup</a>) should be in place. The scheme adds a small block to <code>.zshrc</code> and a <code>~/.password-store/</code> directory.</li>
-<li><strong>Private git remote for <code>pass</code> sync.</strong> A private repository on a self-hosted forge or a private GitHub/GitLab repository. The pass-store contents are GPG-encrypted before being committed, but the existence of an inventory of encrypted secrets is itself sometimes a privacy concern worth keeping behind authentication.</li>
-<li><strong>Time investment.</strong> Approximately two hours for the full setup, dominated by the AWS IAM Identity Center configuration (one-time, ~30 minutes) and the migration of existing secrets from <code>.zshrc</code> and <code>.env</code> files into <code>pass</code> (~60 minutes for a moderate-sized inventory).</li>
+<li>A working <code>pass</code> store with a GPG key and a private git remote, as set up in <a href="../sec-pass-password-manager/">Setting Up pass</a>.</li>
+<li>Full-disk encryption on every machine that holds a secret, as described in the <a href="../sec-multi-laptop-threat-model/">series overview</a>. A cached GPG passphrase or a local credential file is only as safe as the disk it sits on.</li>
+<li>A dotfiles repository with a <code>.gitignore</code> that already excludes secret-bearing paths (shown below).</li>
+<li>About an hour to inventory existing secrets and move them.</li>
 </ul>
 </section>
-<section id="installation" class="level1">
-<h1>Installation</h1>
-<section id="tier-1-pass-and-gpg" class="level2">
-<h2 class="anchored" data-anchor-id="tier-1-pass-and-gpg">Tier 1: <code>pass</code> and GPG</h2>
-<p>The <code>pass</code> binary is small (a single bash script plus a manpage) and available in every major package manager.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install pass gnupg pinentry-mac</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Debian-derived Linux</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install pass gnupg</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Confirm both are present</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> version</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--version</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<section id="generating-a-gpg-key" class="level3">
-<h3 class="anchored" data-anchor-id="generating-a-gpg-key">Generating a GPG Key</h3>
-<p><code>pass</code> requires a GPG key to encrypt and decrypt entries. Generate one interactively:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--full-generate-key</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>At the prompts, select:</p>
-<ul>
-<li><strong>Key type:</strong> ECC (sign and encrypt). Ed25519 / Curve 25519 is the correct choice for new keys in 2026: constant-time operations, smaller keys, and equivalent or stronger security than RSA 4096. RSA remains an option but is not recommended for new keys.</li>
-<li><strong>Curve:</strong> Curve 25519 (default when ECC is selected).</li>
-<li><strong>Expiration:</strong> 2y (two years) rather than 0. A key that never expires remains valid indefinitely if compromised; a two-year expiration creates a forced review point. Add the renewal date to a calendar immediately.</li>
-<li><strong>Real name and email:</strong> as one wants them associated with the key.</li>
-<li><strong>Passphrase:</strong> a minimum of six random words (diceware) or a 25-character random string. The passphrase protects every credential in the store.</li>
-</ul>
-<p>If a GPG key already exists (for git commit signing or otherwise), reuse it; the long-form key ID is the input to <code>pass init</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-secret-keys</span> <span class="at">--keyid-format</span><span class="op">=</span>long</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># sec   rsa4096/ABCD1234EFGH5678 2024-01-15 [SC]</span></span>
+<section id="loading-secrets-on-demand" class="level1">
+<h1>Loading Secrets on Demand</h1>
+<section id="the-with-secret-pattern" class="level2">
+<h2 class="anchored" data-anchor-id="the-with-secret-pattern">The <code>with-secret</code> Pattern</h2>
+<p>The shell helper below reads one entry from <code>pass</code> and passes it to a single command as an environment variable. The value never enters the interactive shell’s environment and never appears on a command line, so it is absent from <code>ps</code> output and shell history.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run one command with one secret in its environment.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Usage: with-secret VAR_NAME pass/entry command [args...]</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">with-secret()</span> <span class="kw">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">var_name</span><span class="op">=</span><span class="st">"</span><span class="va">$1</span><span class="st">"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">entry</span><span class="op">=</span><span class="st">"</span><span class="va">$2</span><span class="st">"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">shift</span> 2</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">value</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">value</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">pass</span> show <span class="st">"</span><span class="va">$entry</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 1<span class="va">)</span><span class="st">"</span> <span class="kw">||</span> <span class="kw">{</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span> <span class="at">-u2</span> <span class="st">"with-secret: pass lookup failed for '</span><span class="va">$entry</span><span class="st">'"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="kw">}</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">env</span> <span class="st">"</span><span class="va">$var_name</span><span class="st">=</span><span class="va">$value</span><span class="st">"</span> <span class="st">"</span><span class="va">$@</span><span class="st">"</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Taking only the first line follows the <code>pass</code> convention that the first line of an entry is the secret and later lines hold metadata. Wrappers for frequently used tools then become one line each:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">llm-cli()</span> <span class="kw">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="ex">with-secret</span> OPENAI_API_KEY api/openai command llm-cli <span class="st">"</span><span class="va">$@</span><span class="st">"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The contrast with the common alternative is the whole point:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Avoid: visible to every subprocess for the rest of the session</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OPENAI_API_KEY</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">pass</span> show api/openai<span class="va">)</span><span class="st">"</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> init ABCD1234EFGH5678</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># mkdir: created directory '/Users/zenn/.password-store/'</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Password store initialized for ABCD1234EFGH5678</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Prefer: visible only to the wrapped command and its children</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">with-secret</span> OPENAI_API_KEY api/openai llm-cli</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The entry names shown are generic examples; any hierarchy works, and a consistent prefix such as <code>api/</code> makes the inventory easy to list with <code>pass ls api</code>.</p>
 </section>
-<section id="initializing-the-git-remote" class="level3">
-<h3 class="anchored" data-anchor-id="initializing-the-git-remote">Initializing the git Remote</h3>
-<p>Initialize the git remote for cross-machine sync. The remote should be a private repository:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/.password-store</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git init</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git remote add origin git@github.com:mygit/password-store.git</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git push <span class="at">-u</span> origin master</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Do not use a public git service as the remote for the password store. Even a ‘private’ repository places credential metadata (entry names, creation dates) and ciphertext under a third party’s access controls. Prefer a self-hosted Gitea or Forgejo instance, or a VPS accessed over SSH. See <a href="#appendix-a">Appendix A</a> for further guidance.</p>
-</div>
-</div>
+<section id="the-r-.renviron-question" class="level2">
+<h2 class="anchored" data-anchor-id="the-r-.renviron-question">The R <code>.Renviron</code> Question</h2>
+<p>R reads <code>~/.Renviron</code> once, at startup, and many packages expect API keys to arrive that way. That design does not fit on-demand loading, and there are two defensible answers.</p>
+<p>The first is to keep a small <code>~/.Renviron</code> that is local to each machine and treated as a secret file in its own right:</p>
+<ul>
+<li>permissions <code>600</code>, so only the owner can read it;</li>
+<li>excluded from the dotfiles repository and from every synced folder;</li>
+<li>included in the machine’s encrypted nightly backup, so that losing the machine does not mean losing the keys.</li>
+</ul>
+<p>This is the pragmatic arrangement on our fleet for R and for a similar <code>~/.env</code> file read by a few scripts. It is safe only if all three conditions hold. The backup condition was added after the quarterly audit found that these files, along with <code>~/.aws</code>, were in no backup at all, which is described in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>.</p>
+<p>The second answer is to set the variable for the current session from <code>pass</code>, which keeps the key out of any plaintext file:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set one key for this R session only; nothing is written to disk.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">OPENAI_API_KEY =</span> <span class="fu">system2</span>(<span class="st">"pass"</span>, <span class="fu">c</span>(<span class="st">"show"</span>, <span class="st">"api/openai"</span>),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                           <span class="at">stdout =</span> <span class="cn">TRUE</span>)[<span class="dv">1</span>]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This works wherever <code>gpg-agent</code> can prompt or already holds the passphrase. It is the better choice for keys that are used rarely, and for any machine where a plaintext file would be difficult to keep out of sync or backup scopes. The snippet is illustrative; it has been checked interactively but is not wired into any startup file on the fleet.</p>
+<p>The dotfiles repository protects both arrangements with ignore rules written before the first commit, because removing a committed secret means rewriting history and rotating the secret anyway:</p>
+<pre class="gitignore"><code>**/.env
+**/.env.local
+**/.env.*.local
+**/Renviron
+.password-store
+.gnupg
+.ssh
+.aws</code></pre>
 </section>
-<section id="guard-the-store-against-accidental-commits" class="level3">
-<h3 class="anchored" data-anchor-id="guard-the-store-against-accidental-commits">Guard the Store Against Accidental Commits</h3>
-<p>Before the first <code>git add</code> in any dotfiles repository, add <code>.password-store</code> and <code>.gnupg</code> to its <code>.gitignore</code>. After a first commit these entries are non-trivial to reverse (a full <code>git filter-repo</code> rewrite plus credential rotation):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In ~/dotfiles/.gitignore, before git init:</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">.password-store</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">.gnupg</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">.ssh</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">.aws</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">secrets/*</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">!secrets/README.md</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="passphrase-caching" class="level2">
+<h2 class="anchored" data-anchor-id="passphrase-caching">Passphrase Caching</h2>
+<p>Each <code>pass show</code> asks <code>gpg-agent</code> to decrypt, and the agent prompts for the GPG passphrase unless it is cached. A moderate cache lifetime keeps the prompts tolerable without leaving the key unlocked all day:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ~/.gnupg/gpg-agent.conf</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">default-cache-ttl 3600</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dt">max-cache-ttl 28800</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">pinentry-program /opt/homebrew/bin/pinentry-mac</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On Linux the <code>pinentry-program</code> line points at <code>pinentry-curses</code> or <code>pinentry-gnome3</code> instead. Reload with <code>gpg-connect-agent reloadagent /bye</code> after editing.</p>
 </section>
 </section>
-<section id="tier-2-aws-iam-identity-center" class="level2">
-<h2 class="anchored" data-anchor-id="tier-2-aws-iam-identity-center">Tier 2: AWS IAM Identity Center</h2>
-<p>The IAM Identity Center setup is a one-time AWS-account operation. The high-level steps are:</p>
+<section id="tokens-held-by-tools-the-github-cli" class="level1">
+<h1>Tokens Held by Tools: the GitHub CLI</h1>
+<p>Some secrets are never typed by anyone. The GitHub CLI (<code>gh</code>) is the clearest example, and it illustrates both the right home for such a token and the way it can escape.</p>
+<section id="the-right-home" class="level2">
+<h2 class="anchored" data-anchor-id="the-right-home">The Right Home</h2>
+<p>The fleet’s project repositories use HTTPS remotes, and git obtains credentials for them from <code>gh</code>, which keeps its OAuth token in the macOS Keychain. The relevant git configuration is two lines:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[credential "https://github.com"]</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dt">  helper </span><span class="ot">=</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="dt">  helper </span><span class="ot">=</span><span class="st"> !gh auth git-credential</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The empty first line clears any inherited helper so that only <code>gh</code> is asked. <code>gh auth status</code> confirms where the token lives; on a correctly configured Mac it reports the token as stored in the keyring. Two operational details follow from this arrangement:</p>
+<ul>
+<li><strong>Scopes matter.</strong> Pushing a change to a GitHub Actions workflow file requires the <code>workflow</code> scope, which <code>gh</code> does not request by default. Without it, GitHub refuses the push with an explicit message, and <code>gh auth refresh -s workflow</code> adds the scope.</li>
+<li><strong>The Keychain is tied to the login session.</strong> A plain SSH session into a Mac cannot read the Keychain, so <code>git pull</code> over HTTPS fails there with a request for a username. Pulls on a Mac are run from a local terminal.</li>
+</ul>
+</section>
+<section id="how-it-escaped" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-escaped">How It Escaped</h2>
+<p>During the quarterly audit, two problems turned up with this token. On one Mac, <code>gh</code> had been storing it in a plain configuration file rather than the Keychain. On every machine, <code>~/.config/gh</code> was a symlink into the dotfiles repository, put there by an install script so that <code>gh</code> settings would be shared. The consequence was that <code>gh auth login</code> wrote the live token into a tracked directory, where it appeared as an uncommitted change on every machine. It was never committed, but a single <code>git add -A</code> would have published it.</p>
+<p>The fix was an ignore rule for the token file, a fresh login that stored the token in the Keychain, and a general rule: before linking a tool’s configuration directory into a repository, check what the tool writes there.</p>
+<pre class="gitignore"><code># gh writes its OAuth token here; never track it.
+config/gh/hosts.yml</code></pre>
+</section>
+</section>
+<section id="cloud-credentials-prefer-short-lived-tokens" class="level1">
+<h1>Cloud Credentials: Prefer Short-Lived Tokens</h1>
+<p>Long-lived cloud access keys are different in kind from API keys. They often authorize broad permissions, they are attractive to attackers, and their compromise can be expensive within minutes. The recommended direction is to stop holding them at all.</p>
+<p>For AWS, IAM Identity Center (formerly AWS SSO) issues short-lived session tokens after a browser sign-in and caches them under <code>~/.aws/sso/cache/</code>, where they expire on their own:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-time profile setup (after the account-level configuration)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> configure sso</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Each working session</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> sso login <span class="at">--profile</span> research</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> sts get-caller-identity <span class="at">--profile</span> research</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>These commands follow AWS’s documentation and have not been exercised on the fleet for this post. Whatever form the credentials take, two rules from the placement table apply without exception: <code>~/.aws</code> is never synced or tracked, and it is included in the machine’s encrypted backup so that a lost machine does not strand the configuration.</p>
+</section>
+<section id="rotation-discipline" class="level1">
+<h1>Rotation Discipline</h1>
+<p>Rotation is where secrets management stops being a filing exercise. The procedure below is the one that held up during the exposure, when a GPG private key, backup passphrases, cloud-drive OAuth tokens, SSH keys, and an API key had all been sitting in a synced folder for months and every one had to be treated as compromised.</p>
+<section id="when-to-rotate" class="level2">
+<h2 class="anchored" data-anchor-id="when-to-rotate">When to Rotate</h2>
+<ul>
+<li><strong>Exposure.</strong> The secret reached a synced folder, a repository, a log, a chat or support transcript, a screen share, or a terminal that printed it. Exposure does not require evidence of misuse.</li>
+<li><strong>Expiry.</strong> Keys with an expiry date (the GPG key in this series has a two-year expiry) are renewed or replaced before they lapse.</li>
+<li><strong>Change of trust.</strong> A machine is retired, sold, or lost.</li>
+</ul>
+</section>
+<section id="the-procedure" class="level2">
+<h2 class="anchored" data-anchor-id="the-procedure">The Procedure</h2>
 <ol type="1">
-<li>In the AWS console, enable IAM Identity Center for the account.</li>
-<li>Create a permission set (the named bundle of permissions a session will receive).</li>
-<li>Assign the permission set to the user for the appropriate AWS account.</li>
+<li><strong>Inventory.</strong> List every place the secret is used: which machines, which tools, which scripts. This is where a <code>pass</code> hierarchy pays for itself.</li>
+<li><strong>Issue the replacement first</strong> where the service allows two live credentials, so that work does not stop.</li>
+<li><strong>Update the store</strong> (<code>pass edit</code> or <code>pass insert -f</code>) and push the store’s git repository so every machine receives the new value.</li>
+<li><strong>Revoke the old credential at the provider</strong>, not merely delete it locally. Deleting a local copy revokes nothing.</li>
+<li><strong>Test that the old credential is dead.</strong> Call the service with it and confirm the refusal.</li>
+<li><strong>Test that the new credential works</strong> on every machine that uses it.</li>
+<li><strong>Record what was rotated and when</strong>, so the next audit can confirm it.</li>
 </ol>
-<p>These three steps are AWS-console-only; AWS’s documentation (see See Also) is the canonical reference. After the AWS-side setup is complete, the laptop-side configuration is a single command:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> configure sso</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># SSO start URL: https://my-org.awsapps.com/start</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># SSO Region: us-west-1</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># CLI default client Region [None]: us-west-1</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># CLI default output format [None]: json</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># CLI profile name [123456789012_PowerUser]: my-profile</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Subsequent re-authentication is one command:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> sso login <span class="at">--profile</span> my-profile</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The legacy <code>~/.aws/credentials</code> file should be deleted after IAM Identity Center is configured and verified:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> ~/.aws/credentials ~/.aws/credentials.legacy.bak</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># After verifying that all scripts work via the SSO profile,</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># rotate the legacy keys via the AWS console and remove the backup.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="a-printed-secret-is-an-exposed-secret" class="level2">
+<h2 class="anchored" data-anchor-id="a-printed-secret-is-an-exposed-secret">A Printed Secret Is an Exposed Secret</h2>
+<p>Twice during the audit a live token was printed in full while its configuration was being inspected: once a cloud-drive token shown by a configuration listing, and once the GitHub CLI token from the plain file described above. In both cases the output had gone to a terminal and a session transcript, and both tokens were rotated exactly as if they had been found in a public repository. The preventive habit is to inspect configuration with commands that redact, for example <code>gh auth status</code> rather than reading the token file, and to pipe listings through a filter before they reach the screen.</p>
 </section>
-<section id="configuration" class="level1">
-<h1>Configuration</h1>
-<section id="pass-daily-use" class="level2">
-<h2 class="anchored" data-anchor-id="pass-daily-use"><code>pass</code> Daily Use</h2>
-<p>The <code>.zshrc</code> block to make <code>pass</code>-stored secrets reachable on demand is small. The construct convention is to inject secrets at process-start time rather than to export them into the shell environment.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Secrets injection helpers (post 55)</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Inject a single pass-stored secret as an environment variable</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># for the duration of one command.</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Usage: with-secret VAR_NAME pass/path command...</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Example: with-secret ANTHROPIC_API_KEY anthropic/api-key claude</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">with-secret()</span> <span class="kw">{</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">var_name</span><span class="op">=</span><span class="st">"</span><span class="va">$1</span><span class="st">"</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">pass_path</span><span class="op">=</span><span class="st">"</span><span class="va">$2</span><span class="st">"</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="bu">shift</span> 2</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">value</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="va">value</span><span class="op">=</span><span class="st">"</span><span class="va">$(</span><span class="ex">pass</span> <span class="st">"</span><span class="va">$pass_path</span><span class="st">"</span><span class="va">)</span><span class="st">"</span> <span class="kw">||</span> <span class="kw">{</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"with-secret: pass lookup failed for '</span><span class="va">$pass_path</span><span class="st">'"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="kw">}</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">env</span> <span class="st">"</span><span class="va">$var_name</span><span class="st">=</span><span class="va">$value</span><span class="st">"</span> <span class="st">"</span><span class="va">$@</span><span class="st">"</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Convenience wrappers for common secret-bearing tools.</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">claude()</span> <span class="kw">{</span></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  <span class="ex">with-secret</span> ANTHROPIC_API_KEY anthropic/api-key <span class="dt">\</span></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    command claude <span class="st">"</span><span class="va">$@</span><span class="st">"</span></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The <code>with-secret</code> pattern is preferred over exporting:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># WRONG: visible to every subprocess for the rest of the session</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">ANTHROPIC_API_KEY</span><span class="op">=</span><span class="va">$(</span><span class="ex">pass</span> anthropic/api-key<span class="va">)</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">claude</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># RIGHT: visible only to the wrapped command</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="ex">with-secret</span> ANTHROPIC_API_KEY anthropic/api-key claude</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="test-that-the-old-credential-is-dead" class="level2">
+<h2 class="anchored" data-anchor-id="test-that-the-old-credential-is-dead">Test That the Old Credential Is Dead</h2>
+<p>A sweep of older credentials, made as part of the same audit, found most of them already dead. One API key issued more than a year earlier and long forgotten still worked, as did a code-assistant OAuth token found among the exposed settings. Both were revoked and confirmed dead. A credential’s age says nothing about whether it is live; only a test does, and step 5 of the procedure exists because of this.</p>
 </section>
-<section id="gpg-agent-caching" class="level2">
-<h2 class="anchored" data-anchor-id="gpg-agent-caching">GPG Agent Caching</h2>
-<p><code>pass</code> invokes <code>gpg</code> for each retrieval, which prompts for the GPG-key passphrase. Caching the passphrase in <code>gpg-agent</code> avoids the repeated prompt while limiting exposure to a configurable cache lifetime.</p>
-<p>The <code>~/.gnupg/gpg-agent.conf</code> file:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">default-cache-ttl 3600</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">max-cache-ttl 28800</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">pinentry-program /opt/homebrew/bin/pinentry-mac   # macOS Apple Silicon</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># pinentry-program /usr/local/bin/pinentry-mac    # macOS Intel</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># pinentry-program /usr/bin/pinentry-curses       # Linux</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>After editing the config, reload the agent:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg-connect-agent</span> reloadagent /bye</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="revoking-an-oauth-grant-logs-out-every-machine" class="level2">
+<h2 class="anchored" data-anchor-id="revoking-an-oauth-grant-logs-out-every-machine">Revoking an OAuth Grant Logs Out Every Machine</h2>
+<p>Revoking the GitHub CLI’s authorization on GitHub’s website, intended to kill one printed token, logged out every machine at once. All of them had authorized the same OAuth application, and the revocation applied to the application grant, not to one machine’s copy of the token. The cloud-drive provider behaved the same way. A revocation intended for one machine should therefore be planned as a revocation for all of them, with time set aside to log each one back in, and done before any unattended job depends on the token.</p>
 </section>
-<section id="aws-iam-identity-center-profile-usage" class="level2">
-<h2 class="anchored" data-anchor-id="aws-iam-identity-center-profile-usage">AWS IAM Identity Center: Profile Usage</h2>
-<p>Once configured, the SSO profile is used the same way as any AWS profile:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> s3 ls <span class="at">--profile</span> my-profile</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Or set for the session:</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AWS_PROFILE</span><span class="op">=</span>my-profile</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The token is cached at <code>~/.aws/sso/cache/</code> and refreshed automatically by the SDK as long as the cached token is not yet expired. When it expires, run <code>aws sso login --profile my-profile</code> to refresh.</p>
+<section id="the-exposure-as-a-worked-example" class="level2">
+<h2 class="anchored" data-anchor-id="the-exposure-as-a-worked-example">The Exposure as a Worked Example</h2>
+<p>For reference, the full rotation after the exposure covered:</p>
+<ul>
+<li>the GPG key behind the <code>pass</code> store, replaced and the store re-encrypted (details in <a href="../sec-pass-password-manager/">Setting Up pass</a>);</li>
+<li>the Borg backup passphrases (see <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>);</li>
+<li>the SSH keys used for the two code-hosting services;</li>
+<li>the <code>rclone</code> OAuth tokens for the cloud drives;</li>
+<li>the GitHub CLI token, a code-assistant token, and an email app password.</li>
+</ul>
+<p>Every replacement went into <code>pass</code>, every old credential was revoked at its provider, and the tests in steps 5 and 6 were run for each.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -604,29 +608,38 @@ Warning
 </div>
 </section>
 </section>
+<section id="catching-mistakes-before-they-leave-secret-scanning" class="level1">
+<h1>Catching Mistakes Before They Leave: Secret Scanning</h1>
+<p>Placement rules and careful habits reduce mistakes but do not eliminate them. The near-miss with the GitHub CLI token is exactly the case a pre-commit secret scanner exists to catch: a high-entropy token appearing in a staged file. The recommended practice is a scanner such as <code>gitleaks</code> run as a pre-commit hook in every repository that could plausibly receive a secret, starting with the dotfiles repository.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># .git/hooks/pre-commit: refuse commits that contain likely secrets.</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">exec</span> gitleaks protect <span class="at">--staged</span> <span class="at">--redact</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Recent <code>gitleaks</code> releases also accept <code>gitleaks git --staged</code> for the same check; consult the installed version’s help. This hook is a recommendation and is not shown here as tested on the fleet. A scanner is a safety net, not a substitute for the placement rules: it cannot see a secret written to a synced folder, a log, or a terminal.</p>
+</section>
 <section id="verification" class="level1">
 <h1>Verification</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tier 1: pass</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> version</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> init</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">'verify-only'</span> <span class="kw">|</span> <span class="ex">pass</span> insert <span class="at">-m</span> verify-temp/test</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> verify-temp/test</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> rm verify-temp/test</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git status</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Tier 2: AWS SSO</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> sts get-caller-identity <span class="at">--profile</span> my-profile</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> ~/.aws/credentials <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Should error 'No such file or directory' after migration</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Tier 3: gitleaks (cross-reference post 49)</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="ex">gitleaks</span> version</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>A green pass on all three blocks indicates the scheme is materialized. A failure on <code>pass git status</code> localises to a sync issue; a failure on <code>aws sts get-caller-identity</code> localises to token expiration (run <code>aws sso login</code>); a failure on <code>gitleaks</code> is addressed in post 49.</p>
+<p>The following checks confirm the arrangement on one machine without printing any secret.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># No secrets exported from shell startup files</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-nE</span> <span class="st">'export .*(KEY|TOKEN|SECRET)='</span> ~/.zshrc ~/.zprofile <span class="dt">\</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  ~/.zshenv <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Secret files are owner-only</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-l</span> ~/.Renviron ~/.env <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># The dotfiles repository ignores them</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> ~/dotfiles check-ignore <span class="at">-v</span> config/gh/hosts.yml</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="co"># gh keeps its token in the keyring, with the expected scopes</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth status</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co"># git asks gh for GitHub credentials</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> config <span class="at">--global</span> <span class="at">--get-regexp</span> <span class="st">'^credential'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The first command should print nothing. The <code>ls</code> output should show <code>-rw-------</code> for each file, and <code>gh auth status</code> should report the keyring as the token’s location.</p>
 </section>
 <section id="daily-workflow" class="level1">
 <h1>Daily Workflow</h1>
-<table class="caption-top table">
+<table class="table-striped caption-top table">
+<caption>Everyday commands.</caption>
 <colgroup>
 <col style="width: 27%">
 <col style="width: 40%">
@@ -641,89 +654,54 @@ Warning
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Add a new API key</td>
-<td style="text-align: left;"><code>pass insert anthropic/api-key</code></td>
-<td style="text-align: left;">Prompts for value (not echoed)</td>
+<td style="text-align: left;">Add an API key</td>
+<td style="text-align: left;"><code>pass insert api/service</code></td>
+<td style="text-align: left;">Prompts; nothing echoed</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Add a multi-line secret</td>
-<td style="text-align: left;"><code>pass insert -m ssh/key</code></td>
-<td style="text-align: left;">Use <code>-m</code> for multi-line input</td>
+<td style="text-align: left;">Generate a new secret</td>
+<td style="text-align: left;"><code>pass generate api/service 32</code></td>
+<td style="text-align: left;">Generate first, then paste into the provider</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Retrieve to stdout</td>
-<td style="text-align: left;"><code>pass anthropic/api-key</code></td>
-<td style="text-align: left;">Avoid in pipelines that log</td>
+<td style="text-align: left;">Run a tool with a key</td>
+<td style="text-align: left;"><code>with-secret VAR api/service cmd</code></td>
+<td style="text-align: left;">Visible only to <code>cmd</code></td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Inject into a command</td>
-<td style="text-align: left;"><code>with-secret VAR pass/path cmd</code></td>
-<td style="text-align: left;">Visible only to <code>cmd</code>’s process tree</td>
-</tr>
-<tr class="odd">
 <td style="text-align: left;">Copy to clipboard</td>
-<td style="text-align: left;"><code>pass -c anthropic/api-key</code></td>
+<td style="text-align: left;"><code>pass -c api/service</code></td>
 <td style="text-align: left;">Clears after 45 seconds</td>
 </tr>
-<tr class="even">
-<td style="text-align: left;">List current store</td>
-<td style="text-align: left;"><code>pass ls</code></td>
-<td style="text-align: left;">Shows hierarchy</td>
-</tr>
 <tr class="odd">
-<td style="text-align: left;">Search by name</td>
-<td style="text-align: left;"><code>pass find anthropic</code></td>
-<td style="text-align: left;">Greps the store names</td>
+<td style="text-align: left;">List the inventory</td>
+<td style="text-align: left;"><code>pass ls api</code></td>
+<td style="text-align: left;">Entry names only</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Sync to remote</td>
+<td style="text-align: left;">Share a change</td>
 <td style="text-align: left;"><code>pass git push</code></td>
-<td style="text-align: left;">Encrypted; safe over public network</td>
+<td style="text-align: left;">Other machines run <code>pass git pull</code></td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Pull from remote</td>
-<td style="text-align: left;"><code>pass git pull</code></td>
-<td style="text-align: left;">Requires GPG private key present</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">AWS session refresh</td>
-<td style="text-align: left;"><code>aws sso login --profile my-profile</code></td>
-<td style="text-align: left;">Browser-based; fast</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">AWS-using command</td>
-<td style="text-align: left;"><code>AWS_PROFILE=my-profile aws ...</code></td>
-<td style="text-align: left;">Token resolved automatically</td>
+<td style="text-align: left;">Check a tool login</td>
+<td style="text-align: left;"><code>gh auth status</code></td>
+<td style="text-align: left;">Redacted; safe to display</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="things-to-watch-out-for" class="level1">
 <h1>Things to Watch Out For</h1>
-<p>Six gotchas dominate the failure modes of this scheme.</p>
 <ol type="1">
-<li><p><strong>The GPG private key is the single point of failure for the entire pass store.</strong> If the key is lost, every encrypted secret in <code>~/.password-store/</code> is permanently unreadable. Back up the GPG key to two physical locations (one off-site) before adding any secret of consequence: <code>gpg --export-secret-keys --armor &lt;key-id&gt; &gt; gpg-private-key.asc</code>. Store the resulting file on an encrypted USB drive.</p></li>
-<li><p><strong>The <code>pass</code> git remote contains encrypted secrets but a plain-text inventory of names.</strong> The contents are encrypted, but the existence of entries like <code>internal-systems/db-prod-password</code> is itself sensitive metadata. The remote should be a private repository, ideally on a self-hosted forge.</p></li>
-<li><p><strong>macOS Keychain and <code>gpg-agent</code> can fight over <code>pinentry</code>.</strong> Set <code>pinentry-program /opt/homebrew/bin/pinentry-mac</code> in <code>~/.gnupg/gpg-agent.conf</code>, restart the agent, and ensure <code>GPG_TTY=$(tty)</code> is exported in <code>.zshrc</code>.</p></li>
-<li><p><strong>Clipboard managers bypass <code>pass -c</code>’s 45-second clear timer.</strong> On a two-laptop setup with iCloud Universal Clipboard enabled, every <code>pass -c</code> on one machine appears in plaintext on the other. Any clipboard manager (Alfred, Raycast, ClipMenu, iCloud Universal Clipboard) captures the output before the timer fires and stores it permanently. Disable clipboard history, or exclude <code>pass</code> invocations, in any clipboard manager running on the system.</p></li>
-<li><p><strong>AWS SSO sessions expire silently from the CLI’s perspective.</strong> A long-running script that issues an AWS call after the cached token has expired sees an authentication error rather than a refresh prompt. Scripts that run longer than the configured session duration should chunk their work into per-token batches.</p></li>
-<li><p><strong>Secrets exported in <code>.zshrc</code> continue to work even after <code>pass</code> is set up.</strong> A migration that adds <code>pass</code> but does not remove legacy <code>export FOO=...</code> lines results in two copies of each secret coexisting. Audit <code>.zshrc</code> for <code>export.*KEY|export.*TOKEN| export.*SECRET</code> patterns and replace each with a <code>with-secret</code> wrapper before considering the migration complete.</p></li>
+<li><strong>Clipboard managers defeat <code>pass -c</code>.</strong> A clipboard history tool, or Universal Clipboard between two Macs, captures the secret before the 45-second clear. Exclude <code>pass</code> from clipboard history, or disable history on machines that handle secrets.</li>
+<li><strong>Tools write tokens into their configuration directories.</strong> If that directory is symlinked into a repository or a synced folder, the token goes with it. Check before linking.</li>
+<li><strong>Diagnostics print the environment.</strong> <code>env</code>, <code>printenv</code>, <code>set -x</code>, and verbose logging in scripts all reveal exported variables. This is the strongest practical argument for <code>with-secret</code> over <code>export</code>.</li>
+<li><strong>Legacy exports survive a migration.</strong> Moving keys into <code>pass</code> while leaving the old <code>export</code> lines in place leaves two copies. The first verification command finds them.</li>
+<li><strong>Revocation is wider than it looks.</strong> Revoking an OAuth application grant logs out every machine that uses it. Plan the re-login before revoking.</li>
+<li><strong>The Keychain is unavailable over SSH.</strong> Operations that need a Keychain-held token, such as an HTTPS <code>git pull</code> on a Mac, fail in a plain SSH session and should be run locally.</li>
+<li><strong>Short-lived sessions expire mid-job.</strong> A long script using short-lived cloud credentials can fail partway through when the session lapses; split long jobs or refresh before starting.</li>
 </ol>
-</section>
-<section id="uninstall-rollback" class="level1">
-<h1>Uninstall / Rollback</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tier 1: remove pass</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> uninstall pass gnupg pinentry-mac   <span class="co"># macOS</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> ~/.password-store                 <span class="co"># </span><span class="al">CAUTION</span><span class="co">: irrecoverable</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Tier 2: revert to long-lived AWS credentials</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> ~/.aws/credentials.legacy.bak ~/.aws/credentials</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># .zshrc: remove the with-secret block and wrapper functions.</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Restore any legacy 'export FOO=...' lines from version control.</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># GPG: leave intact if used for git commit signing</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The migration is reversible per tier, but Tier 1’s removal step is destructive and irreversible without the GPG-key backup. If the goal is to stop using <code>pass</code> while preserving the secrets, export them first (<code>pass git push</code> to ensure the remote is current), then archive the local store (<code>mv ~/.password-store ~/password-store-archive-2026-05-17</code>) rather than deleting outright.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -731,97 +709,76 @@ Warning
 </figure>
 </div>
 </section>
-<section id="lessons-learned" class="level1">
-<h1>Lessons Learned</h1>
-<p>The migration on three machines (the construct’s MacBook, a ThinkPad with Linux Mint, and a clean EC2 Ubuntu instance) surfaced lessons in three buckets.</p>
-<section id="conceptual" class="level2">
-<h2 class="anchored" data-anchor-id="conceptual">Conceptual</h2>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
 <ul>
-<li><strong>Secrets are state, with the same lifecycle concerns as any other state.</strong> They have an authoritative source, they need backup, they require recovery procedures, and they should not be silently duplicated. Treating them as state rather than as configuration is the conceptual shift this scheme operationalizes.</li>
-<li><strong>Short-lived credentials are strictly preferable to long-lived ones, where the issuer supports them.</strong> An eight-hour token that re-authenticates from a SAML identity provider has a smaller blast-radius than a long-lived access key, and the user-experience cost of re-authentication is small once the workflow is habitual.</li>
-<li><strong>Open-source primitives are appropriate for the secrets layer.</strong> The construct’s other layers are auditable down to the source. The secrets layer holds the keys to every other system the operator relies on, which makes it the layer where source-code transparency matters most.</li>
-<li><strong>Per-process injection beats environment-variable export.</strong> A secret exported in <code>.zshrc</code> is visible to every subprocess for the session’s lifetime; a secret injected via <code>with-secret</code> is visible only to the wrapped command’s process tree.</li>
+<li><strong>Placement is the control that matters most.</strong> Every serious incident in the audit traced back to a secret sitting somewhere it should not have been, usually because a directory was linked into a synced folder or a repository for convenience.</li>
+<li><strong>Exposure is a state, not an event that needs proof.</strong> Once a secret has been somewhere uncontrolled, the only safe response is rotation; trying to establish whether anyone read it is rarely possible and never conclusive.</li>
+<li><strong>Revocation must be verified.</strong> Old credentials were found live, and only a direct test revealed it.</li>
+<li><strong>OAuth grants are shared across machines.</strong> Treating a revocation as fleet-wide avoids an unplanned afternoon of logging back in.</li>
+<li><strong>Secrets need backup coverage like any other state.</strong> A key that exists only on one machine is lost with that machine.</li>
 </ul>
 </section>
-<section id="technical" class="level2">
-<h2 class="anchored" data-anchor-id="technical">Technical</h2>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
 <ul>
-<li><strong><code>pass</code> is a thin wrapper over GPG, and the limits of the wrapper are the limits of GPG.</strong> Multi-recipient encryption works but requires both parties’ GPG keys; key rotation (re-encrypting the store with a new key) is documented but non-trivial; offline access requires a GPG-agent cache, not just <code>pass</code> itself.</li>
-<li><strong>The pass-store git history is itself an audit log.</strong> <code>pass git log</code> reveals when each secret was added or changed.</li>
-<li><strong>AWS IAM Identity Center sessions can be extended.</strong> The default eight-hour session is configurable up to twelve hours. For long-running batch jobs, the right pattern is an assume-role chain rather than a single long session.</li>
-<li><strong><code>gpg-agent</code>’s caching behavior differs between macOS and Linux.</strong> macOS with <code>pinentry-mac</code> integrates with the Keychain for the passphrase entry; Linux with <code>pinentry-curses</code> does not.</li>
+<li>The arrangement is single-user. <code>pass</code> supports multiple recipients, but team secret sharing is not covered.</li>
+<li>It depends on GPG, whose key management is the hardest part of the whole scheme; <a href="../sec-pass-password-manager/">Setting Up pass</a> treats that in detail.</li>
+<li>The <code>.Renviron</code> compromise accepts a plaintext file on disk, protected by permissions and full-disk encryption rather than by GPG.</li>
+<li>Alternatives such as <code>gopass</code>, a self-hosted Bitwarden server, or the 1Password CLI are not evaluated here; <code>pass</code> was chosen for its small, auditable implementation.</li>
 </ul>
 </section>
-<section id="gotcha-shaped" class="level2">
-<h2 class="anchored" data-anchor-id="gotcha-shaped">Gotcha-shaped</h2>
-<ul>
-<li><strong><code>pass git push</code> after <code>pass insert</code> does not happen automatically.</strong> Each new secret must be explicitly pushed to the remote. Adding an alias <code>alias passp='pass git push'</code> is the simplest mitigation.</li>
-<li><strong><code>with-secret</code> does not pass through <code>tty</code> settings.</strong> Commands that detect ‘is my stdin a terminal?’ may behave differently inside the wrapper. The cases are rare but real; a <code>--no-pager</code> flag may be needed for affected tools.</li>
-<li><strong>AWS IAM Identity Center’s session cache is per-CLI-install.</strong> A second CLI installation (e.g., a Homebrew-managed <code>awscli</code> plus a Python venv <code>awscli</code>) maintains separate caches. Standardize on one CLI install per machine.</li>
-</ul>
-</section>
-</section>
-<section id="limitations" class="level1">
-<h1>Limitations</h1>
-<ul>
-<li><strong>It depends on GPG, which has its own complexity.</strong> GPG-key generation, backup, rotation, and revocation are non-trivial topics, and <code>pass</code>’s usability is upper-bounded by GPG’s.</li>
-<li><strong>AWS IAM Identity Center requires admin access to configure at the account level.</strong> Personal AWS accounts are easy; institutional accounts may require a conversation with an unfamiliar administrator.</li>
-<li><strong>No hardware-token integration in this revision.</strong> YubiKey-mediated GPG smart-card mode is supported by GPG and <code>pass</code> but warrants its own follow-up post. See <a href="#appendix-b">Appendix B</a> for an overview.</li>
-<li><strong>No coverage of TOTP / 2FA codes.</strong> <code>pass-otp</code> is a popular extension that stores TOTP seeds alongside passwords; the present post does not cover it.</li>
-<li><strong>The recovery procedure for a lost laptop assumes the GPG-key backup is reachable.</strong> If both the laptop and the USB-encrypted backup are lost simultaneously, the recovery path is long.</li>
-<li><strong>The scheme is single-user.</strong> Team-scope secret sharing is supported by <code>pass</code> via multi-recipient encryption but is not covered here.</li>
-</ul>
-</section>
-<section id="alternatives" class="level1">
-<h1>Alternatives</h1>
-<section id="gopass" class="level2">
-<h2 class="anchored" data-anchor-id="gopass"><code>gopass</code></h2>
-<p><code>gopass</code> is a drop-in replacement for <code>pass</code> written in Go. It accepts the same <code>~/.password-store/</code> layout and GPG-encryption pattern. The case for <code>gopass</code> over <code>pass</code> is multi-store support and slightly faster start-up time. For solo use, <code>pass</code> is sufficient.</p>
-</section>
-<section id="bitwarden-cli-against-self-hosted-vaultwarden" class="level2">
-<h2 class="anchored" data-anchor-id="bitwarden-cli-against-self-hosted-vaultwarden"><code>bitwarden-cli</code> Against Self-Hosted <code>vaultwarden</code></h2>
-<p>The Bitwarden ecosystem includes an open-source CLI (<code>bw</code>) and an open-source server reimplementation (Vaultwarden). The combination gives a 1Password-like UX without the proprietary dependency. The operational cost is running a server (backups, TLS, updates) and the larger trust surface relative to <code>pass</code>’s small bash script.</p>
-</section>
-<section id="password-cli-proprietary" class="level2">
-<h2 class="anchored" data-anchor-id="password-cli-proprietary">1Password CLI (Proprietary)</h2>
-<p>The 1Password CLI (<code>op</code>) is a closed-source binary under a commercial subscription. For users already paying for 1Password, <code>op run</code> is structurally similar to <code>with-secret</code>. The construct does not recommend <code>op</code> as the primary because the binary is closed-source, the dependency is a paid subscription, and data is held in AgileBits’s hosted vault by default.</p>
-</section>
-</section>
-<section id="opportunities-for-improvement" class="level1">
-<h1>Opportunities for Improvement</h1>
+<section id="opportunities-for-improvement" class="level2">
+<h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
 <ol type="1">
-<li><strong><code>pass-otp</code> for TOTP integration.</strong> The <code>pass-otp</code> extension stores TOTP seeds alongside passwords, producing current six-digit codes without a separate authenticator app.</li>
-<li><strong>YubiKey-mediated GPG smart-card mode.</strong> Moves the GPG private key from <code>~/.gnupg/</code> to the YubiKey, so that <code>pass</code> decryption requires the physical token.</li>
-<li><strong><code>pass-import</code> for migration from other stores.</strong> Imports from 1Password, LastPass, KeePass, Bitwarden, and others.</li>
-<li><strong>A construct-aware secrets recovery script.</strong> A <code>~/bin/recover-secrets.sh</code> that walks a fresh laptop through GPG-key import, <code>pass git clone</code>, and the AWS SSO setup in sequence, with explicit checkpoints and rollback paths.</li>
-<li><strong>A team-scope <code>gopass</code> follow-up.</strong> Documents the multi-store, multi-recipient pattern for secrets that a small team needs to share, with explicit rotation procedures for when a member leaves.</li>
-<li><strong>Hardware-token-backed AWS IAM Identity Center.</strong> Configures IAM Identity Center to require a YubiKey-produced WebAuthn credential at login, reducing the credential-phishing blast-radius for the AWS layer.</li>
+<li><strong>Short-lived credentials wherever providers offer them</strong>, starting with cloud access, so that a leaked credential expires on its own.</li>
+<li><strong>A pre-commit secret scanner in every repository</strong>, beginning with the dotfiles repository.</li>
+<li><strong>Hardware-backed keys.</strong> Moving the GPG key onto a hardware token makes every decryption require physical presence.</li>
+<li><strong>A recovery script</strong> that walks a fresh machine through importing the GPG key, cloning the store, and restoring tool logins, with checkpoints.</li>
+<li><strong>Scheduled rotation for long-lived API keys</strong>, rather than rotation only after exposure.</li>
 </ol>
+</section>
 </section>
 <section id="wrapping-up" class="level1">
 <h1>Wrapping Up</h1>
-<p>A laptop accumulates secrets the way a desk accumulates pens: silently, in multiple drawers, with no inventory. The three-tier scheme documented here addresses the inventory problem directly: an encrypted, GPG-keyed, git-synchronized store (<code>pass</code>) for long-lived API keys; short-lived tokens via AWS IAM Identity Center for cloud credentials; and <code>gitleaks</code>-at-staging as the residual safety net. Each tier has a small, auditable implementation; each is built on open-source primitives; each is reversible without losing the underlying secrets.</p>
-<p>In conclusion, four points merit emphasis. First, secrets should be treated as state: they require an inventory, backup, rotation schedule, and recovery procedure. Second, short-lived credentials are preferable to long-lived ones wherever the issuer supports them; AWS IAM Identity Center is the canonical example. Third, secrets should be injected per-process rather than exported: a secret in <code>.zshrc</code> is visible to every subprocess, whereas a secret injected via <code>with-secret</code> is visible only to the command that needs it. Fourth, open-source primitives are warranted at the secrets layer because the trust requirement is high enough that source visibility is load-bearing.</p>
+<p>Secrets beyond passwords are easy to overlook because many of them are never typed: tools fetch and store them, and they sit quietly in configuration directories until something copies those directories somewhere else. The practices in this post reduce that risk to a small set of habits: decide where each class of secret lives, load secrets into one command at a time, keep tool tokens in the operating system’s credential store, and rotate on exposure using a procedure that verifies the old credential is dead.</p>
+<p>The main takeaways:</p>
+<ul>
+<li>Secrets never live in a synced folder or a dotfiles repository.</li>
+<li>Load secrets on demand; do not export them into the shell.</li>
+<li>A printed secret is an exposed secret, and exposure means rotation.</li>
+<li>After revoking, test that the old credential no longer works.</li>
+<li>Revoking an OAuth grant logs out every machine; plan for it.</li>
+</ul>
 </section>
 <section id="see-also" class="level1">
 <h1>See Also</h1>
+<p>Security series:</p>
+<ol type="1">
+<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a></li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
+<li>Secrets Management for the Workflow Construct (this post)</li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+</ol>
+<p>External references:</p>
 <ul>
-<li><a href="../cln-aws-ec2-provisioning/">Provisioning AWS EC2 Instances</a>: the AWS CLI setup that this post complements, which requires revision once IAM Identity Center is in place.</li>
-<li><a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a>: the workstation-IaC keystone where the <code>with-secret</code> helper and wrapper functions live.</li>
-<li><a href="../wf-git-for-data-science/">Setting Up Git for Data Science Workflows</a>: the version-control layer that GPG commit signing lives alongside.</li>
-<li>The <code>zzgit</code> secret scanner: the staging-time secret scanner.</li>
-<li><a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>: the construct framing that names the secrets-management concern this post addresses.</li>
-<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Laptop Research Cluster</a>: the threat-model audit for the full multi-laptop configuration.</li>
 <li><code>pass</code>: <a href="https://www.passwordstore.org/">https://www.passwordstore.org/</a></li>
-<li><code>gopass</code>: <a href="https://github.com/gopasspw/gopass">https://github.com/gopasspw/gopass</a></li>
-<li><code>pass-otp</code>: <a href="https://github.com/tadfisher/pass-otp">https://github.com/tadfisher/pass-otp</a></li>
 <li>GnuPG: <a href="https://gnupg.org/">https://gnupg.org/</a></li>
+<li>GitHub CLI manual: <a href="https://cli.github.com/manual/">https://cli.github.com/manual/</a></li>
 <li>AWS IAM Identity Center user guide: <a href="https://docs.aws.amazon.com/singlesignon/">https://docs.aws.amazon.com/singlesignon/</a></li>
+<li><code>gitleaks</code>: <a href="https://github.com/gitleaks/gitleaks">https://github.com/gitleaks/gitleaks</a></li>
 </ul>
 </section>
 <section id="reproducibility" class="level1">
 <h1>Reproducibility</h1>
-<table class="caption-top table">
+<table class="table-striped caption-top table">
+<caption>Versions in use.</caption>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Component</th>
@@ -832,192 +789,65 @@ Warning
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Operating system</td>
-<td style="text-align: left;">macOS 15 (Sequoia)</td>
-<td style="text-align: left;">primary daily driver</td>
+<td style="text-align: left;">macOS 26.6</td>
+<td style="text-align: left;">three Macs</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Operating system</td>
-<td style="text-align: left;">Linux Mint 22 (Wilma)</td>
-<td style="text-align: left;">secondary verification</td>
+<td style="text-align: left;">Linux Mint 22</td>
+<td style="text-align: left;">Linux laptop and home server</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Operating system</td>
-<td style="text-align: left;">Ubuntu 24.04 LTS (EC2)</td>
-<td style="text-align: left;">clean-room verification</td>
-</tr>
-<tr class="even">
 <td style="text-align: left;">Shell</td>
 <td style="text-align: left;">zsh 5.9</td>
-<td style="text-align: left;">minimum 5.0</td>
+<td style="text-align: left;"></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;"><code>pass</code></td>
 <td style="text-align: left;">1.7.4</td>
-<td style="text-align: left;">minimum 1.7</td>
+<td style="text-align: left;"></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">GnuPG</td>
-<td style="text-align: left;">2.4.5</td>
-<td style="text-align: left;">minimum 2.2</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><code>pinentry-mac</code></td>
-<td style="text-align: left;">1.3.0</td>
-<td style="text-align: left;">macOS only</td>
+<td style="text-align: left;">2.5</td>
+<td style="text-align: left;"></td>
 </tr>
 <tr class="even">
+<td style="text-align: left;">GitHub CLI</td>
+<td style="text-align: left;">2.101</td>
+<td style="text-align: left;">Keychain token storage</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">AWS CLI</td>
-<td style="text-align: left;">2.18</td>
-<td style="text-align: left;">minimum 2.13 for SSO token-cache changes</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Optional</td>
-<td style="text-align: left;"><code>gopass</code> 1.15</td>
-<td style="text-align: left;">conditional alternative</td>
+<td style="text-align: left;">2.37</td>
+<td style="text-align: left;">IAM Identity Center commands not exercised</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Optional</td>
-<td style="text-align: left;"><code>bitwarden-cli</code> 2024.10</td>
-<td style="text-align: left;">conditional alternative</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Recommended companion</td>
-<td style="text-align: left;"><code>gitleaks</code> 8.21</td>
-<td style="text-align: left;">post 49 staging scanner</td>
+<td style="text-align: left;"><code>gitleaks</code></td>
+<td style="text-align: left;">not installed</td>
+<td style="text-align: left;">recommended, untested here</td>
 </tr>
 </tbody>
 </table>
-<p>Date of last verification: 2026-05-17.</p>
-</section>
-<section id="appendix-a" class="level1">
-<h1>Appendix A: iOS Sync with Pass for iOS</h1>
-<p>The Pass for iOS app reads the same GPG-encrypted <code>.gpg</code> files that the desktop <code>pass</code> command produces. Once the store is in a private git remote, the iOS app can pull and decrypt entries on the device.</p>
-<p><strong>Step 1:</strong> Confirm the remote is set up:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git remote <span class="at">-v</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git push</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Step 2:</strong> Export the GPG key:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-armor</span> YOUR_KEY_ID <span class="op">&gt;</span> public.asc</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-secret-keys</span> <span class="at">--armor</span> YOUR_KEY_ID <span class="op">&gt;</span> private.asc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Transfer <code>private.asc</code> to the iPhone securely (AirDrop is acceptable). Delete the <code>.asc</code> files from the desktop immediately after transfer.</p>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Do not store the exported private key in Dropbox or iCloud unencrypted. Delete it from the Files app on the iPhone after importing into Pass.</p>
-</div>
-</div>
-<p><strong>Step 3:</strong> Configure the iOS app. Install ‘Pass - Password Store’ from the App Store. In Settings, set the Git Repository URL to your self-hosted remote.</p>
-<p>For SSH: the app generates its own SSH key pair. Go to Settings &gt; SSH Key, copy the displayed public key, and add it to <code>~/.ssh/authorized_keys</code> on your self-hosted git server. Do not copy your desktop key; the iOS app generates a separate key internally.</p>
-<p><strong>Step 4:</strong> Import the GPG key and sync. In the app, go to Settings &gt; PGP Key &gt; Import Key, select the <code>private.asc</code> file from Files, enter your GPG passphrase when prompted, then tap Sync.</p>
-<p><strong>Common snags:</strong></p>
-<ul>
-<li>‘Permission denied (publickey)’ on sync: the app’s SSH key has not been added to the server’s <code>authorized_keys</code>. Copy the public key from Settings &gt; SSH Key in the app.</li>
-<li>‘No secret key’ decryption error: the fingerprint in the app does not match the <code>.gpg-id</code> in the repository. Check both: <code>cat ~/.password-store/.gpg-id</code> on the desktop, Settings &gt; PGP Key in the app.</li>
-</ul>
-</section>
-<section id="appendix-b" class="level1">
-<h1>Appendix B: GPG Subkey Architecture and Hardware Tokens</h1>
-<p>The setup above creates a single key pair used for both certification and encryption. The correct operational model for daily use separates these roles:</p>
-<ul>
-<li><strong>Master key (certify only):</strong> signs new subkeys and revocation certificates. Generated once, then moved to offline storage or a hardware security key (YubiKey). Never used in daily operation.</li>
-<li><strong>Encryption subkey:</strong> the only key needed by <code>pass</code> for day-to-day operations. Shorter expiry than the master.</li>
-<li><strong>Signing subkey (optional):</strong> used for <code>git commit --gpg-sign</code>.</li>
-</ul>
-<p>With this architecture, the master private key never exists on the laptop’s disk during normal operation. A compromised laptop exposes only the encryption subkey, which can be revoked by signing a new revocation certificate with the (offline) master key. Implementing the full subkey architecture is beyond this post’s scope but is the recommended next step after the basic setup is stable.</p>
-<p><strong>FileVault prerequisite:</strong> Full-disk encryption (FileVault on macOS) is a prerequisite for any local credential store. The GPG agent caches the decrypted private key in memory; if the machine is lost while unlocked, the cached key is readable without FileVault.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">fdesetup</span> status</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: FileVault is On.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>SSH key policy for multi-laptop setups:</strong> The correct multi-machine policy is NOT to copy SSH private keys between machines but to generate a new key pair on each machine:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> ed25519 <span class="at">-C</span> <span class="st">"</span><span class="va">$(</span><span class="fu">hostname</span><span class="va">)</span><span class="st">-</span><span class="va">$(</span><span class="fu">date</span> +%Y%m<span class="va">)</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Then add the new public key to GitHub and servers. A compromised laptop exposes only that machine’s key, and revocation is surgical. The GPG private key is the one exception: it is a single identity and must be the same across machines by design. The subkey architecture above limits the blast radius of any single machine compromise.</p>
+<p>Date of last verification: 2026-10-01 (<code>pass</code>, GnuPG, <code>gh</code>, and the verification commands, on macOS 26.6).</p>
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>
+<p><em>Questions, suggestions, or corrections are welcome.</em></p>
 <ul>
 <li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
 <li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
 <li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
-<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">rgtlab.org/contact</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
 </ul>
-<p>Feedback is welcome in the following cases:</p>
+<p>I would like to hear from you if:</p>
 <ul>
-<li>An error or a better approach to any of the code in this post.</li>
-<li>Suggestions for topics to cover in future posts.</li>
-<li>Discussion of R programming, data science, or reproducible research.</li>
-<li>Questions about anything in this tutorial.</li>
-<li>A general connection is of interest.</li>
+<li>You find an error, or a better approach to anything in this series.</li>
+<li>You run a small research fleet and have found where this design breaks.</li>
+<li>You want to compare notes on backups, secrets, or reproducible research infrastructure.</li>
 </ul>
-<hr>
-<p><em>Rendered on 2026-05-17 at 17:08 PDT.</em><br> <em>Source: ~/prj/rgtlab/posts/sec-aws-and-pass-secrets/index.qmd</em></p>
-<hr>
-<!-- ============================================================
-PRE-PUBLISH QA CHECKLIST: verify each item BEFORE draft: false
-
-[ ] YAML
-    [ ] title, date, categories, description, image filled in
-    [x] document-type: 'blog'
-    [x] draft: false
-
-[ ] Narrative complete (no remaining [bracketed] placeholders)
-    [ ] grep '\[' index.qmd returns only legitimate code/links
-
-[ ] Configuration artifacts present and tested
-    [ ] Full config file shown verbatim, not snippets
-    [ ] Install commands tested on a clean machine
-    [ ] Verification commands produce the documented output
-    [ ] Uninstall / rollback steps documented
-
-[ ] Things to Watch Out For
-    [ ] At least 5 gotchas listed (setup posts require this)
-    [ ] Each gotcha has both a symptom AND a fix
-
-[x] Visual design
-    [x] 1 hero image (width=80%) immediately after AUTHOR PROVIDES
-    [x] Exactly 3 ambiance images ({.img-fluid} only, no width=NN%,
-        no fig-align): after Objectives, after Configuration, before
-        Lessons Learnt
-    [x] Hero alt text is descriptive (matches sibling sec- posts'
-        convention, not the two-space style this line originally
-        called for)
-    [ ] No hand-coded 'Download PDF' link in body
-    [ ] media/images/README.md attributes every image
-
-[ ] Content quality
-    [ ] Learner voice: author positioned as peer, not expert
-    [ ] Zero emoji anywhere
-    [ ] Zero em dashes
-    [ ] Single quotes preferred in prose
-    [ ] Each command and config setting interpreted in plain language
-
-[ ] Reproducibility
-    [ ] Version matrix table filled in
-    [ ] Config files committed under analysis/configs/
-    [ ] Date of last verification updated
-
-[ ] Render verification
-    [x] quarto render index.qmd produces clean HTML with no warnings
-    [x] Hero image displays in /blog/ listing card
-    [ ] Internal links resolve
-
-============================================================ -->
-<section id="related-posts-in-this-cluster" class="level2">
-<h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
-<p>This post is part of the <em>Security, Backup, and Sync</em> series. Recommended reading order:</p>
-<ol type="1">
-<li>Post 31: <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a></li>
-<li>Post 33: <a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
-<li><strong>Post 34: Secrets Management for the Workflow Construct</strong> (this post)</li>
-<li>Post 35: <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Laptop Research Cluster</a></li>
-</ol>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

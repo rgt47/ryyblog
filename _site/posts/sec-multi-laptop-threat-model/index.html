@@ -8,9 +8,9 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-17">
-<meta name="description" content="Posts 64-66 establish a portable dotfiles repository, a multi-laptop sync architecture, and a GPG-encrypted credential store. This post asks what that infrastructure is worth if the threat model is wrong or the controls are incomplete.">
+<meta name="description" content="The hub of a security series for a five-machine research fleet: what we defend against, the controls that answer each threat, the quarterly audit that keeps the controls from decaying, and the reading path through the rest of the series.">
 
-<title>Security Foundations for a Multi-Laptop Research Cluster – focusonr</title>
+<title>Security Foundations for a Multi-Machine Research Fleet – focusonr</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -156,12 +156,12 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<meta property="og:title" content="Security Foundations for a Multi-Laptop Research Cluster – focusonr">
-<meta property="og:description" content="Posts 64-66 establish a portable dotfiles repository, a multi-laptop sync architecture, and a GPG-encrypted credential store. This post asks what that infrastructure is worth if the threat model is wrong or the controls are incomplete.">
+<meta property="og:title" content="Security Foundations for a Multi-Machine Research Fleet – focusonr">
+<meta property="og:description" content="The hub of a security series for a five-machine research fleet: what we defend against, the controls that answer each threat, the quarterly audit that keeps the controls from decaying, and the reading path through the rest of the series.">
 <meta property="og:image" content="https://focusonr.org/posts/sec-multi-laptop-threat-model/media/images/hero.jpg">
 <meta property="og:site_name" content="focusonr">
-<meta name="twitter:title" content="Security Foundations for a Multi-Laptop Research Cluster – focusonr">
-<meta name="twitter:description" content="Posts 64-66 establish a portable dotfiles repository, a multi-laptop sync architecture, and a GPG-encrypted credential store. This post asks what that infrastructure is worth if the threat model is wrong or the controls are incomplete.">
+<meta name="twitter:title" content="Security Foundations for a Multi-Machine Research Fleet – focusonr">
+<meta name="twitter:description" content="The hub of a security series for a five-machine research fleet: what we defend against, the controls that answer each threat, the quarterly audit that keeps the controls from decaying, and the reading path through the rest of the series.">
 <meta name="twitter:image" content="https://focusonr.org/posts/sec-multi-laptop-threat-model/media/images/hero.jpg">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -225,29 +225,26 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
   <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
   </ul></li>
-  <li><a href="#what-is-the-threat-model" id="toc-what-is-the-threat-model" class="nav-link" data-scroll-target="#what-is-the-threat-model">What is the Threat Model?</a>
+  <li><a href="#the-fleet" id="toc-the-fleet" class="nav-link" data-scroll-target="#the-fleet">The Fleet</a></li>
+  <li><a href="#what-is-a-threat-model" id="toc-what-is-a-threat-model" class="nav-link" data-scroll-target="#what-is-a-threat-model">What Is a Threat Model?</a>
   <ul class="collapse">
-  <li><a href="#what-we-are-protecting" id="toc-what-we-are-protecting" class="nav-link" data-scroll-target="#what-we-are-protecting">What We Are Protecting</a></li>
-  <li><a href="#threat-actors-and-scenarios" id="toc-threat-actors-and-scenarios" class="nav-link" data-scroll-target="#threat-actors-and-scenarios">Threat Actors and Scenarios</a></li>
-  <li><a href="#the-control-layers" id="toc-the-control-layers" class="nav-link" data-scroll-target="#the-control-layers">The Control Layers</a></li>
+  <li><a href="#assets" id="toc-assets" class="nav-link" data-scroll-target="#assets">Assets</a></li>
+  <li><a href="#threats-in-scope" id="toc-threats-in-scope" class="nav-link" data-scroll-target="#threats-in-scope">Threats in Scope</a></li>
+  <li><a href="#out-of-scope" id="toc-out-of-scope" class="nav-link" data-scroll-target="#out-of-scope">Out of Scope</a></li>
+  </ul></li>
+  <li><a href="#the-control-set" id="toc-the-control-set" class="nav-link" data-scroll-target="#the-control-set">The Control Set</a>
+  <ul class="collapse">
+  <li><a href="#c1.-full-disk-encryption" id="toc-c1.-full-disk-encryption" class="nav-link" data-scroll-target="#c1.-full-disk-encryption">C1. Full-Disk Encryption</a></li>
+  <li><a href="#c5.-ssh-keys-one-per-relationship" id="toc-c5.-ssh-keys-one-per-relationship" class="nav-link" data-scroll-target="#c5.-ssh-keys-one-per-relationship">C5. SSH Keys, One per Relationship</a></li>
+  <li><a href="#c6.-git-hosting-over-https" id="toc-c6.-git-hosting-over-https" class="nav-link" data-scroll-target="#c6.-git-hosting-over-https">C6. Git Hosting over HTTPS</a></li>
+  <li><a href="#c9.-minimal-software" id="toc-c9.-minimal-software" class="nav-link" data-scroll-target="#c9.-minimal-software">C9. Minimal Software</a></li>
+  <li><a href="#smaller-habits" id="toc-smaller-habits" class="nav-link" data-scroll-target="#smaller-habits">Smaller Habits</a></li>
   </ul></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#control-1-full-disk-encryption-filevault" id="toc-control-1-full-disk-encryption-filevault" class="nav-link" data-scroll-target="#control-1-full-disk-encryption-filevault">Control 1: Full-Disk Encryption (FileVault)</a></li>
-  <li><a href="#control-2-gpg-subkey-architecture" id="toc-control-2-gpg-subkey-architecture" class="nav-link" data-scroll-target="#control-2-gpg-subkey-architecture">Control 2: GPG Subkey Architecture</a>
+  <li><a href="#the-quarterly-audit" id="toc-the-quarterly-audit" class="nav-link" data-scroll-target="#the-quarterly-audit">The Quarterly Audit</a>
   <ul class="collapse">
-  <li><a href="#the-problem-with-a-single-key" id="toc-the-problem-with-a-single-key" class="nav-link" data-scroll-target="#the-problem-with-a-single-key">The Problem with a Single Key</a></li>
-  <li><a href="#the-subkey-architecture" id="toc-the-subkey-architecture" class="nav-link" data-scroll-target="#the-subkey-architecture">The Subkey Architecture</a></li>
-  <li><a href="#creating-a-subkey" id="toc-creating-a-subkey" class="nav-link" data-scroll-target="#creating-a-subkey">Creating a Subkey</a></li>
-  <li><a href="#moving-the-master-key-offline" id="toc-moving-the-master-key-offline" class="nav-link" data-scroll-target="#moving-the-master-key-offline">Moving the Master Key Offline</a></li>
-  </ul></li>
-  <li><a href="#control-3-per-machine-ssh-keys" id="toc-control-3-per-machine-ssh-keys" class="nav-link" data-scroll-target="#control-3-per-machine-ssh-keys">Control 3: Per-Machine SSH Keys</a></li>
-  <li><a href="#control-4-plaintext-credential-audit" id="toc-control-4-plaintext-credential-audit" class="nav-link" data-scroll-target="#control-4-plaintext-credential-audit">Control 4: Plaintext Credential Audit</a></li>
-  <li><a href="#control-5-clipboard-security" id="toc-control-5-clipboard-security" class="nav-link" data-scroll-target="#control-5-clipboard-security">Control 5: Clipboard Security</a></li>
-  <li><a href="#control-6-dotfiles-repository-hardening" id="toc-control-6-dotfiles-repository-hardening" class="nav-link" data-scroll-target="#control-6-dotfiles-repository-hardening">Control 6: Dotfiles Repository Hardening</a></li>
-  <li><a href="#control-7-gpg-agent-cache-ttl" id="toc-control-7-gpg-agent-cache-ttl" class="nav-link" data-scroll-target="#control-7-gpg-agent-cache-ttl">Control 7: GPG Agent Cache TTL</a></li>
-  <li><a href="#periodic-review-procedure" id="toc-periodic-review-procedure" class="nav-link" data-scroll-target="#periodic-review-procedure">Periodic Review Procedure</a>
-  <ul class="collapse">
-  <li><a href="#quarterly-checklist" id="toc-quarterly-checklist" class="nav-link" data-scroll-target="#quarterly-checklist">Quarterly Checklist</a></li>
+  <li><a href="#checklist" id="toc-checklist" class="nav-link" data-scroll-target="#checklist">Checklist</a></li>
+  <li><a href="#why-the-backup-items-exist" id="toc-why-the-backup-items-exist" class="nav-link" data-scroll-target="#why-the-backup-items-exist">Why the Backup Items Exist</a></li>
   </ul></li>
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
   <li><a href="#uninstall-rollback" id="toc-uninstall-rollback" class="nav-link" data-scroll-target="#uninstall-rollback">Uninstall / Rollback</a></li>
@@ -258,12 +255,10 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
   </ul></li>
   <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#the-series" id="toc-the-series" class="nav-link" data-scroll-target="#the-series">The Series</a></li>
   <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
   <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
-  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a>
-  <ul class="collapse">
-  <li><a href="#related-posts-in-this-cluster" id="toc-related-posts-in-this-cluster" class="nav-link" data-scroll-target="#related-posts-in-this-cluster">Related posts in this cluster</a></li>
-  </ul></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
     </div>
@@ -272,19 +267,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Security Foundations for a Multi-Laptop Research Cluster</h1>
+<h1 class="title">Security Foundations for a Multi-Machine Research Fleet</h1>
   <div class="quarto-categories">
     <div class="quarto-category">security</div>
-    <div class="quarto-category">gpg</div>
-    <div class="quarto-category">dotfiles</div>
+    <div class="quarto-category">threat-model</div>
+    <div class="quarto-category">encryption</div>
+    <div class="quarto-category">backup</div>
     <div class="quarto-category">macos</div>
-    <div class="quarto-category">setup</div>
+    <div class="quarto-category">linux</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    Posts 64-66 establish a portable dotfiles repository, a multi-laptop sync architecture, and a GPG-encrypted credential store. This post asks what that infrastructure is worth if the threat model is wrong or the controls are incomplete.
+    The hub of a security series for a five-machine research fleet: what we defend against, the controls that answer each threat, the quarterly audit that keeps the controls from decaying, and the reading path through the rest of the series.
   </div>
 </div>
 
@@ -314,51 +310,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- ============================================================================
-AUTHOR PROVIDES — concrete inputs the blogger must supply
+AUTHOR NOTES
 
-YAML FRONT MATTER
-  [x] title
-  [x] subtitle
-  [x] date
-  [x] categories
-  [x] description
-  [x] image           — genuine hero.jpg generated 2026-08-25
-  [x] draft: false    — flip when ready
+Series hub (part 1 of 8). Owns: the fleet table, the threat model, the
+control set mapped to threats (one link per control to its owning
+post), full-disk encryption, the canonical quarterly audit checklist,
+and the reading path. Other posts summarize these and link here.
 
-NARRATIVE INPUTS
-  [x] Hook sentence
-  [x] Pain point
-  [x] Motivations     — 5 bullets
-  [x] Objectives      — 4 verifiable end states
-  [x] What is [the problem]?
-  [x] Things to Watch Out For — 6 gotchas
-  [x] Lessons Learnt
-  [x] Limitations
-  [x] Opportunities
-  [x] Wrapping Up + takeaways
-  [x] See Also
-
-CONFIGURATION DELIVERABLES
-  [x] Prerequisites
-  [x] Verification commands (audit checklist)
-  [x] Periodic review procedure
-  [ ] Optional: security-audit.sh script under analysis/configs/
-
-VERSION MATRIX
-  [x] OS + versions
-  [ ] Date of last verification
-
-IMAGES
-  [x] Hero image (80% width) — done (Gemini, 2026-08-25): two brass
-      padlocks, one open one locked
-  [x] Ambiance image 1 — after Objectives — done: magnifying glass
-      over a map with a marked route
-  [x] Ambiance image 2 — after Controls — done: fireproof document
-      box, lid ajar
-  [x] Ambiance image 3 — before Lessons Learnt — done: chain-link
-      fence post with padlock and chain
-  [x] media/images/README.md
-
+Images: hero.jpg, ambiance1.jpg (after Objectives), ambiance2.jpg
+(after the control set), ambiance3.jpg (before What Did We Learn?).
+Configuration artifacts: analysis/configs/security-audit.sh (macOS
+subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 ============================================================================ -->
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -369,28 +331,26 @@ IMAGES
 <p><em>A credential store is only as strong as the machine it runs on, the key that unlocks it, and the habits that surround both.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really appreciate how many plaintext secrets were living on my laptops until I completed a migration off Dropbox, onto a git-tracked dotfiles repository and a <code>pass</code> credential store. The dotfiles repository was clean, the pass store was encrypted, and the sync architecture was tidy. Then I ran a quick audit and found <code>~/.aws/credentials</code> in plaintext, iCloud Universal Clipboard silently syncing <code>pass -c</code> output between machines, and a GPG key set to never expire sitting on a disk with no subkey architecture and no offline master key backup.</p>
-<p>That three-layer infrastructure is sound as an organizational system. It is less clearly sound as a security system, because the migration was carried out primarily as an operational exercise and treated security as a set of footnotes rather than a first-class concern. This post addresses that gap. It defines a threat model for a personal multi-laptop research cluster, audits the controls already in place against that model, identifies the residual gaps, and provides a set of concrete mitigations ordered by impact.</p>
-<p>This post is not a generic security hardening guide. The scope is narrow: the specific architecture of the dotfiles repository, the three-layer sync design, and the pass credential store. Security measures that do not connect to that architecture are out of scope.</p>
+<p>A research workflow that spans several machines multiplies both its conveniences and its exposures. Each machine holds a copy of the dotfiles, the project tree, the password store, and the keys that reach the others; each runs scheduled jobs that copy data somewhere else. Security for such a fleet is less a matter of any single tool than of knowing which threats matter, which control answers each, and how to tell, months later, that the controls still hold.</p>
+<p>This post is the hub of an eight-part series that documents one such fleet: three Macs, a Linux laptop, and a repurposed laptop that serves as a home server. It states the threat model, lists the controls and the post that treats each in depth, covers full-disk encryption directly, and gives the quarterly audit checklist that the rest of the series refers back to. The controls described here are the ones in use, and the lessons come from the first full audit of the fleet in the last week of September 2026.</p>
 <section id="motivations" class="level2">
 <h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
 <ul>
-<li>A credential store that is correctly encrypted at the file level can still be compromised if the machine it runs on is not encrypted at the disk level. It can also be compromised if the decrypted key is cached in memory while the screen is unlocked.</li>
-<li>A GPG key with no expiration and no subkey architecture means that any compromise of the laptop exposes the master key indefinitely, with no mechanism for selective revocation across multiple devices.</li>
-<li>Plaintext credential files (<code>~/.aws/credentials</code>, <code>~/.npmrc</code>, rclone tokens) may exist adjacent to the pass store, providing easier attack vectors than the encrypted store itself.</li>
-<li>A multi-machine setup creates surfaces that a single-machine setup does not. These include a clipboard manager syncing across devices via iCloud, shared SSH private keys that provide no selective revocation, and a dotfiles repository whose compromise reveals the entire configuration of every machine.</li>
-<li>Security controls that are not periodically verified decay silently. Examples include a GPG key renewal reminder that was never added to a calendar, a pass store that was not audited after a service breach, and FileVault that was disabled during a disk repair and not re-enabled. Each is a control that existed in intention but not in fact.</li>
+<li>Plaintext secrets accumulate on working machines faster than anyone removes them, and a sync service will copy whatever sits in a synced folder, including private keys.</li>
+<li>Several machines sharing one identity means one compromise reaches all of them unless each relationship has its own credential.</li>
+<li>Backups that report success can still be incomplete, stale, or unreadable, and nothing announces that state.</li>
+<li>Controls that were correct when configured drift as software, folders, and network addresses change.</li>
+<li>A written threat model makes it possible to say what is deliberately out of scope, rather than leaving it undecided.</li>
 </ul>
 </section>
 <section id="objectives" class="level2">
 <h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
 <ol type="1">
-<li>Verify that the full-disk encryption, GPG agent, and credential store controls identified in posts 64-66 are actually in place on every machine in the cluster.</li>
-<li>Implement the GPG subkey architecture so that the master private key is not present on any laptop’s disk during daily operation.</li>
-<li>Audit all plaintext credential files and migrate them to pass using the <code>pass_env</code> retrieval pattern.</li>
-<li>Establish a quarterly review procedure that checks the key controls before they decay.</li>
+<li>State the assets, threats, and out-of-scope risks for a five-machine research fleet.</li>
+<li>Map each threat to one or more controls, with a pointer to the series post that implements each control.</li>
+<li>Confirm full-disk encryption on every machine, macOS and Linux.</li>
+<li>Run a quarterly audit that checks every control on every machine, including whether last night’s backups actually succeeded.</li>
 </ol>
-<p>This post documents the author’s own implementation. Controls missed or threats miscategorized are worth noting in the comment thread below.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance1.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -399,160 +359,218 @@ IMAGES
 </div>
 </section>
 </section>
-<section id="what-is-the-threat-model" class="level1">
-<h1>What is the Threat Model?</h1>
-<p>A threat model is a structured answer to three questions: what are we protecting, from what, and with what controls? For a personal multi-laptop research cluster, the answers are as follows.</p>
-<section id="what-we-are-protecting" class="level2">
-<h2 class="anchored" data-anchor-id="what-we-are-protecting">What We Are Protecting</h2>
-<ul>
-<li><strong>Credentials:</strong> passwords, API keys, SSH private keys, GPG private keys, OAuth tokens, TOTP secrets.</li>
-<li><strong>Configuration:</strong> the dotfiles repository reveals the structure of the entire environment. An attacker who can read it knows which services you authenticate to, which scripts run on schedule, and which paths hold sensitive data.</li>
-<li><strong>Research data:</strong> not addressed in this post; the focus is on the credential and configuration layer.</li>
-</ul>
-</section>
-<section id="threat-actors-and-scenarios" class="level2">
-<h2 class="anchored" data-anchor-id="threat-actors-and-scenarios">Threat Actors and Scenarios</h2>
-<p>This is a personal, not enterprise, cluster. The realistic threats are:</p>
-<ul>
-<li><strong>Physical theft</strong> of a laptop, unlocked or locked.</li>
-<li><strong>Remote compromise</strong> via a phishing credential, a malicious package, or a vulnerability in a running service.</li>
-<li><strong>Accidental exposure</strong> via a public git commit, an email attachment, or a cloud sync of a plaintext file.</li>
-<li><strong>Credential reuse</strong> following a service breach that exposes a password used elsewhere.</li>
-</ul>
-<p>Nation-state actors, supply-chain attacks on Homebrew itself, and hardware-level firmware attacks are out of scope for this post. They are real threats but require controls beyond what a setup blog addresses.</p>
-</section>
-<section id="the-control-layers" class="level2">
-<h2 class="anchored" data-anchor-id="the-control-layers">The Control Layers</h2>
-<p>The three-layer architecture maps onto a security layering as follows:</p>
+<section id="the-fleet" class="level1">
+<h1>The Fleet</h1>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
 <thead>
 <tr class="header">
-<th>Layer</th>
-<th>What it holds</th>
-<th>Primary control</th>
-<th>Residual risk</th>
+<th>Name</th>
+<th>Role</th>
+<th>Operating system</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Disk</td>
-<td>Everything</td>
-<td>FileVault (AES-256)</td>
-<td>Unlocked laptop; memory attacks</td>
+<td>julia</td>
+<td>primary workstation</td>
+<td>macOS 26</td>
 </tr>
 <tr class="even">
-<td>Credentials</td>
-<td>Passwords, tokens</td>
-<td>GPG encryption via pass</td>
-<td>Weak passphrase; no subkeys</td>
+<td>athena</td>
+<td>laptop; the only Mac with Time Machine</td>
+<td>macOS 26</td>
 </tr>
 <tr class="odd">
-<td>Configuration</td>
-<td>Dotfiles, scripts</td>
-<td>Private git repo</td>
-<td>Repo compromise; path disclosure</td>
+<td>joe</td>
+<td>secondary Mac</td>
+<td>macOS 26</td>
 </tr>
 <tr class="even">
-<td>Network</td>
-<td>Sync traffic</td>
-<td>SSH; HTTPS</td>
-<td>Weak SSH keys; clipboard leaks</td>
+<td>mercury</td>
+<td>home server (repurposed 2016 MacBook Pro)</td>
+<td>Linux Mint</td>
+</tr>
+<tr class="odd">
+<td>zeus</td>
+<td>Linux laptop (ThinkPad)</td>
+<td>Linux Mint 22</td>
 </tr>
 </tbody>
 </table>
-<p>Controls at each layer are independent. A failure at one layer does not automatically defeat the others, but a sufficiently motivated attacker who finds a gap at any layer can potentially reach the layers above it.</p>
+<p>All five machines encrypt their disks at rest: FileVault on the Macs, LUKS on the two Linux machines. Machines reach each other by their Tailscale addresses, which stay fixed when the home router hands out new LAN addresses; the LAN itself is used only for the Time Machine share on the home server. The home server runs a default-deny firewall. It holds the nightly Borg repositories for the other four machines and the Time Machine share for athena, and it backs up its own files to a repository on julia.</p>
 </section>
-</section>
-<section id="prerequisites" class="level1">
-<h1>Prerequisites</h1>
-<p>This post assumes:</p>
+<section id="what-is-a-threat-model" class="level1">
+<h1>What Is a Threat Model?</h1>
+<p>A threat model answers three questions: what is worth protecting, from whom or what, and which measures reduce the risk to an acceptable level. Writing it down has a second benefit that is easy to underrate: it records what was deliberately left out, so that an uncovered risk is a decision rather than an oversight.</p>
+<section id="assets" class="level2">
+<h2 class="anchored" data-anchor-id="assets">Assets</h2>
 <ul>
-<li><strong>Posts 64, 65, and 66 completed.</strong> The dotfiles repository is at <code>~/dotfiles/</code>, the pass store is at <code>~/.password-store/</code>, and the three-layer sync architecture is in place or in progress.</li>
-<li><strong>Operating system:</strong> macOS 13+ on all machines in the cluster.</li>
-<li><strong>Time required:</strong> approximately 2-3 hours for the initial audit and control implementation; 30 minutes per quarter for the periodic review.</li>
+<li><strong>Credentials:</strong> the GPG key that unlocks the password store, the store itself, SSH private keys, API keys, cloud credentials, and OAuth tokens held by command-line tools.</li>
+<li><strong>Research data and code:</strong> the project tree (<code>~/prj</code>), including unpublished analyses and data covered by use agreements.</li>
+<li><strong>Backups:</strong> the Borg repositories, cloud copies, and the Time Machine share, which together are the only defense against loss.</li>
+<li><strong>Configuration:</strong> the dotfiles repository, which encodes how every machine is set up and is therefore a tempting place for a secret to end up by accident.</li>
 </ul>
-<p>If posts 64-66 are not yet complete, the controls described here have no infrastructure to attach to. Complete the operational setup first.</p>
 </section>
-<section id="control-1-full-disk-encryption-filevault" class="level1">
-<h1>Control 1: Full-Disk Encryption (FileVault)</h1>
-<p>FileVault is a prerequisite for every other control in this post. A laptop with FileVault off and a <code>pass</code> store is less secure than a laptop with FileVault on and a plaintext password file, because without disk encryption the entire filesystem (including the GPG agent’s memory-mapped files and the private key in <code>~/.gnupg/</code>) is readable if the physical device is obtained.</p>
-<p>Verify on each machine:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">fdesetup</span> status</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Required output: FileVault is On.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If FileVault is off, enable it before proceeding. The initial encryption takes 30-60 minutes and runs in the background.</p>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>FileVault does not protect an unlocked, unattended machine. Set the screen lock timeout to 1 minute (System Settings → Lock Screen → ‘Require password after screen saver begins or display is turned off’). On a shared desk or open office, shorter is better.</p>
-</div>
-</div>
+<section id="threats-in-scope" class="level2">
+<h2 class="anchored" data-anchor-id="threats-in-scope">Threats in Scope</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>ID</th>
+<th>Threat</th>
+<th>Typical path</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>T1</td>
+<td>Device loss or theft</td>
+<td>A laptop left in a car or a cafe</td>
+</tr>
+<tr class="even">
+<td>T2</td>
+<td>Account compromise</td>
+<td>A reused or phished password; a stolen token</td>
+</tr>
+<tr class="odd">
+<td>T3</td>
+<td>Credential leakage</td>
+<td>A settings folder inside a synced folder; a token printed to a terminal or log; a secret committed to git</td>
+</tr>
+<tr class="even">
+<td>T4</td>
+<td>Ransomware or accidental deletion</td>
+<td>A mistaken <code>rm</code>, a sync that propagates a deletion, malware encrypting a home folder</td>
+</tr>
+<tr class="odd">
+<td>T5</td>
+<td>Silent backup failure</td>
+<td>A job that stops running, skips a folder, or cannot reach its destination, while appearing scheduled</td>
+</tr>
+<tr class="even">
+<td>T6</td>
+<td>Configuration drift</td>
+<td>A fix applied on one machine but not the others; an address or path that changes underneath a script</td>
+</tr>
+</tbody>
+</table>
+<p>T3 is the threat that actually materialized in this fleet. A settings folder on two machines had been a symlink into a cloud-sync folder, and for months it carried the GPG private key, backup passphrases, and OAuth tokens to a third party’s servers. Whether anyone read them could not be determined, so every exposed credential was replaced. That incident, referred to in this series as <em>the exposure</em>, is told in <a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a>, and the rotation discipline it produced is in <a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a>.</p>
+<p>T5 and T6 are the threats most often missed in personal setups. During the first audit they accounted for most of the problems found.</p>
 </section>
-<section id="control-2-gpg-subkey-architecture" class="level1">
-<h1>Control 2: GPG Subkey Architecture</h1>
-<p>A basic <code>pass</code> setup typically creates a single key pair used for both certification and encryption. The correct architecture separates these roles.</p>
-<section id="the-problem-with-a-single-key" class="level2">
-<h2 class="anchored" data-anchor-id="the-problem-with-a-single-key">The Problem with a Single Key</h2>
-<p>When the master key is used for daily encryption (the basic-setup default), it must remain on the laptop’s disk. If the disk is compromised despite FileVault (via an unlocked session, a remote exploit, or a memory attack), the attacker has the master private key: they can sign new subkeys on your behalf, re-encrypt your pass store to a key they control, and impersonate you to any GPG web of trust indefinitely.</p>
+<section id="out-of-scope" class="level2">
+<h2 class="anchored" data-anchor-id="out-of-scope">Out of Scope</h2>
+<ul>
+<li>Targeted attackers with state-level resources.</li>
+<li>Physical tampering with hardware (evil-maid attacks, hardware implants).</li>
+<li>Supply-chain compromise of the operating system or of Homebrew and distribution packages.</li>
+<li>Compromise of the providers themselves (Google, Apple, Microsoft, GitHub) beyond what encryption of our own data mitigates.</li>
+</ul>
+<p>These are real risks; they are excluded because the controls that address them cost far more than the value they would add for a single researcher’s fleet.</p>
 </section>
-<section id="the-subkey-architecture" class="level2">
-<h2 class="anchored" data-anchor-id="the-subkey-architecture">The Subkey Architecture</h2>
-<p>The correct model has three key components:</p>
-<ol type="1">
-<li><strong>Master key (certify only):</strong> created once, used only to sign new subkeys and revocation certificates, then moved to offline storage (an encrypted USB drive in a physical safe, or a hardware security key). After this move, the master secret key is deleted from the laptop’s keyring.</li>
-<li><strong>Encryption subkey:</strong> used by <code>pass</code> for all daily encrypt/decrypt operations. Has its own expiry (1-2 years). If this subkey is compromised, the master key (offline) can revoke it and sign a replacement.</li>
-<li><strong>Signing subkey (optional):</strong> used for <code>git commit --gpg-sign</code> and email signing.</li>
-</ol>
 </section>
-<section id="creating-a-subkey" class="level2">
-<h2 class="anchored" data-anchor-id="creating-a-subkey">Creating a Subkey</h2>
-<p>For an existing key from a basic setup, add a dedicated encryption subkey now:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Edit the key interactively</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--expert</span> <span class="at">--edit-key</span> your@email.address</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># At the gpg&gt; prompt:</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">addkey</span>        <span class="co"># adds a new subkey</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Select: (12) ECC (encrypt only)</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Curve: Curve 25519</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Expiry: 1y</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="ex">save</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Verify the subkey appears:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-keys</span> <span class="at">--with-subkey-fingerprint</span> your@email.address</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The output will show the master key (<code>pub</code>) and the subkey (<code>sub</code>).</p>
+<section id="the-control-set" class="level1">
+<h1>The Control Set</h1>
+<p>Each control below answers one or more threats and points to the post that implements it. The audit checklist later in this post checks each one.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Control</th>
+<th>Threats</th>
+<th>Owning post</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>C1. Full-disk encryption on every machine</td>
+<td>T1</td>
+<td>This post</td>
+</tr>
+<tr class="even">
+<td>C2. Password store: <code>pass</code> with a GPG key</td>
+<td>T1, T2, T3</td>
+<td><a href="../sec-pass-password-manager/">Setting Up pass</a></td>
+</tr>
+<tr class="odd">
+<td>C3. Secrets loaded on demand; rotation after any exposure</td>
+<td>T2, T3</td>
+<td><a href="../sec-aws-and-pass-secrets/">Secrets Management</a></td>
+</tr>
+<tr class="even">
+<td>C4. No secrets in synced folders; dotfiles in git, not a sync service</td>
+<td>T3, T6</td>
+<td><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox</a></td>
+</tr>
+<tr class="odd">
+<td>C5. One SSH key per relationship; restricted backup keys</td>
+<td>T2, T3</td>
+<td>This post (summary); <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a></td>
+</tr>
+<tr class="even">
+<td>C6. Git hosting over HTTPS through the <code>gh</code> credential helper</td>
+<td>T2, T3</td>
+<td>This post (summary); <a href="../sec-aws-and-pass-secrets/">Secrets Management</a></td>
+</tr>
+<tr class="odd">
+<td>C7. Stable Tailscale addressing; default-deny firewall on the server</td>
+<td>T2, T6</td>
+<td><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></td>
+</tr>
+<tr class="even">
+<td>C8. Encrypted 3-2-1 backups, checked daily, restore-tested</td>
+<td>T1, T4, T5</td>
+<td><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a></td>
+</tr>
+<tr class="odd">
+<td>C9. Minimal installed software, recorded declaratively</td>
+<td>T6</td>
+<td>This post (summary); <a href="../sec-fleet-hardening-lessons/">What Actually Broke</a></td>
+</tr>
+<tr class="even">
+<td>C10. Quarterly audit of every control on every machine</td>
+<td>T5, T6</td>
+<td>This post</td>
+</tr>
+</tbody>
+</table>
+<p>The research-data layer, where an object store with content hashes would add integrity checks that git cannot provide for large files, is treated as a design question rather than a deployed control in <a href="../sec-object-store-research-data/">Object Storage for Research Data</a>.</p>
+<section id="c1.-full-disk-encryption" class="level2">
+<h2 class="anchored" data-anchor-id="c1.-full-disk-encryption">C1. Full-Disk Encryption</h2>
+<p>Full-disk encryption is the control that makes T1 a hardware loss rather than a data breach. On a Mac it is FileVault; on Linux it is LUKS, normally chosen at installation time because adding it later means reinstalling.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS: expect "FileVault is On."</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">fdesetup</span> status</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux: expect a crypto_LUKS partition under the root disk</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,TYPE,FSTYPE <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> luks</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Encryption protects data only while the machine is off or locked, so it pairs with a short screen-lock delay and a password required immediately on wake (System Settings, Lock Screen, on macOS).</p>
+<p>FileVault has one operational consequence that matters for a fleet managed over SSH: after a restart, a FileVault Mac does not unlock its data volume until someone logs in at the keyboard, and until then it refuses SSH logins. A remote restart therefore strands the machine until a person reaches it. Plan restarts accordingly, or accept the trip.</p>
 </section>
-<section id="moving-the-master-key-offline" class="level2">
-<h2 class="anchored" data-anchor-id="moving-the-master-key-offline">Moving the Master Key Offline</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Export master + subkeys to an encrypted backup medium</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-secret-keys</span> <span class="at">--armor</span> your@email.address <span class="dt">\</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> /Volumes/EncryptedUSB/gpg-master-backup.asc</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Export only the subkeys for the laptop keyring</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-secret-subkeys</span> <span class="at">--armor</span> your@email.address <span class="dt">\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="op">&gt;</span> /tmp/subkeys-only.asc</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Delete the master secret key from the laptop</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--delete-secret-key</span> your@email.address</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-import only the subkeys</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--import</span> /tmp/subkeys-only.asc</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> /tmp/subkeys-only.asc   <span class="co"># plaintext; delete immediately</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Verify the master secret key is gone:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-secret-keys</span> your@email.address</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The master key line should show 'sec#' (not 'sec')</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The '#' indicates the secret key is not available</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>pass</code> continues to work using the encryption subkey. The master key is needed only when signing a new subkey, which happens at most once every 1-2 years.</p>
+<section id="c5.-ssh-keys-one-per-relationship" class="level2">
+<h2 class="anchored" data-anchor-id="c5.-ssh-keys-one-per-relationship">C5. SSH Keys, One per Relationship</h2>
+<p>The fleet uses a separate SSH key pair for each relationship rather than one key per person or per machine: a key for each git host, a key for interactive logins between machines, and one key per machine for its nightly backup connection. Losing or exposing one key then affects one relationship.</p>
+<p>The backup keys show the pattern at its strongest. On the home server, each backup key is pinned in <code>authorized_keys</code> to a forced command that permits only an append-only Borg session against that machine’s own repository. A leaked backup key can add data to one repository; it cannot open a shell, read other machines’ backups, or delete anything. Because SSH offers every key named in the user’s config file, the backup script uses a separate config file of its own so that only the restricted key is presented. The details are in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>.</p>
+<p>Two settings apply to every key entry: <code>IdentitiesOnly yes</code>, so that SSH offers only the key named for that host, and a comment on each public key naming the machine and the relationship, so that a list of authorized keys can be audited by eye.</p>
+</section>
+<section id="c6.-git-hosting-over-https" class="level2">
+<h2 class="anchored" data-anchor-id="c6.-git-hosting-over-https">C6. Git Hosting over HTTPS</h2>
+<p>Day-to-day git traffic to the hosting service authenticates over HTTPS through the GitHub CLI’s credential helper, with the token held in the macOS Keychain, rather than through SSH keys. This keeps one revocable credential per machine, visible on the provider’s authorized-applications page, and removes the need to distribute git SSH keys at all. Two practical details: the token needs the <code>workflow</code> scope before it can push a change to a GitHub Actions workflow file, and the Keychain is not available inside a plain SSH session, so a <code>git pull</code> run on a Mac over SSH fails to authenticate even though the same command works at the keyboard.</p>
+</section>
+<section id="c9.-minimal-software" class="level2">
+<h2 class="anchored" data-anchor-id="c9.-minimal-software">C9. Minimal Software</h2>
+<p>Every installed application is code that runs with the user’s privileges and a vendor relationship that can change. The fleet keeps the installed set small, records it in a Brewfile in the dotfiles repository so that a rebuilt machine can be restored with one command, and installs TeX as a per-user TinyTeX with a package list rather than a full distribution. Removing an application completely, including its support files, launch agents, and system extensions, turned out to need more care than dragging it to the Trash; that work is described in <a href="../sec-fleet-hardening-lessons/">What Actually Broke</a>.</p>
+</section>
+<section id="smaller-habits" class="level2">
+<h2 class="anchored" data-anchor-id="smaller-habits">Smaller Habits</h2>
+<ul>
+<li><strong>Clipboard.</strong> <code>pass -c</code> clears the clipboard after 45 seconds. On Macs signed into the same Apple account, Universal Clipboard can carry a copied password to another device; disable Handoff where that matters.</li>
+<li><strong>GPG agent cache.</strong> A cache lifetime of minutes rather than hours limits how long an unattended, unlocked session can decrypt secrets. A reference <code>gpg-agent.conf</code> is in the post’s <code>analysis/configs/</code> folder.</li>
+<li><strong>Keep a copy of the GPG master key offline.</strong> Recommended practice is an offline backup of the master key, kept apart from every daily-use machine, so that losing all machines at once does not lose the password store; see <a href="../sec-pass-password-manager/">Setting Up pass</a>.</li>
+<li><strong>Inspect credential files by structure, not content.</strong> Count lines, list key names, or check file types; never print a token to check it. A printed token is treated as exposed and rotated.</li>
+</ul>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -561,183 +579,114 @@ Warning
 </div>
 </section>
 </section>
-<section id="control-3-per-machine-ssh-keys" class="level1">
-<h1>Control 3: Per-Machine SSH Keys</h1>
-<p>Post 65’s bootstrap sequence says ‘Restore <code>~/.ssh</code> from secure storage.’ For SSH private keys, restoration from backup is the wrong model.</p>
-<p>Each machine should generate its own SSH key pair:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># On each new machine, generate a unique key</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> ed25519 <span class="at">-C</span> <span class="st">"</span><span class="va">$(</span><span class="fu">hostname</span><span class="va">)</span><span class="st">-</span><span class="va">$(</span><span class="fu">date</span> +%Y%m<span class="va">)</span><span class="st">"</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Example comment: MacBook-Pro-2026-0517</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Then add the public key explicitly to each service and server that requires access (<code>github.com</code>, any self-hosted git server, remote VPS). The comment in the key makes it clear which machine generated it.</p>
-<p>When a machine is retired, decommissioned, or compromised, remove only that machine’s public key from the authorized list. Every other machine continues to work without re-keying.</p>
-<p>Contrast this with the copy-and-restore model: if <code>~/.ssh/id_ed25519</code> is the same private key on all machines, any single-machine compromise requires rotating every service credential simultaneously. There is no surgical revocation.</p>
-<p><strong>Audit your current state:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># List all keys authorised on GitHub</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> api user/keys <span class="at">--jq</span> <span class="st">'.[].title'</span></span>
+<section id="prerequisites" class="level1">
+<h1>Prerequisites</h1>
+<ul>
+<li>Administrative access to every machine in the fleet.</li>
+<li><code>pass</code> and GnuPG installed and initialized; see <a href="../sec-pass-password-manager/">Setting Up pass</a>.</li>
+<li>SSH access from the workstation to every other machine, so that the audit can be run from one place.</li>
+<li>The backup jobs described in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>, scheduled with launchd on the Macs and systemd user timers on Linux.</li>
+</ul>
+</section>
+<section id="the-quarterly-audit" class="level1">
+<h1>The Quarterly Audit</h1>
+<p>The audit is where controls are confirmed rather than assumed. The first full run took several days rather than the half hour originally budgeted, mostly because each check turned up something to fix. Later runs should be shorter, but the checklist is written to be run in full, on every machine, including the Linux ones. During the first audit the backup status check initially covered only the Macs, and a Linux laptop’s backups had been failing for four nights before anyone looked at it.</p>
+<section id="checklist" class="level2">
+<h2 class="anchored" data-anchor-id="checklist">Checklist</h2>
+<p><strong>Encryption and lock (C1)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Disk encryption on every machine</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">fdesetup</span> status                              <span class="co"># macOS</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,TYPE,FSTYPE <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> luks     <span class="co"># Linux</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Screen lock requires a password immediately (macOS)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">sysadminctl</span> <span class="at">-screenLock</span> status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Credentials (C2, C3, C4)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. GPG key expiry dates (field 7, epoch seconds; empty means</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    the key never expires); renew anything due within 90 days</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-keys</span> <span class="at">--with-colons</span> <span class="kw">|</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'$1 == "pub" || $1 == "sub" { print $1, $5, $7 }'</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Candidate plaintext credential files in the home folder</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> ~ <span class="at">-maxdepth</span> 3 <span class="dt">\(</span> <span class="at">-name</span> <span class="st">'*.pem'</span> <span class="at">-o</span> <span class="at">-name</span> <span class="st">'.env'</span> <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">-o</span> <span class="at">-name</span> <span class="st">'credentials'</span> <span class="at">-o</span> <span class="at">-name</span> <span class="st">'*token*'</span> <span class="dt">\)</span> <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">-not</span> <span class="at">-path</span> <span class="st">'*/Library/*'</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. The password store is not inside a synced folder</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/.password-store <span class="kw">&amp;&amp;</span> <span class="bu">pwd</span> <span class="at">-P</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. The store's git remote is self-hosted</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> ~/.password-store remote <span class="at">-v</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Stale entries: review the tree, remove what is no longer used</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Keys and authorizations (C5, C6)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Authorized SSH keys on every machine: each comment names a</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    machine and a relationship; no unknown entries</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.ssh/authorized_keys <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{ print $NF }'</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 9. Keys and OAuth apps on each hosting account: review in the</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#    provider's settings pages; remove anything not recognized</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 10. The gh login is in the Keychain, not a plain file, and its</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     scopes are what you expect</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Dotfiles and drift (C4, C6, C9)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 11. Nothing sensitive staged or tracked in the dotfiles repository</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> ~/dotfiles status <span class="at">--short</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> ~/dotfiles ls-files <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="at">-E</span> <span class="st">'token|secret|hosts\.yml'</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 12. Every machine is on the same dotfiles commit</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> ~/dotfiles log <span class="at">-1</span> <span class="at">--oneline</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 13. The installed app set matches the Brewfile</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> bundle check <span class="at">--file</span> ~/dotfiles/Brewfile</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Backups (C8), on every machine</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 14. Last exit status of every scheduled backup job (macOS);</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#     the middle column must be 0</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">launchctl</span> list <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'local\.(borg|rclone)'</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 15. The same on Linux</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> list-timers <span class="at">--all</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> borg</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> show <span class="at">-p</span> Result <span class="at">-p</span> ExecMainStatus <span class="dt">\</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  borg-backup.service</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 16. Log freshness: last night's log exists and ends in success</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-t</span> ~/.borg/log <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-3</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/.borg/log/</span><span class="va">$(</span><span class="fu">ls</span> <span class="at">-t</span> ~/.borg/log <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 17. Restore test: extract one known file from the latest archive</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#     into a scratch folder and compare it with the original</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#     (see the backup post for the repository variables)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> extract <span class="at">--dry-run</span> <span class="at">--list</span> <span class="st">"::</span><span class="va">$(</span><span class="ex">borg</span> list <span class="at">--last</span> 1 <span class="at">--short</span><span class="va">)</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">head</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Network and server (C7)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 18. The home server's firewall is active and default-deny</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status verbose</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Check which machines have identical key fingerprints</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># (run on each machine and compare)</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-lf</span> ~/.ssh/id_ed25519.pub</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If all machines show the same fingerprint, the key has been shared and should be rotated: generate a new key per machine, register each one, then delete the shared key from all services.</p>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 19. Services listen where they should, and only there</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ss <span class="at">-tlnp</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Items 1 to 16 take a few minutes per machine once the fleet is in good order. Item 17 is the one most often skipped and the one that matters most: a backup that has never been restored is an assumption. A full restore test, onto a spare disk, belongs on the checklist once a year.</p>
 </section>
-<section id="control-4-plaintext-credential-audit" class="level1">
-<h1>Control 4: Plaintext Credential Audit</h1>
-<p>The pass store is encrypted. Files adjacent to it are often not. Run the following audit on each machine:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find candidate plaintext credential files</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> ~/.aws/credentials <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> ~/.npmrc <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> ~/.config/rclone/rclone.conf <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> ~/.netrc <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-r</span> <span class="st">"token\|secret\|password\|key"</span> ~/.config/ <span class="dt">\</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--include</span><span class="op">=</span><span class="st">"*.conf"</span> <span class="at">--include</span><span class="op">=</span><span class="st">"*.ini"</span> <span class="at">-l</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>For each file found, migrate the sensitive values to pass and retrieve them on demand via a shell function. The general pattern:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Store once</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert aws/access-key-id</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert aws/secret-access-key</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve per session via a shell function in ~/.zshrc</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">aws_env()</span> <span class="kw">{</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">export</span> <span class="va">AWS_ACCESS_KEY_ID</span><span class="op">=</span><span class="va">$(</span><span class="ex">pass</span> aws/access-key-id<span class="va">)</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">export</span> <span class="va">AWS_SECRET_ACCESS_KEY</span><span class="op">=</span><span class="va">$(</span><span class="ex">pass</span> aws/secret-access-key<span class="va">)</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>After confirming the function works, remove the plaintext file:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> ~/.aws/credentials</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The same pattern applies to <code>~/.npmrc</code> (npm registry tokens), <code>~/.config/rclone/rclone.conf</code> (OAuth tokens), and any <code>~/.env</code> file containing API keys. After migration, the <code>~/dotfiles</code> repository can safely track the <em>structure</em> of <code>~/.aws/config</code> (region, output format) without any secret values.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Some tools (AWS CLI, rclone) support pointing at an external credential helper instead of a file. Post 66’s shell-function approach is the minimal implementation; a proper credential helper integration is more robust for tools that are called from scripts or launchd jobs where the shell function is not available.</p>
-</div>
-</div>
-</section>
-<section id="control-5-clipboard-security" class="level1">
-<h1>Control 5: Clipboard Security</h1>
-<p><code>pass -c</code> copies a password to the clipboard and clears it after 45 seconds. This control is bypassed by any clipboard manager running on the system.</p>
-<p><strong>Inventory clipboard managers on each machine:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check running clipboard tools</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ps</span> aux <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="st">"alfred\|raycast\|clipmenu\|clipboard"</span> <span class="dt">\</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-v</span> grep</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>iCloud Universal Clipboard</strong> is the most commonly overlooked vector. If two machines are signed into the same Apple ID and ‘Handoff’ is enabled (System Settings → General → AirDrop and Handoff), every clipboard copy on one machine appears on the other within seconds. This includes the output of <code>pass -c</code>.</p>
-<p>Disable Universal Clipboard:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify current setting (1 = enabled)</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">defaults</span> read ~/Library/Preferences/com.apple.coreservices.useractivityd.plist <span class="dt">\</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  ActivityAdvertisingAllowed <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Or via System Settings → General → AirDrop and Handoff → uncheck ‘Handoff’.</p>
-<p>For third-party clipboard managers (Alfred, Raycast): configure them to exclude clipboard entries from applications named <code>pass</code> or <code>gpg</code>, or disable clipboard history entirely. Both Alfred and Raycast have per-application exclusion lists in their preferences.</p>
-</section>
-<section id="control-6-dotfiles-repository-hardening" class="level1">
-<h1>Control 6: Dotfiles Repository Hardening</h1>
-<p>The dotfiles repository is a private GitHub repository. It deserves its own access controls.</p>
-<p><strong>Verify repository visibility:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> repo view rgt47/dotfiles <span class="at">--json</span> isPrivate <span class="at">--jq</span> .isPrivate</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Required: true</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Enable branch protection on main:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> api repos/rgt47/dotfiles/branches/main/protection <span class="dt">\</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--method</span> PUT <span class="dt">\</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field</span> required_status_checks=null <span class="dt">\</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field</span> enforce_admins=true <span class="dt">\</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field</span> required_pull_request_reviews=null <span class="dt">\</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--field</span> restrictions=null</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>This prevents force-pushes to <code>main</code>, which could silently replace the deployed configuration with a backdoored version.</p>
-<p><strong>Audit GitHub access tokens:</strong></p>
-<p>Every machine that pushes to the dotfiles repository uses an SSH key. Those keys should be per-machine (Control 3). Review the authorized keys periodically:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> api user/keys <span class="at">--jq</span> <span class="st">'.[] | {id: .id, title: .title}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Remove any key whose associated machine has been retired or compromised.</p>
-</section>
-<section id="control-7-gpg-agent-cache-ttl" class="level1">
-<h1>Control 7: GPG Agent Cache TTL</h1>
-<p>The GPG agent caches the decrypted private key in memory after the first successful passphrase entry. The default cache time is 600 seconds. An unlocked machine during that window exposes all pass operations without a passphrase prompt.</p>
-<p>Post 66 configures <code>~/.gnupg/gpg-agent.conf</code> with <code>pinentry-mac</code> and TTL settings. Verify the file is in place and correct on each machine:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.gnupg/gpg-agent.conf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Expected content:</p>
-<pre><code>pinentry-program /opt/homebrew/bin/pinentry-mac
-default-cache-ttl 300
-max-cache-ttl 600</code></pre>
-<p>Adjust <code>default-cache-ttl</code> downward for machines used in more public settings. A research office is different from a home office.</p>
-<p>After editing <code>gpg-agent.conf</code>, reload the agent:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg-connect-agent</span> reloadagent /bye</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="periodic-review-procedure" class="level1">
-<h1>Periodic Review Procedure</h1>
-<p>The controls above are point-in-time. They decay: GPG keys expire, SSH keys accumulate on old servers, plaintext credential files reappear after tool reinstalls, FileVault gets disabled during disk maintenance. A quarterly 30-minute review prevents drift.</p>
-<section id="quarterly-checklist" class="level2">
-<h2 class="anchored" data-anchor-id="quarterly-checklist">Quarterly Checklist</h2>
-<p>Run on each machine in the cluster. Estimated time: 20-30 minutes.</p>
-<p><strong>Disk and system:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. FileVault status</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">fdesetup</span> status</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Screen lock timeout (verify &lt;= 60s)</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">defaults</span> read com.apple.screensaver askForPasswordDelay</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>GPG:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Key expiry (check for keys expiring within 90 days)</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-keys</span> <span class="at">--with-colons</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"^pub"</span> <span class="kw">|</span> <span class="dt">\</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">awk</span> <span class="at">-F:</span> <span class="st">'{print $7, $10}'</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Confirm master key is offline (sec# not sec)</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-secret-keys</span> your@email.address <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"^sec"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>SSH:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. List authorised keys on GitHub; confirm no stale entries</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> api user/keys <span class="at">--jq</span> <span class="st">'.[] | {id, title}'</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Confirm each machine has a unique key fingerprint</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-lf</span> ~/.ssh/id_ed25519.pub</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Credentials:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Scan for plaintext credential files</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> ~/.aws/credentials ~/.npmrc ~/.netrc<span class="kw">;</span> <span class="cf">do</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">[[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span> <span class="kw">]]</span> <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">"FOUND plaintext: </span><span class="va">$f</span><span class="st">"</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Audit the pass store for stale entries</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls <span class="kw">|</span> <span class="fu">head</span> <span class="at">-40</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove entries for services no longer in use:</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co"># pass rm defunct/service</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Dotfiles repository:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 9. Confirm repository is private</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> repo view rgt47/dotfiles <span class="at">--json</span> isPrivate <span class="at">--jq</span> .isPrivate</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 10. Verify no sensitive files have been accidentally staged</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/dotfiles <span class="kw">&amp;&amp;</span> <span class="fu">git</span> status <span class="kw">&amp;&amp;</span> <span class="fu">git</span> log <span class="at">--oneline</span> <span class="at">-5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Pass store:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 11. Confirm pass store is not inside a cloud-mounted path</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-la</span> ~/.password-store</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Should NOT resolve to ~/Library/CloudStorage/...</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">readlink</span> ~/.password-store <span class="dv">2</span><span class="op">&gt;</span>/dev/null <span class="kw">||</span> <span class="bu">echo</span> <span class="st">"not a symlink (correct)"</span></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 12. Confirm pass store git remote is self-hosted (not GitHub)</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git remote <span class="at">-v</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Save this checklist as <code>analysis/configs/security-audit.sh</code> and run it with <code>bash security-audit.sh</code> each quarter. Add a calendar reminder labelled ‘pass + dotfiles security audit’.</p>
+<section id="why-the-backup-items-exist" class="level2">
+<h2 class="anchored" data-anchor-id="why-the-backup-items-exist">Why the Backup Items Exist</h2>
+<p>Every backup problem found during the first audit was found by reading a log or an exit status by hand, and in every case the information had been sitting there for days. A nightly job silently skipped three folders after they moved; a cloud job had never run at all; and Borg failed for several nights on three machines after the home server received new LAN addresses at a reboot. The scheduler’s own record of each job’s last exit status already showed the failure. Items 14 to 16 make reading that record a routine, and a daily automated version of the same check is the natural next step.</p>
 </section>
 </section>
 <section id="things-to-watch-out-for" class="level1">
 <h1>Things to Watch Out For</h1>
 <ol type="1">
-<li><p><strong><code>sec#</code> after moving the master key offline can become <code>sec</code> again.</strong> Some GPG operations and <code>gpg --import</code> sequences will silently re-import the master secret key if the backup <code>.asc</code> file is accessible. After moving the master key offline, verify <code>sec#</code> immediately and again after any <code>gpg --import</code> operation.</p></li>
-<li><p><strong>Subkey expiry is not the same as master key expiry.</strong> If the encryption subkey expires and only the master key is extended, <code>pass</code> will fail to encrypt new entries with a misleading error. Track subkey and master key expiries separately; <code>gpg --list-keys</code> output shows both dates.</p></li>
-<li><p><strong>Per-machine SSH keys require explicit registration on every service.</strong> Adding a second machine requires registering its public key on GitHub, every self-hosted server, and any other SSH destination. Missing one is easy and produces an afternoon of debugging what appears to be a network problem.</p></li>
-<li><p><strong>iCloud Universal Clipboard is enabled by default.</strong> The Handoff setting is on by default on every new Mac. It is not labelled ‘clipboard sync’ in System Settings; the label is ‘Handoff’. Every post-66 macOS user running <code>pass -c</code> should verify this setting before first use.</p></li>
-<li><p><strong>The pass store git history reveals credential metadata even if the ciphertext is safe.</strong> The git log shows when each <code>.gpg</code> file was created, modified, or deleted. An attacker who compromises the git remote learns which services you have accounts with and when you last rotated credentials. For the most sensitive entries, consider managing them outside the git- tracked store.</p></li>
-<li><p><strong><code>gpg-agent --daemon</code> can run stale after a system update.</strong> If passphrase prompts stop appearing or appear inconsistently after a macOS update, the running agent may be using a different <code>pinentry-mac</code> binary than the one configured. Restart the agent: <code>gpgconf --kill gpg-agent</code>, then run a <code>pass</code> command to start a fresh agent instance.</p></li>
+<li><strong>A restarted FileVault Mac is unreachable over SSH.</strong> Symptom: SSH times out or is refused after a remote restart. Fix: log in once at the keyboard; schedule restarts for when someone is present.</li>
+<li><strong>A status check that skips a machine.</strong> Symptom: everything looks green, but one machine has not been examined. Fix: run every audit item on every machine, Linux included, from a fixed list of hosts.</li>
+<li><strong>A settings folder that is secretly a symlink.</strong> Symptom: a secret appears in a sync service or a git working tree. Fix: before trusting a folder, check it with <code>ls -la</code>, and audit <code>$HOME</code> for symlinks into synced locations; see <a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox</a>.</li>
+<li><strong>Revoking one OAuth authorization revokes it everywhere.</strong> Symptom: every machine is logged out of a tool at once. Fix: plan a revocation as an all-machines action and re-authenticate each one.</li>
+<li><strong>Keychain credentials are absent in SSH sessions.</strong> Symptom: <code>git pull</code> over SSH into a Mac asks for a username. Fix: run git operations that need the hosting token at the keyboard, or accept that remote sessions are read-only for that purpose.</li>
+<li><strong>Printing a file to check it.</strong> Symptom: a live token on screen or in a scrollback buffer. Fix: rotate it, then inspect credential files by structure only.</li>
+<li><strong>A scheduled job firing before the network is up.</strong> Symptom: a 02:00 job on a sleeping Mac fails with a connection timeout while later jobs succeed. Fix: have the script wait or retry for connectivity before declaring failure.</li>
 </ol>
 </section>
 <section id="uninstall-rollback" class="level1">
 <h1>Uninstall / Rollback</h1>
-<p>These controls do not require installation in the traditional sense, but they can be reversed.</p>
-<p><strong>Reverting to a single key (undoing the subkey migration):</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Re-import the master secret key from offline backup</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--import</span> /Volumes/EncryptedUSB/gpg-master-backup.asc</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify: gpg --list-secret-keys should now show 'sec' not 'sec#'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reverting per-machine SSH keys:</strong></p>
-<p>Replace per-machine keys with a shared key by generating a new shared key, adding it to all services, and revoking the individual machine keys. This is not recommended but is reversible.</p>
-<p><strong>Re-enabling Universal Clipboard:</strong></p>
-<p>System Settings → General → AirDrop and Handoff → re-enable Handoff.</p>
+<p>The controls in this post are configuration rather than software, and most are reversed in the same place they were set: FileVault in System Settings (decryption runs in the background and can take hours), the screen-lock delay in Lock Screen settings, the GPG agent cache in <code>~/.gnupg/gpg-agent.conf</code> followed by <code>gpgconf --kill gpg-agent</code>. Reversing LUKS requires reinstalling. The controls owned by other posts each have their own rollback section.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -749,68 +698,85 @@ max-cache-ttl 600</code></pre>
 <h1>What Did We Learn?</h1>
 <section id="lessons-learned" class="level2">
 <h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
-<p><strong>Conceptual:</strong></p>
 <ul>
-<li>Security controls and operational procedures are not the same thing. A well-organized three-layer architecture is a sound operational design; whether it is secure depends on a separate analysis of what it needs to protect and from what.</li>
-<li>Defense in depth means that a failure at one layer does not defeat the system. FileVault, GPG subkeys, per-machine SSH keys, and a pass store are independent controls; strengthening any one of them is worthwhile even if the others are imperfect.</li>
-<li>The most common security failures in personal clusters are not sophisticated attacks but defaults: FileVault off, Universal Clipboard on, a single shared SSH key, and plaintext credentials left in place after a tool is installed.</li>
-</ul>
-<p><strong>Technical:</strong></p>
-<ul>
-<li>The <code>sec#</code> indicator in <code>gpg --list-secret-keys</code> is the confirmation that the master key has been successfully moved offline; it is the only reliable test.</li>
-<li><code>gpg --export-secret-subkeys</code> exports only subkeys, leaving the master key in the backup. This is the correct command for populating a new machine’s keyring without moving the master key there.</li>
-<li>Ed25519 SSH and GPG keys are smaller, faster, and free of the timing side-channels that affect RSA. For new keys in 2026, there is no reason to use RSA.</li>
-<li>The quarterly checklist converts a set of one-time controls into a recurring process. Controls that are not periodically verified are controls in name only.</li>
-</ul>
-<p><strong>Gotchas:</strong></p>
-<ul>
-<li>Moving the master GPG key offline is irreversible in practice: the steps exist to re-import it, but the backup medium may be unavailable. Test the backup restore procedure on a non-primary machine before deleting the master key from the primary.</li>
-<li><code>rm ~/.aws/credentials</code> does not overwrite file content on APFS. With FileVault enabled, the block is protected at rest but not in transit if the disk image is copied. Treat <code>rm</code> as ‘removes the directory entry’ rather than ‘destroys the data’.</li>
-<li>Per-machine SSH key registration is work. The productivity cost of setting up a new machine is higher with per-machine keys than with a shared key. That cost is the price of selective revocation.</li>
+<li><strong>The threat that arrives is rarely the one planned for.</strong> The original model centered on device theft. What happened was leakage through a sync service, a quieter failure that a stolen laptop’s encryption does nothing to stop.</li>
+<li><strong>Controls decay without anyone touching them.</strong> Folders move, addresses change, a job drops out of the scheduler after a restart. None of these announce themselves; only a check does.</li>
+<li><strong>Read logs and exit statuses; do not trust schedules.</strong> A job being scheduled says nothing about whether it ran or succeeded.</li>
+<li><strong>A fix is not done until it is verified on every machine it touches.</strong> One fix to the backup scripts introduced a dependency that one machine lacked, and broke that machine’s jobs entirely.</li>
+<li><strong>Treat exposure as compromise.</strong> When it cannot be shown that a leaked secret was not read, replace it, then test that the old one no longer works. Some revoked-in-principle credentials were still live when tested.</li>
 </ul>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
 <ul>
-<li><strong>This post covers macOS only.</strong> Linux equivalents exist for every control (LUKS for full-disk encryption, systemd-credential for agent caching, per-distribution clipboard managers) but are not addressed here.</li>
-<li><strong>Hardware security keys (YubiKey) are not covered.</strong> They are the logical next step after the subkey architecture and provide a physical second factor for all GPG and SSH operations. The setup procedure is beyond this post’s scope.</li>
-<li><strong>Remote access to the cluster is not addressed.</strong> If any machine runs an SSH server, its configuration (allowed authentication methods, port, fail2ban or equivalent) is a significant attack surface not covered here.</li>
-<li><strong>The threat model excludes supply-chain attacks.</strong> A malicious Homebrew package or a compromised dependency could bypass every control described here. Addressing supply-chain risk requires package signing verification, reproducible builds, and trust anchors that are out of scope for a personal cluster.</li>
-<li><strong>This is a point-in-time design.</strong> The threat landscape evolves. The controls appropriate for 2026 may need revision in two years, which is why the quarterly review procedure matters more than any individual control.</li>
+<li>The fleet has one operator. The model does not address shared administration, role separation, or onboarding another person.</li>
+<li>Hardware security keys are not used; private keys live on disk, protected by passphrases and full-disk encryption.</li>
+<li>Backup monitoring is a manual check on the audit schedule and on demand, not an automated daily alert.</li>
+<li>The audit checklist is a set of commands rather than a single tested script covering both macOS and Linux.</li>
 </ul>
 </section>
 <section id="opportunities-for-improvement" class="level2">
 <h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
 <ol type="1">
-<li>Implement hardware security key support (YubiKey 5 or similar) so the GPG private key never exists in software, even as a cached subkey. The subkey architecture in Control 2 is a prerequisite for this step.</li>
-<li>Extend the quarterly checklist to a proper <code>security-audit.sh</code> script that exits non-zero on any failing check, suitable for running as a launchd job or a GitHub Actions scheduled workflow.</li>
-<li>Add <code>pass-otp</code> for TOTP secrets. Storing TOTP seeds encrypted in pass is significantly better than a standalone authenticator app with no backup; <code>pass-otp</code> adds <code>pass otp servicename</code> support to the existing store.</li>
-<li>Investigate <code>passage</code> (the <code>age</code>-based successor to <code>pass</code>) or <code>gopass</code> for long-term maintenance. <code>pass</code> has had no security updates since 2018; a maintained fork is worth evaluating for any new deployments.</li>
-<li>Document the revocation procedure: what to do if a laptop is stolen, including which SSH keys to revoke, whether to rotate the GPG encryption subkey, and how to audit the pass store for credentials that may have been exposed during the window between theft and revocation.</li>
+<li><strong>A daily backup status report.</strong> Collect each job’s last exit status and log age from every machine and flag anything not successful or older than a day.</li>
+<li><strong>Hardware-backed keys.</strong> Move SSH and GPG private keys onto a hardware token so that a copied file is no longer a usable key.</li>
+<li><strong>Automated secret scanning.</strong> A pre-commit hook on the dotfiles and project repositories would catch the next secret before it is committed.</li>
+<li><strong>Short-lived cloud credentials.</strong> Replace long-lived access keys with credentials issued per session where the provider supports it.</li>
+<li><strong>One audit script for both platforms.</strong> Turn the checklist into a script that runs on every host over SSH and prints a single report.</li>
 </ol>
 </section>
 </section>
 <section id="wrapping-up" class="level1">
 <h1>Wrapping Up</h1>
-<p>Posts 64, 65, and 66 established a portable, three-layer infrastructure for a multi-laptop research environment. This post asked the subsequent question: is that infrastructure secure? The answer is ‘it can be, with additional controls.’ Those controls are not difficult, but they do not happen by default.</p>
-<p>The highest-leverage actions, in priority order: enable FileVault on every machine, move the GPG master key offline using the subkey architecture, generate per-machine SSH keys, and audit adjacent plaintext credential files. Any one of these steps is an improvement; together they represent a significant reduction in the residual attack surface of the three-layer architecture.</p>
-<p>In conclusion, five points merit emphasis. First, FileVault is a prerequisite, not an option; it must be verified on before any encrypted credential store is trusted. Second, the GPG subkey architecture (master key offline, daily use via the encryption subkey) is the difference between a compromise that requires revoking one subkey and one that compromises the master identity permanently. Third, per-machine SSH keys provide selective revocation whereas a shared key does not; the operational cost is justified. Fourth, iCloud Universal Clipboard is on by default and silently transmits <code>pass -c</code> output across devices; it should be checked before first use. Fifth, a quarterly 30-minute audit is worth more than any individual control, because controls that are not periodically verified have a way of quietly failing.</p>
+<p>A threat model is useful in proportion to how honestly it is kept. For this fleet, the planned threat was a lost laptop and the actual one was a sync service quietly carrying keys off the machine, followed by a run of backups that looked fine and were not. The controls in this series answer both, but they hold only as long as someone checks them.</p>
+<p>Key takeaways:</p>
+<ul>
+<li>Write down what is out of scope; it turns gaps into decisions.</li>
+<li>Give every relationship its own credential, and restrict the ones that run unattended.</li>
+<li>Encrypt every disk, every backup, and every Time Machine destination.</li>
+<li>Check exit statuses and logs on every machine, Linux included, and test a restore.</li>
+<li>Verify each fix on every machine it touches.</li>
+</ul>
+</section>
+<section id="the-series" class="level1">
+<h1>The Series</h1>
+<ol type="1">
+<li><strong>Security Foundations for a Multi-Machine Research Fleet</strong> (this post): threat model, controls, full-disk encryption, and the quarterly audit.</li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a>: the GPG-encrypted password store and its use across machines.</li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a>: API keys, cloud credentials, OAuth tokens, and rotation.</li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a>: leaving a sync daemon, and the exposure that forced a rotation.</li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a>: the backup tiers, retention, monitoring, and restore testing.</li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a>: the server’s roles, networking, firewall, and storage.</li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a>: a design argument for content-addressed research data.</li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a>: the first audit, told as it happened.</li>
+</ol>
 </section>
 <section id="see-also" class="level1">
 <h1>See Also</h1>
-<p><strong>Key resources:</strong></p>
+<p>Security series:</p>
+<ol type="1">
+<li>Security Foundations for a Multi-Machine Research Fleet (this post)</li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+</ol>
+<p>External references:</p>
 <ul>
-<li><a href="https://wiki.debian.org/Subkeys">GnuPG subkeys</a>: the Debian wiki’s treatment of the subkey architecture is the clearest available reference.</li>
-<li><a href="https://github.com/tadfisher/pass-otp">pass-otp</a>: TOTP support for the pass store.</li>
-<li><a href="https://github.com/FiloSottile/passage">passage</a>: an <code>age</code>-based fork of pass under active maintenance.</li>
-<li><a href="https://support.yubico.com/hc/en-us/articles/360013790259-Using-Your-YubiKey-with-OpenPGP">YubiKey and GPG</a>: Yubico’s guide to moving GPG keys to hardware.</li>
-<li><a href="https://haveibeenpwned.com/">Have I Been Pwned</a>: a periodic check of whether any service credential has appeared in a known breach; useful input to the pass store audit step.</li>
+<li><a href="https://owasp.org/www-community/Threat_Modeling">OWASP Threat Modeling</a>: a general introduction to the method.</li>
+<li><a href="https://support.apple.com/guide/security/volume-encryption-with-filevault-sec4c6dc1b6e/web">Apple Platform Security: FileVault</a>: how FileVault protects the data volume.</li>
+<li><a href="https://gitlab.com/cryptsetup/cryptsetup">cryptsetup and LUKS</a>: the Linux full-disk encryption reference.</li>
+<li><a href="https://www.gnupg.org/documentation/">GnuPG documentation</a>: key management, subkeys, and agent configuration.</li>
+<li><a href="https://tailscale.com/kb">Tailscale documentation</a>: the overlay network used for inter-machine addressing.</li>
+<li><a href="https://haveibeenpwned.com/">Have I Been Pwned</a>: a periodic check of whether an account has appeared in a known breach.</li>
 </ul>
-<hr>
 </section>
 <section id="reproducibility" class="level1">
 <h1>Reproducibility</h1>
-<p><strong>Tested configuration:</strong></p>
+<p><strong>Tested configuration (verified 2026-10-01):</strong></p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -820,110 +786,64 @@ max-cache-ttl 600</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td>Operating system</td>
-<td>macOS 15.4 (Sequoia)</td>
+<td>macOS</td>
+<td>26.6</td>
 </tr>
 <tr class="even">
-<td>gnupg</td>
-<td>2.4.x</td>
+<td>Linux Mint</td>
+<td>22.3</td>
 </tr>
 <tr class="odd">
+<td>GnuPG</td>
+<td>2.5</td>
+</tr>
+<tr class="even">
 <td>pass</td>
 <td>1.7.4</td>
 </tr>
-<tr class="even">
-<td>openssh</td>
-<td>9.x</td>
-</tr>
 <tr class="odd">
+<td>OpenSSH</td>
+<td>10.3</td>
+</tr>
+<tr class="even">
 <td>gh CLI</td>
-<td>2.x</td>
-</tr>
-<tr class="even">
-<td>Shell</td>
-<td>zsh 5.9</td>
+<td>2.101</td>
 </tr>
 <tr class="odd">
-<td>Last verified</td>
-<td>2026-05-31</td>
+<td>Tailscale</td>
+<td>1.102</td>
+</tr>
+<tr class="even">
+<td>Borg</td>
+<td>1.4.5</td>
 </tr>
 </tbody>
 </table>
 <p><strong>Configuration artifacts:</strong></p>
 <ul>
-<li><code>analysis/configs/security-audit.sh</code>: the quarterly review script (the inline checklist above, assembled into a runnable file)</li>
-<li><code>analysis/configs/gpg-agent.conf</code>: reference <code>gpg-agent.conf</code> with <code>pinentry-mac</code> and TTL settings</li>
+<li><code>analysis/configs/security-audit.sh</code>: a runnable macOS subset of an earlier version of the checklist; the checklist in this post is the current reference.</li>
+<li><code>analysis/configs/gpg-agent.conf</code>: a reference agent configuration with <code>pinentry-mac</code> and short cache lifetimes.</li>
 </ul>
+<p>Items 1, 3, 13, and 14 were run as written on julia (macOS), and items 1 and 15 on zeus (Linux), on 2026-10-01. The remaining items are the commands used during the first audit, collected here; they have not yet been run end to end as a single pass in this exact form. Item 9 is a manual review of provider settings pages, and item 17 needs the repository variables described in the backup post.</p>
 <hr>
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>
-<p><em>Have questions, suggestions, or spot an error? Let me know.</em></p>
+<p><em>Questions, suggestions, or corrections are welcome.</em></p>
 <ul>
 <li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
 <li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
-<li><strong>Email:</strong> rgthomas47@gmail.com</li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
 </ul>
-<p>I would enjoy hearing from you if:</p>
+<p>I would like to hear from you if:</p>
 <ul>
-<li>You identify a control gap in the threat model above.</li>
-<li>You have implemented hardware security key support and want to compare notes on the setup procedure.</li>
-<li>You use a different OS and want to extend the checklist to Linux.</li>
+<li>You find an error, or a better approach to anything in this series.</li>
+<li>You run a small research fleet and have found where this design breaks.</li>
+<li>You want to compare notes on backups, secrets, or reproducible research infrastructure.</li>
 </ul>
-<hr>
-<p><em>Rendered on 2026-05-17 at 09:46 PDT.</em><br> <em>Source: ~/prj/rgtlab/posts/sec-multi-laptop-threat-model/index.qmd</em></p>
-<hr>
-<!-- ============================================================================
-PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
-
-[ ] YAML
-    [ ] title, subtitle, date, categories, description, image filled in
-    [x] document-type: 'blog'
-    [x] draft: false
-
-[ ] Narrative complete (no remaining [bracketed] placeholders)
-    [ ] grep '\[' index.qmd returns only legitimate code/links
-
-[ ] Configuration artifacts present
-    [ ] analysis/configs/security-audit.sh present and runnable
-    [ ] analysis/configs/gpg-agent.conf present
-    [ ] All commands verified on a real machine (mark unverified ones)
-
-[ ] Things to Watch Out For
-    [ ] At least 5 gotchas, each with symptom AND fix
-
-[x] Visual design
-    [x] 1 hero image (width=80%)
-    [x] Exactly 3 ambiance images ({.img-fluid} only)
-    [x] media/images/README.md updated
-
-[ ] Content quality
-    [ ] Zero emoji
-    [ ] Zero em dashes
-    [ ] Single quotes in prose
-    [ ] All commands interpreted in plain language
-
-[ ] Reproducibility
-    [ ] 'Last verified' date filled in
-    [ ] security-audit.sh tested end-to-end on primary machine
-
-[ ] Render verification
-    [x] quarto render index.qmd produces clean HTML
-    [ ] Internal links to posts 64, 65, 66 resolve
-
-============================================================================ -->
-<section id="related-posts-in-this-cluster" class="level2">
-<h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
-<p>This post is part of the <em>Security, Backup, and Sync</em> series. Recommended reading order:</p>
-<ol type="1">
-<li>Post 31: <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a></li>
-<li>Post 33: <a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
-<li>Post 34: <a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
-<li><strong>Post 35: Security Foundations for a Multi-Laptop Research Cluster</strong> (this post)</li>
-</ol>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

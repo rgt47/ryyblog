@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ronald G. Thomas">
+<meta name="dcterms.date" content="2026-09-11">
+<meta name="description" content="Code goes to git, but where does research data go? This post argues for a versioned object store addressed by content hash, gives a tested manifest-and-fetch pattern that turns a laptop into a cache rather than a replica, shows how it completes the data pillar of a zzcollab compendium with a hash-linked provenance chain from a rendered report back to the exact bytes, and walks through a SeaweedFS setup that enforces write-once. Nothing here is deployed yet; the post says what would justify deploying it.">
+
+<title>Object Storage for Research Data: The Layer Git Cannot Hold – focusonr</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d1f979f567abd94e3c058709025db867.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Open+Sans:ital,wght@0,400;0,600;1,400&amp;family=Fira+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0fba9333d8.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+<!-- Custom meta tags for social sharing -->
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@rgt47">
+
+<!-- Add responsive features -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Add analytics if needed -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script> -->
+
+<!-- Add custom javascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove code tools button completely
+  const codeButton = document.querySelector('.code-tools-button');
+  if (codeButton) {
+    codeButton.remove();
+  }
+
+  // Smooth scrolling for in-page anchor links (skip listing category elements)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    if (anchor.closest('.quarto-listing-category')) return;
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+});
+</script>
+<meta name="quarto:status" content="draft">
+
+
+<meta property="og:title" content="Object Storage for Research Data: The Layer Git Cannot Hold – focusonr">
+<meta property="og:description" content="Code goes to git, but where does research data go? This post argues for a versioned object store addressed by content hash, gives a tested manifest-and-fetch pattern that turns a laptop into a cache rather than a replica, shows how it completes the data pillar of a zzcollab compendium with a hash-linked provenance chain from a rendered report back to the exact bytes, and walks through a SeaweedFS setup that enforces write-once. Nothing here is deployed yet; the post says what would justify deploying it.">
+<meta property="og:image" content="https://focusonr.org/posts/sec-object-store-research-data/media/images/hero.jpg">
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:title" content="Object Storage for Research Data: The Layer Git Cannot Hold – focusonr">
+<meta name="twitter:description" content="Code goes to git, but where does research data go? This post argues for a versioned object store addressed by content hash, gives a tested manifest-and-fetch pattern that turns a laptop into a cache rather than a replica, shows how it completes the data pillar of a zzcollab compendium with a hash-linked provenance chain from a rendered report back to the exact bytes, and walks through a SeaweedFS setup that enforces write-once. Nothing here is deployed yet; the post says what would justify deploying it.">
+<meta name="twitter:image" content="https://focusonr.org/posts/sec-object-store-research-data/media/images/hero.jpg">
+<meta name="twitter:creator" content="@rgt47">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">focusonr</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://rgtlab.org"> 
+<span class="menu-text">rgtlab.org</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/rgt47"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  </ul></li>
+  <li><a href="#what-is-an-object-store" id="toc-what-is-an-object-store" class="nav-link" data-scroll-target="#what-is-an-object-store">What is an Object Store?</a>
+  <ul class="collapse">
+  <li><a href="#what-it-is-not" id="toc-what-it-is-not" class="nav-link" data-scroll-target="#what-it-is-not">What it is not</a></li>
+  </ul></li>
+  <li><a href="#when-a-store-earns-its-keep" id="toc-when-a-store-earns-its-keep" class="nav-link" data-scroll-target="#when-a-store-earns-its-keep">When a Store Earns Its Keep</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#the-pattern" id="toc-the-pattern" class="nav-link" data-scroll-target="#the-pattern">The Pattern</a>
+  <ul class="collapse">
+  <li><a href="#move-1-the-manifest" id="toc-move-1-the-manifest" class="nav-link" data-scroll-target="#move-1-the-manifest">Move 1: the manifest</a></li>
+  <li><a href="#move-2-fetch-what-the-manifest-names-and-nothing-else" id="toc-move-2-fetch-what-the-manifest-names-and-nothing-else" class="nav-link" data-scroll-target="#move-2-fetch-what-the-manifest-names-and-nothing-else">Move 2: fetch what the manifest names, and nothing else</a></li>
+  <li><a href="#move-3-read-only-through-the-manifest" id="toc-move-3-read-only-through-the-manifest" class="nav-link" data-scroll-target="#move-3-read-only-through-the-manifest">Move 3: read only through the manifest</a></li>
+  <li><a href="#move-4-ignore-the-bytes" id="toc-move-4-ignore-the-bytes" class="nav-link" data-scroll-target="#move-4-ignore-the-bytes">Move 4: ignore the bytes</a></li>
+  <li><a href="#what-this-buys" id="toc-what-this-buys" class="nav-link" data-scroll-target="#what-this-buys">What this buys</a></li>
+  <li><a href="#how-it-was-tested" id="toc-how-it-was-tested" class="nav-link" data-scroll-target="#how-it-was-tested">How it was tested</a></li>
+  </ul></li>
+  <li><a href="#reproducibility-in-a-zzcollab-compendium" id="toc-reproducibility-in-a-zzcollab-compendium" class="nav-link" data-scroll-target="#reproducibility-in-a-zzcollab-compendium">Reproducibility in a zzcollab Compendium</a>
+  <ul class="collapse">
+  <li><a href="#the-weak-pillar" id="toc-the-weak-pillar" class="nav-link" data-scroll-target="#the-weak-pillar">The weak pillar</a></li>
+  <li><a href="#what-zzcollab-already-does-and-where-it-stops" id="toc-what-zzcollab-already-does-and-where-it-stops" class="nav-link" data-scroll-target="#what-zzcollab-already-does-and-where-it-stops">What zzcollab already does, and where it stops</a></li>
+  <li><a href="#a-hash-linked-provenance-chain-from-a-report-to-the-bytes" id="toc-a-hash-linked-provenance-chain-from-a-report-to-the-bytes" class="nav-link" data-scroll-target="#a-hash-linked-provenance-chain-from-a-report-to-the-bytes">A hash-linked provenance chain from a report to the bytes</a></li>
+  <li><a href="#where-the-chain-is-weak" id="toc-where-the-chain-is-weak" class="nav-link" data-scroll-target="#where-the-chain-is-weak">Where the chain is weak</a></li>
+  <li><a href="#is-this-a-blockchain" id="toc-is-this-a-blockchain" class="nav-link" data-scroll-target="#is-this-a-blockchain">Is this a blockchain?</a></li>
+  <li><a href="#several-analysts-one-dataset" id="toc-several-analysts-one-dataset" class="nav-link" data-scroll-target="#several-analysts-one-dataset">Several analysts, one dataset</a></li>
+  <li><a href="#derived-data-containers-and-ci" id="toc-derived-data-containers-and-ci" class="nav-link" data-scroll-target="#derived-data-containers-and-ci">Derived data, containers, and CI</a></li>
+  <li><a href="#where-this-stops" id="toc-where-this-stops" class="nav-link" data-scroll-target="#where-this-stops">Where this stops</a></li>
+  </ul></li>
+  <li><a href="#running-your-own-seaweedfs-step-by-step" id="toc-running-your-own-seaweedfs-step-by-step" class="nav-link" data-scroll-target="#running-your-own-seaweedfs-step-by-step">Running Your Own: SeaweedFS, Step by Step</a>
+  <ul class="collapse">
+  <li><a href="#choosing-the-software" id="toc-choosing-the-software" class="nav-link" data-scroll-target="#choosing-the-software">Choosing the software</a></li>
+  <li><a href="#step-1-install" id="toc-step-1-install" class="nav-link" data-scroll-target="#step-1-install">Step 1: install</a></li>
+  <li><a href="#step-2-start-the-server" id="toc-step-2-start-the-server" class="nav-link" data-scroll-target="#step-2-start-the-server">Step 2: start the server</a></li>
+  <li><a href="#step-3-create-a-bucket-with-object-lock" id="toc-step-3-create-a-bucket-with-object-lock" class="nav-link" data-scroll-target="#step-3-create-a-bucket-with-object-lock">Step 3: create a bucket with object lock</a></li>
+  <li><a href="#step-4-point-rclone-at-it" id="toc-step-4-point-rclone-at-it" class="nav-link" data-scroll-target="#step-4-point-rclone-at-it">Step 4: point rclone at it</a></li>
+  <li><a href="#step-5-verify-the-lock-actually-holds" id="toc-step-5-verify-the-lock-actually-holds" class="nav-link" data-scroll-target="#step-5-verify-the-lock-actually-holds">Step 5: verify the lock actually holds</a>
+  <ul class="collapse">
+  <li><a href="#use-a-version-id-or-you-will-misread-the-result" id="toc-use-a-version-id-or-you-will-misread-the-result" class="nav-link" data-scroll-target="#use-a-version-id-or-you-will-misread-the-result">Use a version id, or you will misread the result</a></li>
+  <li><a href="#a-lock-is-not-a-pin" id="toc-a-lock-is-not-a-pin" class="nav-link" data-scroll-target="#a-lock-is-not-a-pin">A lock is not a pin</a></li>
+  <li><a href="#verify-it-again-after-a-restart" id="toc-verify-it-again-after-a-restart" class="nav-link" data-scroll-target="#verify-it-again-after-a-restart">Verify it again after a restart</a></li>
+  </ul></li>
+  <li><a href="#step-6-authentication" id="toc-step-6-authentication" class="nav-link" data-scroll-target="#step-6-authentication">Step 6: authentication</a></li>
+  </ul></li>
+  <li><a href="#operating-it-on-the-home-server" id="toc-operating-it-on-the-home-server" class="nav-link" data-scroll-target="#operating-it-on-the-home-server">Operating It on the Home Server</a></li>
+  <li><a href="#what-it-all-costs" id="toc-what-it-all-costs" class="nav-link" data-scroll-target="#what-it-all-costs">What It All Costs</a>
+  <ul class="collapse">
+  <li><a href="#the-arrangement-i-would-build" id="toc-the-arrangement-i-would-build" class="nav-link" data-scroll-target="#the-arrangement-i-would-build">The arrangement I would build</a></li>
+  </ul></li>
+  <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
+  <ul class="collapse">
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
+  </ul></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Object Storage for Research Data: The Layer Git Cannot Hold</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">security</div>
+    <div class="quarto-category">storage</div>
+    <div class="quarto-category">reproducibility</div>
+    <div class="quarto-category">data-management</div>
+    <div class="quarto-category">zzcollab</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Code goes to git, but where does research data go? This post argues for a versioned object store addressed by content hash, gives a tested manifest-and-fetch pattern that turns a laptop into a cache rather than a replica, shows how it completes the data pillar of a zzcollab compendium with a hash-linked provenance chain from a rendered report back to the exact bytes, and walks through a SeaweedFS setup that enforces write-once. Nothing here is deployed yet; the post says what would justify deploying it.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta column-page-left">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ronald G. Thomas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 11, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- ============================================================================
+AUTHOR NOTES
+
+Part 7 of the security series (see sec-multi-laptop-threat-model for
+the reading path). Forward-looking design post: no object store is
+deployed on the home server. Operational prerequisites are linked to
+the backup post (5) and the home-server post (6), not repeated.
+
+IMAGES: hero.jpg, ambiance1-3.jpg in media/images/ (README.md holds
+prompts, model, date).
+
+VERIFICATION RECORD (macOS arm64, loopback endpoints)
+  2026-09-11  SeaweedFS 4.46: object lock in COMPLIANCE mode enforced
+              (version delete -> AccessDenied; retention shortening ->
+              InvalidRequest); versioning retained an overwritten
+              version; lock state and bytes survived a restart; scoped
+              identities enforced (-s3.config -> 403 unauthenticated;
+              Read,List identity refused put, overwrite, delete marker,
+              bucket creation); seaweedfs#8350 reproduced as ordinary
+              delete-marker semantics.
+  2026-09-11  Garage 2.4.1: PutBucketVersioning -> 501; a 1 KB upload
+              silently replaced a 5 MB object under the same key.
+  2026-09-11  MinIO upstream archived; Homebrew formulae deprecated.
+  2026-09-28  Manifest pattern end to end: tests/run-local.sh (rclone
+              alias remote) and tests/run-s3.sh (SeaweedFS 4.47, object
+              lock COMPLIANCE 1 day, publisher and read-only
+              identities). 14 of 14 tinytest assertions pass. Listings
+              in The Pattern are read from those files at render time.
+  2026-09-28  'A lock is not a pin'; render register; tree_dirty flag;
+              byte-identical walk backward from a fresh clone; commit
+              signing with a throwaway key.
+NOT TESTED: service supervision, Tailscale access, Linux, the rclone
+replica leg, object lock across replication, memory footprint.
+Commercial prices are September 2026 list rates from secondary sources.
+============================================================================ -->
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+<p><em>A repository never edits a box; it accessions a new one, and the old number still means what it always meant.</em></p>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>Leaving a sync daemon settles where code goes: into git repositories. It does not settle where research data goes. The usual answer, some mixture of a shared folder and a habit of copying, carries forward the property that made the sync daemon painful in the first place: the same mutable file existing in several places at once, with conflict copies, silent overwrites, and no way to say which version produced a given table.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Part 7 of the security series; start with <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a> for the overview.</p>
+</div>
+</div>
+<p>This post argues that the question is malformed. Asking how to synchronize research data presumes the data should be mutable and replicated. An object store declines that premise: data is written once under a key, never modified, and fetched on demand. Nothing has to agree with anything, because nothing changes. A laptop stops being a replica and becomes a cache.</p>
+<p>The post is a design argument with a tested worked example, not a deployment report. No object store runs on the fleet’s home server today. A section below states what the fleet does instead and what would justify the change.</p>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<ul>
+<li>Every sync mechanism compared in <a href="../sec-dropbox-to-portable-sync/">the post on leaving Dropbox</a> is one-way, conflict-prone, quota-limited, or all three when applied to data.</li>
+<li>A reproducible compendium pins its code, environment, and package versions, then says nothing machine-checkable about which bytes of data it consumed.</li>
+<li>Students arriving in a lab need a rule for where data goes that does not depend on remembering to copy something.</li>
+<li>Restricted data under a data use agreement needs access that can be revoked centrally, which copies on laptops cannot offer.</li>
+</ul>
+</section>
+<section id="objectives" class="level2">
+<h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
+<ol type="1">
+<li>Explain what an object store is, separately from the file-sharing services it superficially resembles.</li>
+<li>Give a manifest-and-fetch pattern small enough to adopt in an afternoon, tested end to end.</li>
+<li>Show where the pattern fits in a zzcollab compendium, including the hash-linked provenance chain from a rendered report to the exact bytes, where that chain is weak, and whether it is a blockchain.</li>
+<li>Give a tested setup for a self-hosted store that enforces immutability, and the operational conditions for running it on a home server.</li>
+<li>Compare costs and say when the pattern is the wrong shape for the work.</li>
+</ol>
+<p><img src="media/images/ambiance1.jpg" class="img-fluid" style="height:3.5in"></p>
+</section>
+</section>
+<section id="what-is-an-object-store" class="level1">
+<h1>What is an Object Store?</h1>
+<p>An object store is not a folder, and the most common way to misuse one is to mount it and treat it as though it were.</p>
+<p>The model is a flat namespace of immutable blobs. You <code>put</code> an object under a key and <code>get</code> it back by that key; no operation edits it in place. The interface is HTTP rather than a filesystem: no partial writes, no locking, no rename, and no directories except as a convention about slashes in key names.</p>
+<p>Two API families implement the model. Amazon S3 is the commercially dominant one, and its interface is the de facto standard that SeaweedFS, Garage, Ceph, Backblaze, and Wasabi all speak. OpenStack Swift is older and still common in academic and national-laboratory deployments, where a bucket is called a container. The architecture is identical; only the wire protocol and tooling differ, which matters when an institutional service turns out to speak Swift.</p>
+<p>Three properties follow from immutability, and they carry the whole argument:</p>
+<ul>
+<li><strong>No conflict, because no concurrent modification.</strong> A corrected extract is not an edit; it is a new object under a new key.</li>
+<li><strong>A key plus a content hash is a durable citation.</strong> If an analysis records the hash of what it read, the claim ‘this table came from that data’ is checkable years later without trusting a filename.</li>
+<li><strong>Access is centrally governed.</strong> Revoking one credential removes access everywhere at once. No folder-sharing arrangement can promise that, because copies have already left.</li>
+</ul>
+<section id="what-it-is-not" class="level2">
+<h2 class="anchored" data-anchor-id="what-it-is-not">What it is not</h2>
+<p>It is not a backup system. A mistaken write under a new key is still a mistaken write, and lifecycle rules that expire old versions will expire the one you wanted. Backup stays a separate concern; see <a href="../sec-three-tier-backup-architecture/">the backup post</a>.</p>
+<p>It is not a filesystem. Tools that make it look like one (<code>s3fs</code> and its relatives) reintroduce every problem the model removes. Fetch explicitly.</p>
+<p>It is not, on its own, a data management plan. It is a substrate that makes a good plan expressible.</p>
+</section>
+</section>
+<section id="when-a-store-earns-its-keep" class="level1">
+<h1>When a Store Earns Its Keep</h1>
+<p>The fleet described in this series does not run an object store. Research data that is too large or too restricted for git lives in a plain directory on <a href="../sec-five-machine-storage/">the home server</a>, and workstations fetch from it. Code is in git; working copies of projects are protected by Borg, cloud copies, and Time Machine.</p>
+<p>That arrangement is adequate while one person produces and consumes each dataset. It has none of the properties argued for here: no versioning, no write-once enforcement, and no read-only identity that a collaborator could be given. The manifest pattern below does not need a store to be useful; it was tested against a plain directory exposed as an rclone remote, and it adds verification and provenance there too. What a store adds is enforcement on the server side.</p>
+<p>The deployment is justified when any of the following becomes true:</p>
+<ul>
+<li><strong>A second analyst needs the canonical dataset.</strong> At that point ‘everyone agrees not to overwrite it’ stops being a control.</li>
+<li><strong>A data use agreement requires revocable access</strong> or audited custody that copies on laptops cannot provide.</li>
+<li><strong>A result must be defended later</strong> by showing the exact input bytes, which needs both the manifest’s hash and a store that cannot destroy the version it names.</li>
+<li><strong>Datasets outgrow the plain directory’s informal discipline</strong>: many versions, several projects reading the same extract, or derived data expensive enough to publish rather than regenerate.</li>
+</ul>
+<p>Until then, adopting the manifest and the read-through helper costs an afternoon and moves nothing.</p>
+</section>
+<section id="prerequisites" class="level1">
+<h1>Prerequisites</h1>
+<ul>
+<li>A project laid out as a zzcollab compendium, or any layout with a raw-data directory excluded from git.</li>
+<li><code>rclone</code> (tested with 1.75), R with the <code>digest</code> and <code>tinytest</code> packages, <code>bash</code>, and <code>shasum</code>.</li>
+<li>For the store walkthrough: SeaweedFS (tested with 4.46 and 4.47) and the AWS CLI, on a machine you control.</li>
+<li>Credentials kept in <code>pass</code> and loaded on demand, as described in <a href="../sec-aws-and-pass-secrets/">the secrets post</a>.</li>
+</ul>
+</section>
+<section id="the-pattern" class="level1">
+<h1>The Pattern</h1>
+<p>The pattern is four moves: data leaves the project directory, a manifest takes its place in git, a build step fetches exactly what the manifest names and checks it, and the analysis refuses to read anything the manifest does not vouch for.</p>
+<p>Every listing in this section is read at render time from a small working example stored beside this post (<code>analysis/scripts/manifest-pattern/</code>). Two test scripts in the same folder ran it end to end, one against a local directory and one against an S3 endpoint with object lock; the results are tabulated at the end of the section. The layout follows a zzcollab compendium (<code>analysis/data/raw_data/</code>, <code>analysis/scripts/</code>, <code>R/</code>, <code>inst/tinytest/</code>), for reasons the next section gives.</p>
+<section id="move-1-the-manifest" class="level2">
+<h2 class="anchored" data-anchor-id="move-1-the-manifest">Move 1: the manifest</h2>
+<p>The compendium tracks a small tab-separated file naming each dataset, where it lives, its content hash, and the terms under which it may be used. The example ships with only the header row; the tests publish into it. Populated, it looks like this (the codebook row is illustrative):</p>
+<pre><code># analysis/data/manifest.tsv
+name              remote  container  object      sha256     terms
+trial_extract_v3  lab     trial      ext_v3.csv  77cad0...  synthetic
+codebook_v3       lab     trial      cb_v3.csv   41cd88...  synthetic</code></pre>
+<p>The location is written as remote, container, and object rather than as one <code>s3://</code> URL on purpose. A protocol scheme inside the key bakes one vendor into a file meant to outlive the storage choice. The remote name resolves through the client’s configuration, which is where protocol details belong.</p>
+<p>Two columns carry the argument. The <code>sha256</code> is the dataset’s identity; the key only says where to look, and a later section shows why that distinction matters. The <code>terms</code> column puts the license or data use restriction on the same line as the hash, so it travels into every provenance record the analysis writes.</p>
+<p>The file is a few hundred bytes, diffs cleanly, and reviews in a pull request. It is append-only in practice: a corrected extract is published under a new name and key, which adds a row, and the analysis moves to it by changing the one line that names the dataset. Both halves appear in the same pull request.</p>
+</section>
+<section id="move-2-fetch-what-the-manifest-names-and-nothing-else" class="level2">
+<h2 class="anchored" data-anchor-id="move-2-fetch-what-the-manifest-names-and-nothing-else">Move 2: fetch what the manifest names, and nothing else</h2>
+<p>The fetch belongs in the build, not in anyone’s memory. The Makefile is deliberately thin; each data target hands off to one script that reads the manifest.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>Makefile</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-filename="Makefile"><pre class="sourceCode makefile code-with-copy"><code class="sourceCode makefile"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">SHELL</span> <span class="ch">:=</span><span class="st"> /bin/bash</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">.SHELLFLAGS</span> <span class="ch">:=</span><span class="st"> -eu -c</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">RAW_DATA_DIR</span> <span class="ch">?=</span><span class="st"> analysis/data/raw_data</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">export</span><span class="dt"> RAW_DATA_DIR</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ot">.PHONY:</span><span class="dt"> fetch-data verify-data publish-data analysis report test</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="dv">fetch-data:</span><span class="dt"> </span><span class="co">## Pull every manifest dataset not already cached, verified</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>bash tools/data-manifest.sh fetch</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="dv">verify-data:</span><span class="dt"> </span><span class="co">## Check local copies against the manifest's sha256 column</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>bash tools/data-manifest.sh verify</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># make publish-data NAME=trial_extract_v4 FILE=ext_v4.csv \</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">#   CONTAINER=trial OBJECT=ext_v4.csv TERMS='DUA 2026-014'</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="dv">publish-data:</span><span class="dt"> </span><span class="co">## Upload a new dataset and append its manifest row</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>bash tools/data-manifest.sh publish \</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>      <span class="st">"</span><span class="ch">$(</span><span class="dt">NAME</span><span class="ch">)</span><span class="st">"</span> <span class="st">"</span><span class="ch">$(</span><span class="dt">FILE</span><span class="ch">)</span><span class="st">"</span> <span class="st">"</span><span class="ch">$(</span><span class="dt">CONTAINER</span><span class="ch">)</span><span class="st">"</span> <span class="st">"</span><span class="ch">$(</span><span class="dt">OBJECT</span><span class="ch">)</span><span class="st">"</span> <span class="st">"</span><span class="ch">$(</span><span class="dt">TERMS</span><span class="ch">)</span><span class="st">"</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="dv">analysis:</span><span class="dt"> fetch-data</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>Rscript analysis/scripts/01_prepare_data.R</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="dv">report:</span><span class="dt"> analysis </span><span class="co">## Render the report and register its hash</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>Rscript analysis/scripts/02_report.R</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="dv">test:</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>Rscript -e <span class="st">"tinytest::run_test_dir('inst/tinytest')"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>What matters about the script is what each subcommand refuses to do.</p>
+<ul>
+<li><strong><code>fetch</code> takes every key from the manifest</strong>, so changing the manifest changes what is downloaded.</li>
+<li><strong>A verified local copy is a cache hit.</strong> If the file is present and its hash matches, nothing is transferred.</li>
+<li><strong>Bytes that fail the hash are deleted before anything can read them</strong>, and the target fails, naming the dataset.</li>
+<li><strong><code>verify</code> derives its expectations from the same <code>sha256</code> column</strong>, so there is no second checksum file to drift.</li>
+<li><strong><code>publish</code> hashes the bytes being uploaded, at write time</strong>, refuses a name already in the manifest or a key already in the store, reads the object back and hashes it again, and only then appends the row.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Full listing: <code>tools/data-manifest.sh</code>
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>tools/data-manifest.sh</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-filename="tools/data-manifest.sh"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># data-manifest.sh -- fetch, verify, and publish datasets named in</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># analysis/data/manifest.tsv. The manifest is the single source of truth:</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the key says where to fetch from, the sha256 says what must arrive.</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   data-manifest.sh verify</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   data-manifest.sh fetch</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   data-manifest.sh publish NAME FILE CONTAINER OBJECT [TERMS]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="va">MANIFEST</span><span class="op">=</span><span class="va">${MANIFEST</span><span class="op">:-</span>analysis/data/manifest.tsv<span class="va">}</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="va">RAW_DATA_DIR</span><span class="op">=</span><span class="va">${RAW_DATA_DIR</span><span class="op">:-</span>analysis/data/raw_data<span class="va">}</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="va">REMOTE</span><span class="op">=</span><span class="va">${DATA_REMOTE</span><span class="op">:-</span>lab<span class="va">}</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sha256_of()</span> <span class="kw">{</span> <span class="ex">shasum</span> <span class="at">-a</span> 256 <span class="st">"</span><span class="va">$1</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d</span><span class="st">' '</span> <span class="at">-f1</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Rows only: skip the header and comment lines.</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="fu">rows()</span> <span class="kw">{</span> <span class="fu">grep</span> <span class="at">-v</span> <span class="st">'^#'</span> <span class="st">"</span><span class="va">$MANIFEST</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> +2<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">local_path()</span> <span class="kw">{</span> <span class="bu">printf</span> <span class="st">'%s/%s/%s'</span> <span class="st">"</span><span class="va">$RAW_DATA_DIR</span><span class="st">"</span> <span class="st">"</span><span class="va">$1</span><span class="st">"</span> <span class="st">"</span><span class="va">$2</span><span class="st">"</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="fu">verify_one()</span> <span class="kw">{</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">name</span><span class="op">=</span><span class="va">$1</span> <span class="va">path</span><span class="op">=</span><span class="va">$2</span> <span class="va">want</span><span class="op">=</span><span class="va">$3</span> <span class="va">got</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"MISSING  </span><span class="va">$name</span><span class="st">  (</span><span class="va">$path</span><span class="st">; run 'make fetch-data')"</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="va">got</span><span class="op">=</span><span class="va">$(</span><span class="ex">sha256_of</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$got</span><span class="st">"</span> <span class="ot">!=</span> <span class="st">"</span><span class="va">$want</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"FAILED   </span><span class="va">$name</span><span class="st">  expected </span><span class="va">${want</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">12</span><span class="va">}</span><span class="st"> got </span><span class="va">${got</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">12</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"OK       </span><span class="va">$name</span><span class="st">  </span><span class="va">${want</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">12</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="fu">cmd_verify()</span> <span class="kw">{</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">bad</span><span class="op">=</span>0 <span class="va">name</span> <span class="va">remote</span> <span class="va">container</span> <span class="va">object</span> <span class="va">sha</span> <span class="va">terms</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> <span class="va">IFS</span><span class="op">=</span><span class="st">$'</span><span class="dt">\t</span><span class="st">'</span> <span class="bu">read</span> <span class="at">-r</span> <span class="va">name</span> <span class="va">remote</span> <span class="va">container</span> <span class="va">object</span> <span class="va">sha</span> <span class="va">terms</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="ex">verify_one</span> <span class="st">"</span><span class="va">$name</span><span class="st">"</span> <span class="st">"</span><span class="va">$(</span><span class="ex">local_path</span> <span class="st">"</span><span class="va">$container</span><span class="st">"</span> <span class="st">"</span><span class="va">$object</span><span class="st">"</span><span class="va">)</span><span class="st">"</span> <span class="st">"</span><span class="va">$sha</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>      <span class="kw">||</span> <span class="va">bad</span><span class="op">=</span><span class="va">$((bad</span> <span class="op">+</span> <span class="dv">1</span><span class="va">))</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>  <span class="cf">done</span> <span class="op">&lt;</span> <span class="op">&lt;(</span><span class="ex">rows</span><span class="op">)</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>  <span class="bu">[</span> <span class="st">"</span><span class="va">$bad</span><span class="st">"</span> <span class="ot">-eq</span> 0 <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"</span><span class="va">$bad</span><span class="st"> dataset(s) failed verification"</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="fu">cmd_fetch()</span> <span class="kw">{</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">bad</span><span class="op">=</span>0 <span class="va">name</span> <span class="va">remote</span> <span class="va">container</span> <span class="va">object</span> <span class="va">sha</span> <span class="va">terms</span> <span class="va">path</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> <span class="va">IFS</span><span class="op">=</span><span class="st">$'</span><span class="dt">\t</span><span class="st">'</span> <span class="bu">read</span> <span class="at">-r</span> <span class="va">name</span> <span class="va">remote</span> <span class="va">container</span> <span class="va">object</span> <span class="va">sha</span> <span class="va">terms</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="va">path</span><span class="op">=</span><span class="va">$(</span><span class="ex">local_path</span> <span class="st">"</span><span class="va">$container</span><span class="st">"</span> <span class="st">"</span><span class="va">$object</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="co"># A verified local copy is a cache hit; repeated builds cost nothing.</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$(</span><span class="ex">sha256_of</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span><span class="va">)</span><span class="st">"</span> <span class="ot">=</span> <span class="st">"</span><span class="va">$sha</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>      <span class="bu">echo</span> <span class="st">"CACHED   </span><span class="va">$name</span><span class="st">"</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>      <span class="cf">continue</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$(</span><span class="fu">dirname</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># &lt;/dev/null: the loop's stdin is the manifest; nothing may eat it.</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rclone</span> copyto <span class="st">"</span><span class="va">$remote</span><span class="st">:</span><span class="va">$container</span><span class="st">/</span><span class="va">$object</span><span class="st">"</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span> <span class="op">&lt;</span>/dev/null</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="ot">! </span><span class="ex">verify_one</span> <span class="st">"</span><span class="va">$name</span><span class="st">"</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span> <span class="st">"</span><span class="va">$sha</span><span class="st">"</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Never leave bytes the manifest does not vouch for where an</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>      <span class="co"># analysis could read them.</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rm</span> <span class="at">-f</span> <span class="st">"</span><span class="va">$path</span><span class="st">"</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>      <span class="va">bad</span><span class="op">=</span><span class="va">$((bad</span> <span class="op">+</span> <span class="dv">1</span><span class="va">))</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>  <span class="cf">done</span> <span class="op">&lt;</span> <span class="op">&lt;(</span><span class="ex">rows</span><span class="op">)</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>  <span class="bu">[</span> <span class="st">"</span><span class="va">$bad</span><span class="st">"</span> <span class="ot">-eq</span> 0 <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"</span><span class="va">$bad</span><span class="st"> dataset(s) failed on fetch"</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="fu">cmd_publish()</span> <span class="kw">{</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">name</span><span class="op">=</span><span class="va">${1</span><span class="op">:?</span>name<span class="va">}</span> <span class="va">file</span><span class="op">=</span><span class="va">${2</span><span class="op">:?</span>file<span class="va">}</span> <span class="va">container</span><span class="op">=</span><span class="va">${3</span><span class="op">:?</span>container<span class="va">}</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>  <span class="bu">local</span> <span class="va">object</span><span class="op">=</span><span class="va">${4</span><span class="op">:?</span>object<span class="va">}</span> <span class="va">terms</span><span class="op">=</span><span class="va">${5</span><span class="op">:-</span>unspecified<span class="va">}</span> <span class="va">sha</span> <span class="va">remote_sha</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>  <span class="bu">[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$file</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"no such file: </span><span class="va">$file</span><span class="st">"</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="ex">rows</span> <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-f1</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-qx</span> <span class="st">"</span><span class="va">$name</span><span class="st">"</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"refusing: '</span><span class="va">$name</span><span class="st">' is already in </span><span class="va">$MANIFEST</span><span class="st">; publish a new name"</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">[</span> <span class="ot">-n</span> <span class="st">"</span><span class="va">$(</span><span class="ex">rclone</span> lsf <span class="st">"</span><span class="va">$REMOTE</span><span class="st">:</span><span class="va">$container</span><span class="st">/</span><span class="va">$object</span><span class="st">"</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null<span class="va">)</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"refusing: </span><span class="va">$REMOTE</span><span class="st">:</span><span class="va">$container</span><span class="st">/</span><span class="va">$object</span><span class="st"> already exists; keys are"</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"write-once, so give the new version a new object name"</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Hash at write time, from the bytes being published, not later from</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>  <span class="co"># whatever copy someone happens to read first.</span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>  <span class="va">sha</span><span class="op">=</span><span class="va">$(</span><span class="ex">sha256_of</span> <span class="st">"</span><span class="va">$file</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>  <span class="ex">rclone</span> copyto <span class="st">"</span><span class="va">$file</span><span class="st">"</span> <span class="st">"</span><span class="va">$REMOTE</span><span class="st">:</span><span class="va">$container</span><span class="st">/</span><span class="va">$object</span><span class="st">"</span></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>  <span class="va">remote_sha</span><span class="op">=</span><span class="va">$(</span><span class="ex">rclone</span> cat <span class="st">"</span><span class="va">$REMOTE</span><span class="st">:</span><span class="va">$container</span><span class="st">/</span><span class="va">$object</span><span class="st">"</span> <span class="kw">|</span> <span class="ex">shasum</span> <span class="at">-a</span> 256 <span class="dt">\</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>    <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d</span><span class="st">' '</span> <span class="at">-f1</span><span class="va">)</span></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$remote_sha</span><span class="st">"</span> <span class="ot">!=</span> <span class="st">"</span><span class="va">$sha</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"upload verification failed for </span><span class="va">$object</span><span class="st">"</span><span class="kw">;</span> <span class="bu">exit</span> 1</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>  <span class="cf">fi</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>  <span class="bu">printf</span> <span class="st">'%s\t%s\t%s\t%s\t%s\t%s\n'</span> <span class="dt">\</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="va">$name</span><span class="st">"</span> <span class="st">"</span><span class="va">$REMOTE</span><span class="st">"</span> <span class="st">"</span><span class="va">$container</span><span class="st">"</span> <span class="st">"</span><span class="va">$object</span><span class="st">"</span> <span class="st">"</span><span class="va">$sha</span><span class="st">"</span> <span class="st">"</span><span class="va">$terms</span><span class="st">"</span> <span class="op">&gt;&gt;</span> <span class="st">"</span><span class="va">$MANIFEST</span><span class="st">"</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"published </span><span class="va">$name</span><span class="st"> -&gt; </span><span class="va">$REMOTE</span><span class="st">:</span><span class="va">$container</span><span class="st">/</span><span class="va">$object</span><span class="st"> </span><span class="va">${sha</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">12</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="cf">case</span> <span class="st">"</span><span class="va">${1</span><span class="op">:-</span><span class="va">}</span><span class="st">"</span> <span class="kw">in</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>  <span class="ss">verify</span><span class="kw">)</span>  <span class="ex">cmd_verify</span> <span class="cf">;;</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>  <span class="ss">fetch</span><span class="kw">)</span>   <span class="ex">cmd_fetch</span> <span class="cf">;;</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>  <span class="ss">publish</span><span class="kw">)</span> <span class="bu">shift</span><span class="kw">;</span> <span class="ex">cmd_publish</span> <span class="st">"</span><span class="va">$@</span><span class="st">"</span> <span class="cf">;;</span></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>  <span class="pp">*</span><span class="kw">)</span> <span class="bu">echo</span> <span class="st">"usage: </span><span class="va">$0</span><span class="st"> verify | fetch |"</span></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>     <span class="bu">echo</span> <span class="st">"       </span><span class="va">$0</span><span class="st"> publish NAME FILE CONTAINER OBJECT [TERMS]"</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>     <span class="bu">exit</span> 2 <span class="cf">;;</span></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="cf">esac</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</div>
+<p><code>rclone</code> is the client because the remote is named <code>lab</code> and nothing in the script says which protocol <code>lab</code> speaks. rclone has native backends for S3, Swift, and roughly forty others, so the same build step works against a self-hosted gateway, an institutional Swift service, a commercial bucket, or a plain directory. The two tests make the point: the same unmodified script ran against a local directory and against an S3 endpoint, and only the definition of <code>lab</code> differed. Credentials for either backend can be supplied through environment variables from <code>pass</code> rather than written to <code>rclone.conf</code>.</p>
+</section>
+<section id="move-3-read-only-through-the-manifest" class="level2">
+<h2 class="anchored" data-anchor-id="move-3-read-only-through-the-manifest">Move 3: read only through the manifest</h2>
+<p>Verification in the build protects the build. It does not protect a script run directly from the console, which is how most analysis scripts are run. So the analysis never opens a raw file by path; it asks for a dataset by name.</p>
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>analysis/scripts/01_prepare_data.R</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-filename="analysis/scripts/01_prepare_data.R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">'R'</span>, <span class="st">'data_manifest.R'</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>trial <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="fu">use_dataset</span>(<span class="st">'trial_extract_v3'</span>))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">nrow</span>(trial) <span class="sc">&gt;</span> <span class="dv">0</span>, <span class="fu">all</span>(<span class="fu">c</span>(<span class="st">'arm'</span>, <span class="st">'outcome'</span>) <span class="sc">%in%</span> <span class="fu">names</span>(trial)))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>by_arm <span class="ot">&lt;-</span> trial <span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aggregate</span>(outcome <span class="sc">~</span> arm, <span class="at">data =</span> _, <span class="at">FUN =</span> mean)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>derived <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">'analysis'</span>, <span class="st">'data'</span>, <span class="st">'derived_data'</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">dir.create</span>(derived, <span class="at">showWarnings =</span> <span class="cn">FALSE</span>, <span class="at">recursive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(by_arm, <span class="fu">file.path</span>(derived, <span class="st">'outcome_by_arm.csv'</span>),</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="fu">write_provenance</span>(<span class="fu">file.path</span>(derived, <span class="st">'outcome_by_arm.provenance.tsv'</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>use_dataset()</code> looks the name up in the manifest, hashes the local copy, and returns the path only if the two agree, recording the read (name, key, hash, terms, time). <code>write_provenance()</code> writes that record beside the derived output, with the full commit hash of the code and a flag saying whether tracked files had uncommitted changes. From the test run, with the <code>remote</code>, <code>terms</code>, and <code>read_at</code> columns omitted and hashes shortened:</p>
+<pre><code>name              key               sha256      commit      tree_dirty
+trial_extract_v3  trial/ext_v3.csv  77cad0...   4adfedc...  FALSE</code></pre>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Full listing: <code>R/data_manifest.R</code>
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="code-with-filename">
+<div class="code-with-filename-file">
+<pre><strong>R/data_manifest.R</strong></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-filename="R/data_manifest.R"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>.provenance <span class="ot">&lt;-</span> <span class="fu">new.env</span>(<span class="at">parent =</span> <span class="fu">emptyenv</span>())</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>.provenance<span class="sc">$</span>log <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#' Read the project data manifest</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param path Path to the tab-separated manifest.</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return A data frame with one character column per manifest field.</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#' @export</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>read_data_manifest <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">path =</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">'analysis'</span>, <span class="st">'data'</span>, <span class="st">'manifest.tsv'</span>)) {</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">read.delim</span>(path, <span class="at">colClasses =</span> <span class="st">'character'</span>, <span class="at">comment.char =</span> <span class="st">'#'</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co">#' Path to a verified local copy of a manifest dataset</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="co">#' Looks up `name` in the manifest, checks the local copy's sha256</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co">#' against the manifest entry, records the read in the session</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co">#' provenance log, and returns the path. It errors rather than return</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co">#' a file the manifest does not vouch for.</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param name Dataset name, as in the manifest's `name` column.</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param manifest A manifest data frame from [read_data_manifest()].</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param raw_dir Directory that `make fetch-data` populates.</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return The local file path, invisibly verified.</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co">#' @export</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>use_dataset <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    name,</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">manifest =</span> <span class="fu">read_data_manifest</span>(),</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">raw_dir =</span> here<span class="sc">::</span><span class="fu">here</span>(<span class="st">'analysis'</span>, <span class="st">'data'</span>, <span class="st">'raw_data'</span>)) {</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  row <span class="ot">&lt;-</span> manifest[manifest<span class="sc">$</span>name <span class="sc">==</span> name, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(row) <span class="sc">!=</span> <span class="dv">1</span>L) {</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="fu">sprintf</span>(<span class="st">"dataset '%s' must appear exactly once in the manifest"</span>,</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>                 name), <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(raw_dir, row<span class="sc">$</span>container, row<span class="sc">$</span>object)</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(path)) {</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="fu">sprintf</span>(<span class="st">"dataset '%s' has no local copy at %s; run 'make %s'"</span>,</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>                 name, path, <span class="st">'fetch-data'</span>), <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>  found <span class="ot">&lt;-</span> digest<span class="sc">::</span><span class="fu">digest</span>(<span class="at">file =</span> path, <span class="at">algo =</span> <span class="st">'sha256'</span>)</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">identical</span>(found, row<span class="sc">$</span>sha256)) {</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="fu">sprintf</span>(<span class="fu">paste0</span>(<span class="st">"dataset '%s' does not match the manifest</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>                        <span class="st">'  expected %s</span><span class="sc">\n</span><span class="st">  found    %s</span><span class="sc">\n</span><span class="st">'</span>,</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>                        <span class="st">"refusing to read it; re-run 'make fetch-data'"</span>),</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>                 name, row<span class="sc">$</span>sha256, found), <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>  entry <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">name    =</span> name,</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">remote  =</span> row<span class="sc">$</span>remote,</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">key     =</span> <span class="fu">paste</span>(row<span class="sc">$</span>container, row<span class="sc">$</span>object, <span class="at">sep =</span> <span class="st">'/'</span>),</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">sha256  =</span> found,</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">terms   =</span> <span class="cf">if</span> (<span class="st">'terms'</span> <span class="sc">%in%</span> <span class="fu">names</span>(row)) row<span class="sc">$</span>terms <span class="cf">else</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">read_at =</span> <span class="fu">format</span>(<span class="fu">Sys.time</span>(), <span class="st">'%Y-%m-%d %H:%M:%S %Z'</span>)</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>  prior <span class="ot">&lt;-</span> .provenance<span class="sc">$</span>log</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(prior)) prior <span class="ot">&lt;-</span> prior[prior<span class="sc">$</span>name <span class="sc">!=</span> name, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>  .provenance<span class="sc">$</span>log <span class="ot">&lt;-</span> <span class="fu">rbind</span>(prior, entry)</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>  path</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="co">#' Datasets read so far in this session</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return A data frame with one row per dataset read through</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="co">#'   [use_dataset()], or a zero-row data frame if none were.</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="co">#' @export</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>data_provenance <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(.provenance<span class="sc">$</span>log)) {</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">name =</span> <span class="fu">character</span>(), <span class="at">remote =</span> <span class="fu">character</span>(),</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>               <span class="at">key =</span> <span class="fu">character</span>(), <span class="at">sha256 =</span> <span class="fu">character</span>(),</span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>               <span class="at">terms =</span> <span class="fu">character</span>(), <span class="at">read_at =</span> <span class="fu">character</span>())</span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>    .provenance<span class="sc">$</span>log</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>.git_lines <span class="ot">&lt;-</span> <span class="cf">function</span>(args) {</span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>(<span class="fu">system2</span>(<span class="st">'git'</span>, args, <span class="at">stdout =</span> <span class="cn">TRUE</span>, <span class="at">stderr =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>           <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>, <span class="at">warning =</span> <span class="cf">function</span>(w) <span class="cn">NULL</span>)</span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a><span class="co">#' The state of the code at this moment</span></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a><span class="co">#' Uses the full commit hash rather than an abbreviated `git describe`,</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a><span class="co">#' and reports uncommitted changes to tracked files as a separate flag,</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a><span class="co">#' because a commit does not pin a working tree that differs from it.</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return A list with `commit` (40 hex characters, or `NA` outside a</span></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a><span class="co">#'   repository) and `dirty` (`TRUE`, `FALSE`, or `NA`).</span></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a><span class="co">#' @export</span></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>code_state <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>  commit <span class="ot">&lt;-</span> <span class="fu">.git_lines</span>(<span class="fu">c</span>(<span class="st">'rev-parse'</span>, <span class="st">'HEAD'</span>))</span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(commit) <span class="sc">||</span> <span class="sc">!</span><span class="fu">length</span>(commit)) {</span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">commit =</span> <span class="cn">NA_character_</span>, <span class="at">dirty =</span> <span class="cn">NA</span>))</span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>  status <span class="ot">&lt;-</span> <span class="fu">.git_lines</span>(<span class="fu">c</span>(<span class="st">'status'</span>, <span class="st">'--porcelain'</span>, <span class="st">'--untracked-files=no'</span>))</span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">commit =</span> commit[[<span class="dv">1</span>]], <span class="at">dirty =</span> <span class="fu">length</span>(status) <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a><span class="co">#' Write the session's data provenance beside a derived output</span></span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a><span class="co">#' Adds the code state so a derived file records both what it read and</span></span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a><span class="co">#' exactly which commit read it.</span></span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param path Destination TSV.</span></span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return `path`, invisibly.</span></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a><span class="co">#' @export</span></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>write_provenance <span class="ot">&lt;-</span> <span class="cf">function</span>(path) {</span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>  state <span class="ot">&lt;-</span> <span class="fu">code_state</span>()</span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>  prov <span class="ot">&lt;-</span> <span class="fu">data_provenance</span>()</span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>  prov<span class="sc">$</span>commit <span class="ot">&lt;-</span> <span class="fu">rep</span>(state<span class="sc">$</span>commit, <span class="fu">nrow</span>(prov))</span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>  prov<span class="sc">$</span>tree_dirty <span class="ot">&lt;-</span> <span class="fu">rep</span>(state<span class="sc">$</span>dirty, <span class="fu">nrow</span>(prov))</span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">write.table</span>(prov, path, <span class="at">sep =</span> <span class="st">'</span><span class="sc">\t</span><span class="st">'</span>, <span class="at">quote =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>                     <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(path)</span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a><span class="co">#' Register a rendered output's hash, code state, and inputs</span></span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a><span class="co">#' A document cannot contain its own hash, so the binding between a</span></span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a><span class="co">#' rendered file and what produced it is written beside it, as one row</span></span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a><span class="co">#' of a tab-separated register.</span></span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param output Path to the rendered file (PDF, HTML, or anything).</span></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param inputs A provenance data frame with `name` and `sha256`</span></span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a><span class="co">#'   columns; defaults to the datasets read in this session.</span></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param register Path to the register TSV.</span></span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return The appended row, invisibly.</span></span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a><span class="co">#' @export</span></span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a>record_render <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a>    output,</span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a>    <span class="at">inputs =</span> <span class="fu">data_provenance</span>(),</span>
+<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a>    <span class="at">register =</span> <span class="fu">file.path</span>(<span class="fu">dirname</span>(output), <span class="st">'RENDERS.tsv'</span>)) {</span>
+<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">file.exists</span>(output))</span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a>  state <span class="ot">&lt;-</span> <span class="fu">code_state</span>()</span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a>  row <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>    <span class="at">output        =</span> <span class="fu">basename</span>(output),</span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a>    <span class="at">output_sha256 =</span> digest<span class="sc">::</span><span class="fu">digest</span>(<span class="at">file =</span> output, <span class="at">algo =</span> <span class="st">'sha256'</span>),</span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>    <span class="at">commit        =</span> state<span class="sc">$</span>commit,</span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>    <span class="at">tree_dirty    =</span> state<span class="sc">$</span>dirty,</span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>    <span class="at">inputs        =</span> <span class="fu">paste</span>(inputs<span class="sc">$</span>name, inputs<span class="sc">$</span>sha256, <span class="at">sep =</span> <span class="st">'='</span>,</span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>                          <span class="at">collapse =</span> <span class="st">';'</span>),</span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>    <span class="at">recorded_at   =</span> <span class="fu">format</span>(<span class="fu">Sys.time</span>(), <span class="st">'%Y-%m-%d %H:%M:%S %Z'</span>)</span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>  fresh <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">file.exists</span>(register)</span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a>  utils<span class="sc">::</span><span class="fu">write.table</span>(row, register, <span class="at">sep =</span> <span class="st">'</span><span class="sc">\t</span><span class="st">'</span>, <span class="at">quote =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>                     <span class="at">row.names =</span> <span class="cn">FALSE</span>, <span class="at">col.names =</span> fresh,</span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>                     <span class="at">append =</span> <span class="sc">!</span>fresh)</span>
+<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(row)</span>
+<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a><span class="co">#' Look a rendered file up in the register by its hash</span></span>
+<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a><span class="co">#' The walk backward starts here: the bytes of the file in hand, not</span></span>
+<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a><span class="co">#' its name, select the register row, which names the commit and the</span></span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a><span class="co">#' input hashes.</span></span>
+<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a><span class="co">#'</span></span>
+<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param output Path to the rendered file being checked.</span></span>
+<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a><span class="co">#' @param register Path to the register TSV.</span></span>
+<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a><span class="co">#' @return The matching register row(s); errors if none match.</span></span>
+<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a><span class="co">#' @export</span></span>
+<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a>verify_render <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a>    output,</span>
+<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a>    <span class="at">register =</span> <span class="fu">file.path</span>(<span class="fu">dirname</span>(output), <span class="st">'RENDERS.tsv'</span>)) {</span>
+<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a>  reg <span class="ot">&lt;-</span> utils<span class="sc">::</span><span class="fu">read.delim</span>(register, <span class="at">colClasses =</span> <span class="st">'character'</span>)</span>
+<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a>  sha <span class="ot">&lt;-</span> digest<span class="sc">::</span><span class="fu">digest</span>(<span class="at">file =</span> output, <span class="at">algo =</span> <span class="st">'sha256'</span>)</span>
+<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a>  hit <span class="ot">&lt;-</span> reg[reg<span class="sc">$</span>output_sha256 <span class="sc">==</span> sha, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">nrow</span>(hit)) {</span>
+<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="fu">sprintf</span>(<span class="fu">paste0</span>(<span class="st">"'%s' matches no registered render "</span>,</span>
+<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a>                        <span class="st">'(sha256 %s); it was altered after rendering, '</span>,</span>
+<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a>                        <span class="st">'or never registered'</span>),</span>
+<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a>                 <span class="fu">basename</span>(output), <span class="fu">substr</span>(sha, <span class="dv">1</span>, <span class="dv">12</span>)), <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a>  hit</span>
+<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+</div>
+<p>The two layers are independent, and the tests exercised both. With a tampered local copy, <code>make analysis</code> repaired the cache: the fetch step saw the mismatch, downloaded the object again, and the analysis ran on the right bytes. Running the script directly, with no fetch in front of it, stopped at the read (hashes abbreviated):</p>
+<pre><code>Error: dataset 'trial_extract_v3' does not match the manifest
+  expected 77cad029cb5b0245c9df258f6898d3f9...
+  found    b485c3f0a918e6175abbd21a1515d43a...
+refusing to read it; re-run 'make fetch-data'</code></pre>
+</section>
+<section id="move-4-ignore-the-bytes" class="level2">
+<h2 class="anchored" data-anchor-id="move-4-ignore-the-bytes">Move 4: ignore the bytes</h2>
+<pre><code># .gitignore
+analysis/data/raw_data/</code></pre>
+<p>The repository carries the manifest and never the data. A fresh clone plus <code>make fetch-data</code> reconstitutes the project, and deleting <code>raw_data/</code> to reclaim disk is safe.</p>
+<p><img src="media/images/ambiance2.jpg" class="img-fluid" style="height:3.5in"></p>
+</section>
+<section id="what-this-buys" class="level2">
+<h2 class="anchored" data-anchor-id="what-this-buys">What this buys</h2>
+<p>No machine is authoritative and nothing needs reconciling. Two people working from the same manifest work from bit-identical inputs, and their provenance files prove it. The question behind the whole reproducibility apparatus, which data produced Table 1, has an answer recoverable from the commit and checkable against the bytes.</p>
+</section>
+<section id="how-it-was-tested" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-was-tested">How it was tested</h2>
+<p>Both test scripts copy the example to a temporary directory, so running them never modifies it. <code>tests/run-local.sh</code> uses an rclone alias remote pointing at a local directory. <code>tests/run-s3.sh</code> starts SeaweedFS 4.47 on the loopback interface with per-run credentials for a publisher and a read-only identity, and a bucket under object lock in <code>COMPLIANCE</code> mode with a one-day retention. Both ran on 2026-09-28 on macOS arm64.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Scenario</th>
+<th>Expected</th>
+<th>Observed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Publish a dataset</td>
+<td>Row appended, hash from uploaded bytes</td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Fetch with no local data</td>
+<td>Downloaded and verified</td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Fetch again</td>
+<td>Cache hit, no transfer</td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Analysis via <code>make</code></td>
+<td>Reads via <code>use_dataset()</code>, writes provenance</td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Local copy tampered, <code>verify-data</code></td>
+<td>Fails, names dataset</td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Same, script run directly</td>
+<td>Refuses to read, shows both hashes</td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Same, via <code>make analysis</code></td>
+<td>Re-fetches, heals the cache</td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Remote object replaced under same key</td>
+<td>Fetch fails, bad file deleted</td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Publish an existing name or key</td>
+<td>Refused</td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Read-only identity overwrites a key (S3)</td>
+<td><code>AccessDenied</code></td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Publisher overwrites a locked key (S3)</td>
+<td>New version accepted; fetch fails on hash</td>
+<td>As expected; see ‘A lock is not a pin’</td>
+</tr>
+<tr class="even">
+<td>Delete the original locked version (S3)</td>
+<td><code>AccessDenied</code>; original recoverable</td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Uncommitted edit to tracked code</td>
+<td>Provenance records <code>tree_dirty = TRUE</code></td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Render a report</td>
+<td>Register row: output hash, commit, inputs</td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Look the report up by its bytes</td>
+<td>Row found</td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Edit the report, look it up again</td>
+<td>No row matches</td>
+<td>As expected</td>
+</tr>
+<tr class="odd">
+<td>Signed commit, throwaway key</td>
+<td><code>verify-commit</code> passes; unsigned fails</td>
+<td>As expected</td>
+</tr>
+<tr class="even">
+<td>Unit tests (<code>inst/tinytest/</code>)</td>
+<td>All pass</td>
+<td>14 of 14</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="reproducibility-in-a-zzcollab-compendium" class="level1">
+<h1>Reproducibility in a zzcollab Compendium</h1>
+<p>The pattern is not tied to a template, but it was written for one. zzcollab, the framework behind most analyses on this blog, organizes a compendium around five artifacts, the Five Pillars, and the pattern repairs the weakest of them.</p>
+<section id="the-weak-pillar" class="level2">
+<h2 class="anchored" data-anchor-id="the-weak-pillar">The weak pillar</h2>
+<p>The five are the <code>Dockerfile</code>, <code>renv.lock</code>, <code>.Rprofile</code>, the source code, and the research data. Four are pinned by something a machine can check: the image is built from the <code>Dockerfile</code> and a team project pulls it by the digest in <code>.team-image-digest</code>; package versions are pinned in <code>renv.lock</code>; <code>.Rprofile</code> and code are identified exactly by a commit.</p>
+<p>The fifth is pinned by convention. zzcollab’s replication-crisis vignette says the raw data directory ‘is read-only by convention’. Nothing records which bytes a commit expects there, and nothing stops them from changing. A compendium can rebuild its three-year-old environment exactly and still produce a different Table 1, because the extract was replaced by a corrected one with the same filename, while every other pillar reports, truthfully, that nothing changed.</p>
+</section>
+<section id="what-zzcollab-already-does-and-where-it-stops" class="level2">
+<h2 class="anchored" data-anchor-id="what-zzcollab-already-does-and-where-it-stops">What zzcollab already does, and where it stops</h2>
+<p>The zzcollab Makefile ships two data-integrity targets. <code>make hash-data</code> writes the sha256 of every file under <code>analysis/data/raw_data/</code> to <code>data-manifest.sha256</code>, and <code>make verify-data</code> checks against it. Committed, that file makes silent mutation detectable. It stops at detection:</p>
+<ul>
+<li><strong>It records what is present, not where it came from.</strong> Hashes are taken from whatever is on disk when the target runs.</li>
+<li><strong>A fresh clone cannot act on it.</strong> It says what should be there, not how to get it.</li>
+<li><strong>It covers the directory, not the analysis.</strong> It cannot say which files a script read, or which commit read them.</li>
+</ul>
+<p>The manifest here is the same idea with location and terms added, and with those, verification becomes reconstitution. Its natural home is the existing target pair rather than a parallel system; see Opportunities.</p>
+</section>
+<section id="a-hash-linked-provenance-chain-from-a-report-to-the-bytes" class="level2">
+<h2 class="anchored" data-anchor-id="a-hash-linked-provenance-chain-from-a-report-to-the-bytes">A hash-linked provenance chain from a report to the bytes</h2>
+<p>A compendium cannot record a chain of custody in the forensic sense, which documents who held an item and when. It can record a sequence of records in which each carries the hash of the next, so a change anywhere is detectable. That is strong evidence the bytes were not altered and weak evidence of who held them or when. The links:</p>
+<ol type="1">
+<li><strong>The rendered output is registered by its hash.</strong> A document cannot contain its own hash, so <code>record_render()</code> appends a row to a register beside it: the output’s sha256, the full commit hash, the dirty-tree flag, and the hashes of the raw data it was computed from. zzcollab’s render stamp prints a source path, time, and <code>git describe</code> label on every page for human readers; the register is what a machine can check.</li>
+<li><strong>The commit names the manifest.</strong> A commit hash covers its whole tree.</li>
+<li><strong>The manifest names the bytes.</strong></li>
+<li><strong>Derived outputs name what was actually read</strong>, through their provenance files; the report reads those, so its register row can name raw-data hashes rather than an intermediate CSV.</li>
+<li><strong>The store keeps the bytes.</strong> Object lock prevents the named version from being deleted during retention.</li>
+</ol>
+<p>Working backward starts from the bytes in hand:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">'R/data_manifest.R'</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">verify_render</span>(<span class="st">'analysis/report/share/outcome_report.txt'</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># -&gt; the register row: output hash, full commit, tree_dirty, inputs</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="op">&lt;</span>project<span class="op">&gt;</span> <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> <span class="op">&lt;</span>project<span class="op">&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout <span class="op">&lt;</span>commit from that row<span class="op">&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> report  <span class="co"># fetches the named data, verifies, re-renders</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The test ran exactly this walk: a fresh clone at the registered commit fetched, verified, re-rendered, and produced a report whose sha256 matched the register row. An edited report fails the lookup, because the lookup is by content; an altered object fails <code>make fetch-data</code>, which names the dataset rather than rerunning on something else.</p>
+<p>Links 3 and 4 look redundant and are not. The manifest records what a commit intended to read; the provenance file records what was read. They diverge when someone runs a script with uncommitted changes, and the divergence is visible because <code>tree_dirty</code> is recorded.</p>
+</section>
+<section id="where-the-chain-is-weak" class="level2">
+<h2 class="anchored" data-anchor-id="where-the-chain-is-weak">Where the chain is weak</h2>
+<ul>
+<li><strong>The register is a file.</strong> It binds a document’s bytes to a commit, but it is trustworthy only as far as it is committed (in a later commit, since a commit cannot name itself) and the history protecting it is trustworthy.</li>
+<li><strong>Abbreviations are not identifiers.</strong> Seven hexadecimal characters find a commit today and do not bind one; the example records forty.</li>
+<li><strong>A commit does not pin a dirty tree.</strong> The flag makes this visible; the policy that follows is not to publish from a dirty tree.</li>
+<li><strong>Git hashes with SHA-1 by default.</strong> Since 2.13 git uses a hardened SHA-1 that detects the SHAttered collision technique, and repositories can use SHA-256 (<code>git init --object-format=sha256</code>) if the hosting service supports it. See the <a href="https://git-scm.com/docs/hash-function-transition">hash-function transition document</a>.</li>
+<li><strong>Who and when are self-asserted.</strong> Authors and dates come from the committer’s configuration and clock, and history can be rewritten. Signing commits and tags binds them to a key, so <code>git verify-commit</code> can say who; signing does not establish when.</li>
+<li><strong>A hash can leak small data.</strong> The hash of a small, predictable table can be reversed by enumeration. Do not publish hashes of low-variety restricted data.</li>
+</ul>
+</section>
+<section id="is-this-a-blockchain" class="level2">
+<h2 class="anchored" data-anchor-id="is-this-a-blockchain">Is this a blockchain?</h2>
+<p>Structurally it is a relative. Chaining hashes so records cannot be altered unnoticed goes back to Haber and Stornetta, <a href="https://link.springer.com/article/10.1007/BF00196791">‘How to time-stamp a digital document’</a> (Journal of Cryptology, 1991), widely credited as the first blockchain design. Git history is the same kind of object: each commit hash covers its tree and parents. The Software Heritage archive uses the structure to give research software <a href="https://docs.softwareheritage.org/devel/swh-model/persistent-identifiers.html">intrinsic, content-derived identifiers</a>, which in my reading are the closest published analog to the manifest here.</p>
+<p>What a blockchain adds is agreement among many mutually untrusting writers and, on a public chain, a record of time no single party controls. Neither is needed here. Wüst and Gervais, <a href="https://eprint.iacr.org/2017/375.pdf">‘Do you Need a Blockchain?’</a> (2018), conclude a blockchain is warranted only when several mutually untrusting parties must write shared state and no trusted third party is available. A lab publishing its own datasets has one writer and trusted parties within reach: its institution, a timestamp authority, a registry.</p>
+<p>The research literature arguing otherwise is thinner than its visibility suggests. According to PubMed, an early proof of concept for blockchain-timestamped trial protocols, Irving and Holden (2016), <a href="https://doi.org/10.12688/f1000research.11888.1">was retracted</a> by its authors in 2017 after concerns raised in post-publication review (<a href="https://doi.org/10.12688/f1000research.8114.3">original</a>). Nugent and colleagues (2016) extended the idea to smart contracts (<a href="https://doi.org/10.12688/f1000research.9756.1">DOI</a>), and Benchoufi and Ravaud (2017) argued the case in a commentary (<a href="https://doi.org/10.1186/s13063-017-2035-z">DOI</a>). A 2026 systematic review in JMIR Medical Informatics found ten qualifying studies of smart contracts in clinical trials, all prototypes or simulations, none tested in a real regulatory setting, with conflicts with the GDPR’s right to erasure among the common gaps (<a href="https://doi.org/10.2196/76980">Sheikh et al.</a>).</p>
+<p>Something beyond this chain does add value for a dated claim that must convince a skeptical outsider, such as proof that an analysis plan existed before a result. Three tools address it without a private blockchain (none was tested for this post):</p>
+<ul>
+<li><strong>A timestamp authority</strong> (<a href="https://www.rfc-editor.org/rfc/rfc3161.html">RFC 3161</a>) signs a statement that a hash existed at a given time.</li>
+<li><strong>Transparency logs</strong> such as <a href="https://www.rfc-editor.org/rfc/rfc6962.html">Certificate Transparency</a> (RFC
+<ol start="6962" type="1">
+<li>and Sigstore’s Rekor (<a href="https://dl.acm.org/doi/pdf/10.1145/3548606.3560596">Newman, Meyers, and Torres-Arias, 2022</a>) give public verifiability with no consensus protocol.</li>
+</ol></li>
+<li><strong><a href="https://opentimestamps.org/">OpenTimestamps</a></strong> records an aggregate of many hashes in a Bitcoin transaction, proving a commit existed before a block without putting data on the chain; <code>git-ots</code> applies it to git.</li>
+</ul>
+<p>For describing provenance rather than protecting it, <a href="https://www.w3.org/TR/prov-dm/">W3C PROV</a> is the standard vocabulary, and it complements the hashes rather than replacing them.</p>
+</section>
+<section id="several-analysts-one-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="several-analysts-one-dataset">Several analysts, one dataset</h2>
+<p>zzcollab’s vignette proposes multi-analyst scaffolding, a <code>multiverse/</code> directory with one subdirectory per team, following the crowdsourced protocol of Silberzahn and colleagues (2018), whose first stage is a shared, documented dataset. The pattern makes that stage enforceable. Each team gets read-only credentials, so no team can alter the canonical dataset (the test confirms a read-only identity is refused an overwrite), and the claim that twenty-nine teams analyzed the same data becomes a check that twenty-nine provenance files contain the same hash.</p>
+</section>
+<section id="derived-data-containers-and-ci" class="level2">
+<h2 class="anchored" data-anchor-id="derived-data-containers-and-ci">Derived data, containers, and CI</h2>
+<ul>
+<li><strong>Derived data is regenerated, not published.</strong> Raw data goes to the store and the manifest; derived data stays in <code>analysis/data/derived_data/</code>, identified by its provenance file. The exception is a derived dataset that is expensive to recompute or depends on a licensed source the build cannot reach: publish it as though it were raw, with its provenance file beside it.</li>
+<li><strong>Fetch on the host, read in the container.</strong> rclone and the store credentials stay on the host, where <code>pass</code> supplies them; the container reads the verified cache through the project mount, and credentials never enter the shared image.</li>
+<li><strong>The verifier is a dependency.</strong> <code>use_dataset()</code> hashes with the <code>digest</code> package, which must be in <code>renv.lock</code>; paths resolve with <code>here::here()</code>, so the cache is found on the host and in the container alike.</li>
+<li><strong>CI checks structure, not data.</strong> A store on a home network is invisible to a hosted runner, and for restricted data it should be. CI can run the unit tests, which use a synthetic file, and validate manifest rows; the full rebuild is verified on machines entitled to hold the data, which means someone has to actually do it.</li>
+</ul>
+</section>
+<section id="where-this-stops" class="level2">
+<h2 class="anchored" data-anchor-id="where-this-stops">Where this stops</h2>
+<ul>
+<li><strong>A hash identifies bytes, not meaning.</strong> A codebook revision that reinterprets a column leaves every hash intact; publish codebooks as datasets in their own right.</li>
+<li><strong>Provenance is per script, not per table.</strong> Finer lineage is what pipeline tools such as <code>targets</code> add.</li>
+<li><strong>The manifest is hand-rolled on purpose</strong>, so the mechanism is visible. DVC and git-annex automate the same idea with more to learn.</li>
+</ul>
+</section>
+</section>
+<section id="running-your-own-seaweedfs-step-by-step" class="level1">
+<h1>Running Your Own: SeaweedFS, Step by Step</h1>
+<p>A self-hosted store buys the one property consumer services cannot: the server refuses the overwrite, rather than everyone agreeing not to attempt it. The walkthrough below was run on a laptop against a loopback endpoint; the next section covers what changes on a home server.</p>
+<section id="choosing-the-software" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-the-software">Choosing the software</h2>
+<p>The recommendation changed twice during testing, and the path is the part a reader is most likely to repeat.</p>
+<p><strong>MinIO</strong> is the name most people arrive with. Its open-source upstream is archived; Homebrew marks <code>minio</code> and <code>minio-mc</code> deprecated with removal scheduled during 2027. The binaries run but receive no security patches.</p>
+<p><strong>Garage</strong> is what most published comparisons recommend for a single machine: maintained, S3-compatible, designed for hardware outside a datacenter, and modest with memory. It does not enforce immutability. On 2.4.1, <code>PutBucketVersioning</code> returned <code>501 NotImplemented</code>, and a 1 KB upload over a 5 MB object under the same key silently replaced it. It is also not simpler to operate: nine steps to an authenticated endpoint (configuration file with generated secrets, node id, cluster layout with zone and capacity, layout apply, then bucket, key, and permission commands) against three for SeaweedFS. Where Garage plausibly wins is memory, since <code>weed server</code> runs master, volume, filer, and S3 gateway in one process. That was not measured; on a 4 GB machine it could decide the question, on the 16 GB home server it is less likely to.</p>
+<p><strong>SeaweedFS</strong> enforces write-once. The rest of this section is the setup verified on 4.46.</p>
+</section>
+<section id="step-1-install" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-install">Step 1: install</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install seaweedfs</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On Debian-derived Linux, take the release binary from the project’s GitHub rather than the distribution package, which tends to lag. (The Linux install was not tested.)</p>
+</section>
+<section id="step-2-start-the-server" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-start-the-server">Step 2: start the server</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/seaweed/data</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">weed</span> server <span class="dt">\</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">-dir</span><span class="op">=</span><span class="va">$HOME</span>/seaweed/data <span class="dt">\</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">-s3</span> <span class="at">-s3.port</span><span class="op">=</span>8333 <span class="dt">\</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">-ip</span><span class="op">=</span>127.0.0.1 <span class="dt">\</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">-volume.max</span><span class="op">=</span>50 <span class="dt">\</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">-master.volumeSizeLimitMB</span><span class="op">=</span>256</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-s3</code> turns on the S3 gateway. Bind to <code>127.0.0.1</code> while testing so nothing is reachable before authentication is configured.</p>
+<p><strong><code>-volume.max</code> is not optional.</strong> SeaweedFS preallocates volumes per bucket and the default runs out once a second bucket exists. The symptom is an opaque <code>InternalError</code> on upload, with <code>failed to find writable volumes for collection</code> visible only in the server log.</p>
+<p>Allow about fifteen seconds. The S3 gateway comes up well after the process starts, and an early client reports what looks like a configuration fault.</p>
+</section>
+<section id="step-3-create-a-bucket-with-object-lock" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-create-a-bucket-with-object-lock">Step 3: create a bucket with object lock</h2>
+<p>Lock must be enabled <strong>at bucket creation</strong>; it cannot be retrofitted.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">AWS_ACCESS_KEY_ID</span><span class="op">=</span>... <span class="va">AWS_SECRET_ACCESS_KEY</span><span class="op">=</span>...</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="va">EP</span><span class="op">=</span><span class="st">"--endpoint-url http://127.0.0.1:8333"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> <span class="va">$EP</span> s3api create-bucket <span class="at">--bucket</span> lab-data <span class="dt">\</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--object-lock-enabled-for-bucket</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> <span class="va">$EP</span> s3api put-object-lock-configuration <span class="at">--bucket</span> lab-data <span class="dt">\</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--object-lock-configuration</span> <span class="dt">\</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">'{"ObjectLockEnabled":"Enabled",</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="st">    "Rule":{"DefaultRetention":{"Mode":"COMPLIANCE","Days":365}}}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use <code>COMPLIANCE</code>. Under <code>GOVERNANCE</code> a privileged caller can override retention, which returns you to immutability by permission. Choose the window deliberately: every version is stored that long and the period cannot be shortened.</p>
+</section>
+<section id="step-4-point-rclone-at-it" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-point-rclone-at-it">Step 4: point rclone at it</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> config create lab s3 <span class="dt">\</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  provider=Other <span class="dt">\</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  access_key_id=... secret_access_key=... <span class="dt">\</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  endpoint=http://127.0.0.1:8333 <span class="dt">\</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  region=us-east-1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>make fetch-data</code> now works unchanged against <code>lab:lab-data</code>, which is the payoff of keeping protocol out of the manifest. In practice, leave the key fields empty in the file and supply them from <code>pass</code> through rclone’s environment variables at invocation.</p>
+</section>
+<section id="step-5-verify-the-lock-actually-holds" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-verify-the-lock-actually-holds">Step 5: verify the lock actually holds</h2>
+<p>Accepting a lock configuration and enforcing it are different things, and the difference is what disqualified Garage.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> <span class="va">$EP</span> s3api put-object <span class="at">--bucket</span> lab-data <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--key</span> trial/ext_v1.parquet <span class="at">--body</span> ext_v1.parquet</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="va">VID</span><span class="op">=</span><span class="va">$(</span><span class="ex">aws</span> <span class="va">$EP</span> s3api list-object-versions <span class="at">--bucket</span> lab-data <span class="dt">\</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">--prefix</span> trial/ext_v1.parquet <span class="dt">\</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--query</span> <span class="st">'Versions[0].VersionId'</span> <span class="at">--output</span> text<span class="va">)</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Both of these must fail.</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> <span class="va">$EP</span> s3api delete-object <span class="at">--bucket</span> lab-data <span class="dt">\</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--key</span> trial/ext_v1.parquet <span class="at">--version-id</span> <span class="st">"</span><span class="va">$VID</span><span class="st">"</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="ex">aws</span> <span class="va">$EP</span> s3api put-object-retention <span class="at">--bucket</span> lab-data <span class="dt">\</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--key</span> trial/ext_v1.parquet <span class="at">--version-id</span> <span class="st">"</span><span class="va">$VID</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--retention</span> <span class="dt">\</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">'{"Mode":"COMPLIANCE","RetainUntilDate":"2020-01-01T00:00:00Z"}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On 4.46 the first returns <code>AccessDenied</code> and the second <code>InvalidRequest</code>, and the object survives with its size and version id unchanged.</p>
+<section id="use-a-version-id-or-you-will-misread-the-result" class="level3">
+<h3 class="anchored" data-anchor-id="use-a-version-id-or-you-will-misread-the-result">Use a version id, or you will misread the result</h3>
+<p>Deleting <strong>without</strong> a version id does something different and legitimate. On 4.46, <code>delete-object</code> with no version id returns <code>"DeleteMarker": true</code> and succeeds, and <code>list-objects-v2</code> then shows nothing. But <code>list-object-versions</code> still shows the protected version, and reading it by version id returns bytes whose sha256 matches the original. This is standard S3 behavior, and almost certainly what lies behind tracker issue <a href="https://github.com/seaweedfs/seaweedfs/issues/8350">#8350</a>, ‘Object Lock COMPLIANCE mode does not enforce WORM (Delete still succeeds)’, closed as ‘not planned’. Object lock protects versions; listings are a separate question.</p>
+</section>
+<section id="a-lock-is-not-a-pin" class="level3">
+<h3 class="anchored" data-anchor-id="a-lock-is-not-a-pin">A lock is not a pin</h3>
+<p>Object lock prevents a version from being destroyed. It does not freeze what a key resolves to. In a versioned bucket, an upload to an existing key creates a new current version and leaves the old one protected, and a fetch by key returns whichever is current.</p>
+<p>Tested on SeaweedFS 4.47 with the manifest pattern running against it: the publisher identity uploaded a 15-byte file over the 2,571-byte extract under the same key, and the locked bucket accepted it. A fetch by key returned the 15 bytes and the manifest hash refused them. The original version was still retrievable by version id, still matched the manifest, and still could not be deleted.</p>
+<p>Three mechanisms each do one job:</p>
+<ul>
+<li><strong>Object lock</strong> stops a version from being destroyed.</li>
+<li><strong>A read-only identity</strong> stops most clients from writing at all; the read-only test identity was refused the same overwrite.</li>
+<li><strong>The manifest hash</strong> is the only one that notices a key now pointing at different bytes.</li>
+</ul>
+<p>The publisher identity remains the gap, since it can always create a new version under an old key. Keep it on one machine, use it only through the publish step, which refuses existing keys, and let the hash rather than the key decide what counts as the right file.</p>
+</section>
+<section id="verify-it-again-after-a-restart" class="level3">
+<h3 class="anchored" data-anchor-id="verify-it-again-after-a-restart">Verify it again after a restart</h3>
+<p>A store that forgets its locks on reboot is worse than one that never claimed them, because you would trust it. After stopping and restarting the server, the bucket lock configuration, the protected version, its <code>RetainUntilDate</code>, the refusal to delete by version id, and the bytes were all intact. Run that check once on your own hardware before the store holds anything you care about.</p>
+</section>
+</section>
+<section id="step-6-authentication" class="level2">
+<h2 class="anchored" data-anchor-id="step-6-authentication">Step 6: authentication</h2>
+<p>Started plainly, the S3 gateway answers unauthenticated requests with <code>200</code>; started with <code>-s3.config</code>, it answers <code>403</code>. A minimal configuration with one publisher and one read-only client:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"identities"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"publisher"</span><span class="fu">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"credentials"</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span><span class="dt">"accessKey"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">,</span> <span class="dt">"secretKey"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"actions"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"Admin"</span><span class="ot">,</span> <span class="st">"Read"</span><span class="ot">,</span> <span class="st">"Write"</span><span class="ot">,</span> <span class="st">"List"</span><span class="ot">,</span> <span class="st">"Tagging"</span><span class="ot">]</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"laptop-ro"</span><span class="fu">,</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"credentials"</span><span class="fu">:</span> <span class="ot">[</span><span class="fu">{</span><span class="dt">"accessKey"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">,</span> <span class="dt">"secretKey"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">}</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"actions"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"Read"</span><span class="ot">,</span> <span class="st">"List"</span><span class="ot">]</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Pass it with <code>-s3.config=/path/to/s3.json</code>. Tested on 4.46 as <code>laptop-ro</code>: listing and reading succeeded; creating an object, overwriting a key, planting a delete marker, and creating a bucket were each refused with <code>AccessDenied</code>. The delete-marker refusal matters: a read-only client cannot hide an object, which closes the gap the version-id discussion opens. The lock stops destruction; the identity stops mischief.</p>
+</section>
+</section>
+<section id="operating-it-on-the-home-server" class="level1">
+<h1>Operating It on the Home Server</h1>
+<p>The walkthrough yields an authenticated, lock-enforcing store on a loopback interface. Moving it onto <a href="../sec-five-machine-storage/">the home server</a> is not tested, but the services already running there (Borg repositories, a Samba Time Machine share, a default-deny firewall) set the conditions it would have to meet. Each item below is a practice established for those services and transferred by analogy.</p>
+<ul>
+<li><strong>Run it under the service manager and make it wait for the network.</strong> The <code>-ip=127.0.0.1</code> from Step 2 must change, and any service bound to a specific interface inherits a failure the Samba share on that server exhibited: started before its adapter had an address, it listened only on loopback and never retried, while every status check said it was running. A systemd unit for the store should declare <code>Wants=network-online.target</code> and <code>After=network-online.target</code>, and a post-reboot check should confirm what the port actually listens on (<code>ss -tln</code>), not merely that the process exists. The home-server post covers this in detail.</li>
+<li><strong>Address it by its Tailscale address.</strong> The fleet’s scripts reach the server by its Tailscale address, because its LAN address can change at a reboot; when it did, clients that named the old address failed quietly for several nights (<a href="../sec-three-tier-backup-architecture/">the backup post</a> tells that story). An <code>endpoint=</code> in <code>rclone.conf</code> is exactly such a hardcoded address. The same choice covers access from campus or travel without any port forwarding.</li>
+<li><strong>Firewall first.</strong> The server denies incoming connections by default, trusts the Tailscale interface, and admits specific ports from the LAN only. The S3 port should join that list deliberately, before the store leaves loopback.</li>
+<li><strong>Credentials in <code>pass</code>, one identity per role.</strong> The publisher identity lives on one workstation; every other machine gets a read-only identity. This mirrors the restricted backup keys that limit each Borg client to its own repository.</li>
+<li><strong>A retention policy you have thought about.</strong> Compliance mode plus a careless default fills a disk with undeletable versions of a file someone regenerates nightly.</li>
+<li><strong>Durability comes from elsewhere.</strong> One disk with excellent locks is still one disk, and object lock protects against deletion, not a dead SSD. The store’s data directory belongs in the server’s own Borg backup and in an offsite replica (see the costs section).</li>
+<li><strong>Monitor it.</strong> Every failure in the fleet’s backup jobs so far was found by reading logs and exit statuses by hand, sometimes days late, while the jobs looked healthy. A store holding the canonical copy of a dataset deserves the same daily check proposed in the backup post: up, reachable from a client, and still refusing a version delete.</li>
+</ul>
+<p>What self-hosting still does not provide is uptime guarantees (a repurposed laptop sleeps, loses power, and gets moved) or anyone to call. Upgrades, disk health, key rotation, and restore tests are the operator’s job.</p>
+</section>
+<section id="what-it-all-costs" class="level1">
+<h1>What It All Costs</h1>
+<p>Self-hosting is free at the margin, so the comparison is what you would otherwise pay, and on which axis.</p>
+<p>Hot-tier commercial storage runs roughly $18 per TB per month for Azure Blob, $20 for Google Cloud Storage Standard, and $23 for Amazon S3 Standard. The differentiator is egress: S3 charges about $0.09 per GB, so pulling one terabyte adds roughly $90. A pattern built on fetching on demand stresses exactly that axis.</p>
+<p>Backblaze B2 (about $6.95 per TB per month) and Wasabi (about $7.99) include free egress within generous limits, and Cloudflare R2 ($15) charges none. All three are S3-compatible, and B2 and Wasabi support Object Lock. So <strong>if enforced immutability is the goal, the cheapest route is not self-hosting</strong>; it is a $7 per TB bucket at a provider that implements Object Lock. Self-hosting buys LAN speed, no quotas, no per-request accounting, and control of a machine already owned.</p>
+<p>Consumer sync products (Google Drive, OneDrive, Dropbox) are mutable by design, with no content-addressed retrieval or version semantics a manifest can rest on, and API quotas a build step will feel. They are fine as a durable copy, which is how the fleet uses them for project directories, and wrong as the store the pattern addresses.</p>
+<p>Institutional storage, where offered, is worth pricing first. It often carries custody and retention properties a data management plan needs, and sometimes favorable treatment on grant-funded work. Ask whether the endpoint speaks S3 or Swift before designing around it.</p>
+<section id="the-arrangement-i-would-build" class="level2">
+<h2 class="anchored" data-anchor-id="the-arrangement-i-would-build">The arrangement I would build</h2>
+<p>A SeaweedFS instance on the home server as the working store, with <code>rclone sync</code> to an offsite replica at a provider that also supports Object Lock, B2 or Wasabi being the obvious candidates at around $7 per TB. Fast fetches over the Tailscale network, enforced write-once, no marginal cost for daily work, and a replica that covers the single-disk hole. Whether lock semantics survive the sync is an open question (see Limitations); the destination bucket most likely needs its own default retention.</p>
+<p>Because rclone speaks all of these and the manifest names none of them, the replica is a decision that can be deferred and revisited. The storage recommendation moved three times while this post was tested, and the build step never changed.</p>
+<p><img src="media/images/ambiance3.jpg" class="img-fluid" style="height:3.5in"></p>
+</section>
+</section>
+<section id="things-to-watch-out-for" class="level1">
+<h1>Things to Watch Out For</h1>
+<ol type="1">
+<li><strong>Assuming S3.</strong> Symptom: an <code>s3://</code> path and access-key stanza copied from a tutorial fail against a campus service that speaks Swift, and the authentication error is really a protocol mismatch. Fix: read the provider’s own documentation, and keep protocol out of the manifest.</li>
+<li><strong>Mounting the store.</strong> Symptom: someone installs <code>s3fs</code>, and the lab is back to a shared folder with worse latency. Fix: make the fetch step the only sanctioned access path.</li>
+<li><strong>A manifest with no hash.</strong> Symptom: ‘the file is present’ is the only check the build can make. Fix: record the hash when the object is written, as the publish step does, not when it is first read.</li>
+<li><strong>Mutable keys.</strong> Symptom: a corrected file is uploaded under the old key and every fetch by key returns the new bytes. Versioning is not the fix; it keeps the old version but makes the new one current. Fix: put the version in the key, refuse existing keys at publish time, and let the manifest hash decide.</li>
+<li><strong>Credentials in <code>rclone.conf</code>.</strong> Symptom: an access key sits in plain text in the home directory, the exposure <a href="../sec-aws-and-pass-secrets/">the secrets post</a> exists to prevent. Fix: inject from <code>pass</code> at invocation.</li>
+<li><strong>A hardcoded LAN endpoint.</strong> Symptom: fetches fail after the server reboots with a new LAN address. Fix: use the Tailscale address in every client’s configuration.</li>
+<li><strong>Egress and quota surprises.</strong> Symptom: a cross-validation loop re-fetches a 40 GB object every iteration. Fix: cache under an ignored path and make the fetch idempotent.</li>
+<li><strong>Assuming the license travels with the bytes.</strong> Symptom: data under redistribution limits lands where a future collaborator gets blanket access. Fix: record terms in the manifest so they appear in every provenance file.</li>
+<li><strong>The exploratory phase.</strong> Symptom: a weekly revised spreadsheet is minted as a versioned object each time. Fix: keep a scratch area with loose rules and promote to the store when a dataset is stable enough to cite.</li>
+</ol>
+</section>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
+<ul>
+<li><strong>Test the property, not the documentation.</strong> Two of three candidate stores failed on inspection: one archived, one silently replacing locked data. The only reliable test was trying to delete a protected version and watching the server refuse.</li>
+<li><strong>A lock is not a pin.</strong> Object lock kept the original extract safe, but only the manifest hash noticed when the key began pointing at different bytes.</li>
+<li><strong>Detection is not reconstitution.</strong> A committed checksum file says data changed; a manifest with location and terms lets a fresh clone rebuild the project with the right bytes or refuse.</li>
+<li><strong>A label is not a binding.</strong> A version string in a footer identifies nothing; a register keyed by the output’s hash does.</li>
+<li><strong>Operating a store is mostly operating a server.</strong> The conditions in ‘Operating It on the Home Server’ came from services that have nothing to do with object storage, and they would apply unchanged.</li>
+</ul>
+</section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<ul>
+<li>The pattern assumes datasets large relative to git’s comfort and stable enough to version. Small, rapidly churning tables are better committed directly.</li>
+<li>Object storage is poor at partial reads of row-oriented formats; Parquet makes column projection workable, a 40 GB CSV does not.</li>
+<li>Someone has to administer the store and rotate credentials, which is real overhead for a single-investigator lab.</li>
+<li>Nothing is deployed. The SeaweedFS walkthrough ran on macOS arm64 on loopback; service supervision, Tailscale access, Linux, and the memory footprint were not tested, and the home-server operating advice is transferred from other services.</li>
+<li>The manifest pattern was tested with one synthetic 200-row CSV: no transfer timings, multi-gigabyte objects, many datasets, or Swift backend.</li>
+<li>The publisher identity can always create a new version under an existing key. The publish step refuses and the hash catches a bypass, but nothing on the server prevents it.</li>
+<li>The render register was exercised with a plain-text report. A PDF engine that embeds a creation time will not re-render byte-identically, so for PDFs the walk backward verifies inputs and code rather than reproducing the file.</li>
+<li>Commit signing was tested with a throwaway key; no trusted timestamp was tested. The chain establishes integrity and, with signing, who, but not when.</li>
+<li>Whether object lock survives <code>rclone sync</code> to a replica is untested and doubtful; retention metadata is not obviously among what rclone copies. Treat the replica’s immutability as a hypothesis.</li>
+<li>Commercial prices are September 2026 list rates from secondary sources; treat them as orders of magnitude.</li>
+</ul>
+</section>
+<section id="opportunities-for-improvement" class="level2">
+<h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
+<ol type="1">
+<li>Fold the pattern into zzcollab: <code>hash-data</code> and <code>verify-data</code> become <code>publish-data</code>, <code>fetch-data</code>, and a manifest-reading <code>verify-data</code>, with the manifest header, <code>.gitignore</code> stanza, and <code>R/data_manifest.R</code> in the scaffold.</li>
+<li>Move <code>use_dataset()</code>, <code>write_provenance()</code>, <code>record_render()</code>, and <code>verify_render()</code> into zzcollab with their tests, and have the render stamp call <code>record_render()</code>, so each staged report’s row carries its own sha256, the full commit, and input hashes.</li>
+<li>Record the object version id in the manifest and fetch by it, so a new version under an old key is never downloaded at all.</li>
+<li>Sign release commits and tags, and add an RFC 3161 timestamp or OpenTimestamps proof where a date must convince an outsider.</li>
+<li>Deploy and measure on the home server when one of the triggers in ‘When a Store Earns Its Keep’ is met: systemd supervision, access over Tailscale, memory footprint, transfer times, and the replica leg including lock behavior.</li>
+<li>Compare DVC and git-annex against the hand-rolled manifest.</li>
+<li>A companion piece on institutional storage, the option many data management plans actually require.</li>
+</ol>
+</section>
+</section>
+<section id="wrapping-up" class="level1">
+<h1>Wrapping Up</h1>
+<p>The sync question for research data is better dissolved than answered. Code belongs in git. Mutable copies of data on several machines are the source of the problem, and an append-only store addressed by content hash removes them while adding the provenance a compendium otherwise lacks. The cost is an explicit fetch step and an administrator; the return is that every analysis can say exactly what it read.</p>
+<p>For a zzcollab compendium the gain is specific: the data pillar becomes checkable like the other four, and a hash-linked chain runs from a rendered report through its commit to the exact bytes. That chain shares ancestry with blockchains without needing to be one; it proves the bytes were not altered, and who and when are jobs for signatures and timestamping services.</p>
+<p>Takeaways:</p>
+<ul>
+<li>Adopt the manifest and the read-through helper now; they work against a plain directory and need no store.</li>
+<li>Deploy a store when a second analyst, a revocable-access requirement, or a result that must be defended appears.</li>
+<li>Choose software by trying to delete a locked version, not by reading comparisons.</li>
+<li>Let the hash, not the key, decide what counts as the right file.</li>
+<li>Run the store under the same discipline as the fleet’s other services: network-aware startup, Tailscale addressing, firewall first, credentials in <code>pass</code>, and a daily check.</li>
+</ul>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<p>Security series:</p>
+<ol type="1">
+<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a></li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
+<li>Object Storage for Research Data: The Layer Git Cannot Hold (this post)</li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+</ol>
+<p>External references:</p>
+<ul>
+<li><a href="../zc-quarto-compendium-intro/">Reproducible Blog Posts with ZZCOLLAB</a>: the Five Pillars.</li>
+<li><a href="../wf-pocket-terminal-ttyd-tailscale/">A pocket terminal with ttyd and Tailscale</a>: the same overlay-network argument for a different service.</li>
+<li><a href="https://seaweedfs.com">SeaweedFS</a> and <a href="https://garagehq.deuxfleurs.fr/">Garage</a>.</li>
+</ul>
+</section>
+<section id="reproducibility" class="level1">
+<h1>Reproducibility</h1>
+<p><strong>Store behavior.</strong> SeaweedFS object lock, persistence across a restart, scoped-identity enforcement, the delete-marker semantics behind issue #8350, the Garage versioning result, and the MinIO deprecation were verified on 2026-09-11 on macOS arm64, with integrity checked by sha256 on retrieved bytes. Versions: SeaweedFS 4.46, Garage 2.4.1, rclone 1.75.1, aws-cli against a local endpoint.</p>
+<p><strong>The manifest pattern.</strong> The example in <code>analysis/scripts/manifest-pattern/</code> was run end to end on 2026-09-28 by <code>tests/run-local.sh</code> and <code>tests/run-s3.sh</code> (SeaweedFS 4.47, object lock in <code>COMPLIANCE</code> mode, publisher and read-only identities), with results in ‘How it was tested’; the 14 tinytest assertions in <code>inst/tinytest/</code> pass. Listings in The Pattern are read from those files at render time. The render register, dirty-tree flag, byte-identical walk backward, and commit signing (throwaway key in a temporary keyring) were tested the same day. The dataset is synthetic, generated with a fixed seed. zzcollab details were read from its source and templates, not executed for this post.</p>
+<p><strong>The literature.</strong> Sources in ‘Is this a blockchain?’ were checked for existence and for the claims attributed to them through publisher or standards pages and, for biomedical papers, PubMed records. Full texts were not read.</p>
+<p><strong>What was not done.</strong> Both SeaweedFS instances were temporary and have been torn down. No service supervision, Tailscale access, Linux run, replica leg, or memory measurement. The home-server operating practices come from Samba, Borg, and firewall configuration on that machine, not from a store.</p>
+<p><strong>AI involvement in this post:</strong> drafting was AI-assisted, and the tool survey and testing were conducted with assistance. The architecture argument, the decision to keep protocol details out of the manifest, the decision to treat a self-hosted store as a first-class option, and the editorial judgment are the author’s.</p>
+<p><strong>Session information:</strong></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.6.1 (2026-06-24)
+Platform: aarch64-apple-darwin25.4.0
+Running under: macOS Tahoe 26.6.2
+
+Matrix products: default
+BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
+LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Los_Angeles
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] htmlwidgets_1.6.4 compiler_4.6.1    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.1       htmltools_0.5.9   parallel_4.6.1    otel_0.2.0       
+ [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
+[13] xfun_0.58         digest_0.6.39     rlang_1.3.0       evaluate_1.0.5   </code></pre>
+</div>
+</div>
+<hr>
+</section>
+<section id="lets-connect" class="level1">
+<h1>Let’s Connect</h1>
+<p><em>Questions, suggestions, or corrections are welcome.</em></p>
+<ul>
+<li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
+<li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
+</ul>
+<p>I would like to hear from you if:</p>
+<ul>
+<li>You find an error, or a better approach to anything in this series.</li>
+<li>You run a small research fleet and have found where this design breaks.</li>
+<li>You want to compare notes on backups, secrets, or reproducible research infrastructure.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/focusonr\.org");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Ronald G. Thomas.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47/ryyblog">
+      <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<!-- Fix category filtering. itemValues.categories is always a base64+URI-
+     encoded comma-joined blob and must be decoded before comparing. The
+     incoming `category` argument's encoding is NOT reliable: Quarto's own
+     native click path decodes it to plain text before calling
+     filterListingCategory, but other call sites (older cached scripts,
+     manual calls, other Quarto builds) pass the raw base64 data-category
+     value instead. A word like "docker" also happens to be valid-shaped
+     base64, so blindly re-decoding an already-plain-text argument silently
+     corrupts it rather than failing loudly. Match against both
+     interpretations instead of guessing which one applies. -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    function decodeCategory(value) {
+      try {
+        return decodeURIComponent(atob(value));
+      } catch (e) {
+        return value;
+      }
+    }
+
+    window.filterListingCategory = function(category) {
+      const listingIds = Object.keys(window['quarto-listings']);
+      for (const listingId of listingIds) {
+        const list = window['quarto-listings'][listingId];
+        if (list) {
+          if (category === '') {
+            list.filter();
+          } else {
+            const decodedTarget = decodeCategory(category);
+            list.filter(function (item) {
+              const itemValues = item.values();
+              if (itemValues.categories !== null && itemValues.categories !== undefined) {
+                const categories = decodeCategory(itemValues.categories)
+                  .split(",")
+                  .map(c => c.trim());
+                return categories.includes(category) || categories.includes(decodedTarget);
+              } else {
+                return false;
+              }
+            });
+          }
+        }
+      }
+    };
+  }, 500);
+});
+</script>
+
+<!-- PDF view/download button for blog posts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only add the button on post pages
+  if (window.location.pathname.includes('/posts/') && !window.location.pathname.endsWith('/posts/') && !window.location.pathname.endsWith('/posts/index.html')) {
+    var currentPath = window.location.pathname;
+    // Handle both /posts/name/ and /posts/name/index.html formats
+    var pdfPath;
+    if (currentPath.endsWith('/')) {
+      pdfPath = currentPath + 'index.pdf';
+    } else {
+      pdfPath = currentPath.replace('.html', '.pdf');
+    }
+
+    // Check if PDF exists first
+    fetch(pdfPath, { method: 'HEAD' })
+      .then(function(response) {
+        if (response.ok) {
+          // PDF exists, show download button
+          showDownloadButton(pdfPath);
+        }
+        // If PDF doesn't exist, don't show any button
+      })
+      .catch(function(error) {
+        // Error checking PDF, don't show any button
+      });
+  }
+});
+
+function showDownloadButton(pdfPath) {
+  var downloadBtn = document.createElement('div');
+  downloadBtn.className = 'pdf-download-button';
+
+  // Get file size if possible
+  fetch(pdfPath, { method: 'HEAD' })
+    .then(function(response) {
+      var size = response.headers.get('Content-Length');
+      var sizeText = '';
+
+      if (size) {
+        // Convert to MB or KB
+        var sizeInMB = size / (1024 * 1024);
+        if (sizeInMB >= 1) {
+          sizeText = ' (' + sizeInMB.toFixed(1) + ' MB)';
+        } else {
+          sizeText = ' (' + (size / 1024).toFixed(0) + ' KB)';
+        }
+      }
+
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' + sizeText +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    })
+    .catch(function() {
+      // Basic fallback if we can't get file size
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    });
+
+  // Find where to insert the button (right after the title block)
+  var titleBlock = document.querySelector('.quarto-title-meta');
+  if (titleBlock) {
+    titleBlock.after(downloadBtn);
+  }
+}
+
+
+</script>
+
+<style>
+.pdf-download-button {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
+
+
+
+
+</body></html>

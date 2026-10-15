@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ronald G. Thomas">
+<meta name="dcterms.date" content="2026-09-11">
+<meta name="description" content="How a repurposed 2016 MacBook Pro running Linux Mint serves a five-machine research fleet as its Borg repository host, its Time Machine share, and its remote of last resort for code that cannot go to GitHub. Covers the hardware realities of a laptop server, stable addressing over Tailscale, a default-deny firewall, an ext4 SSD with TRIM over USB, and the Samba details that kept the share unreachable until they were fixed.">
+
+<title>A Home Server for a Five-Machine Research Fleet – focusonr</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d1f979f567abd94e3c058709025db867.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Open+Sans:ital,wght@0,400;0,600;1,400&amp;family=Fira+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0fba9333d8.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+<!-- Custom meta tags for social sharing -->
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@rgt47">
+
+<!-- Add responsive features -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Add analytics if needed -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script> -->
+
+<!-- Add custom javascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove code tools button completely
+  const codeButton = document.querySelector('.code-tools-button');
+  if (codeButton) {
+    codeButton.remove();
+  }
+
+  // Smooth scrolling for in-page anchor links (skip listing category elements)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    if (anchor.closest('.quarto-listing-category')) return;
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+});
+</script>
+<meta name="quarto:status" content="draft">
+
+
+<meta property="og:title" content="A Home Server for a Five-Machine Research Fleet – focusonr">
+<meta property="og:description" content="How a repurposed 2016 MacBook Pro running Linux Mint serves a five-machine research fleet as its Borg repository host, its Time Machine share, and its remote of last resort for code that cannot go to GitHub. Covers the hardware realities of a laptop server, stable addressing over Tailscale, a default-deny firewall, an ext4 SSD with TRIM over USB, and the Samba details that kept the share unreachable until they were fixed.">
+<meta property="og:image" content="https://focusonr.org/posts/sec-five-machine-storage/media/images/hero.jpg">
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:title" content="A Home Server for a Five-Machine Research Fleet – focusonr">
+<meta name="twitter:description" content="How a repurposed 2016 MacBook Pro running Linux Mint serves a five-machine research fleet as its Borg repository host, its Time Machine share, and its remote of last resort for code that cannot go to GitHub. Covers the hardware realities of a laptop server, stable addressing over Tailscale, a default-deny firewall, an ext4 SSD with TRIM over USB, and the Samba details that kept the share unreachable until they were fixed.">
+<meta name="twitter:image" content="https://focusonr.org/posts/sec-five-machine-storage/media/images/hero.jpg">
+<meta name="twitter:creator" content="@rgt47">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">focusonr</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://rgtlab.org"> 
+<span class="menu-text">rgtlab.org</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/rgt47"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  </ul></li>
+  <li><a href="#what-is-the-home-server-for" id="toc-what-is-the-home-server-for" class="nav-link" data-scroll-target="#what-is-the-home-server-for">What Is the Home Server For?</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#a-laptop-that-behaves-like-a-server" id="toc-a-laptop-that-behaves-like-a-server" class="nav-link" data-scroll-target="#a-laptop-that-behaves-like-a-server">A Laptop That Behaves Like a Server</a></li>
+  <li><a href="#addressing-tailscale-for-scripts-the-lan-for-samba" id="toc-addressing-tailscale-for-scripts-the-lan-for-samba" class="nav-link" data-scroll-target="#addressing-tailscale-for-scripts-the-lan-for-samba">Addressing: Tailscale for Scripts, the LAN for Samba</a></li>
+  <li><a href="#the-firewall-default-deny" id="toc-the-firewall-default-deny" class="nav-link" data-scroll-target="#the-firewall-default-deny">The Firewall: Default Deny</a></li>
+  <li><a href="#the-borg-repository-host" id="toc-the-borg-repository-host" class="nav-link" data-scroll-target="#the-borg-repository-host">The Borg Repository Host</a></li>
+  <li><a href="#the-external-ssd" id="toc-the-external-ssd" class="nav-link" data-scroll-target="#the-external-ssd">The External SSD</a>
+  <ul class="collapse">
+  <li><a href="#ext4-after-an-hfs-experiment-failed" id="toc-ext4-after-an-hfs-experiment-failed" class="nav-link" data-scroll-target="#ext4-after-an-hfs-experiment-failed">ext4, After an HFS+ Experiment Failed</a></li>
+  <li><a href="#mounting-nofail-and-a-mountpoint-guard" id="toc-mounting-nofail-and-a-mountpoint-guard" class="nav-link" data-scroll-target="#mounting-nofail-and-a-mountpoint-guard">Mounting: <code>nofail</code> and a Mountpoint Guard</a></li>
+  <li><a href="#trim-over-usb" id="toc-trim-over-usb" class="nav-link" data-scroll-target="#trim-over-usb">TRIM over USB</a></li>
+  </ul></li>
+  <li><a href="#the-time-machine-share" id="toc-the-time-machine-share" class="nav-link" data-scroll-target="#the-time-machine-share">The Time Machine Share</a>
+  <ul class="collapse">
+  <li><a href="#binding-to-interfaces-and-waiting-for-them" id="toc-binding-to-interfaces-and-waiting-for-them" class="nav-link" data-scroll-target="#binding-to-interfaces-and-waiting-for-them">Binding to Interfaces, and Waiting for Them</a></li>
+  </ul></li>
+  <li><a href="#research-data-and-git-remotes-of-last-resort" id="toc-research-data-and-git-remotes-of-last-resort" class="nav-link" data-scroll-target="#research-data-and-git-remotes-of-last-resort">Research Data and Git Remotes of Last Resort</a></li>
+  <li><a href="#verification" id="toc-verification" class="nav-link" data-scroll-target="#verification">Verification</a></li>
+  <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
+  <ul class="collapse">
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
+  </ul></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">A Home Server for a Five-Machine Research Fleet</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">security</div>
+    <div class="quarto-category">linux</div>
+    <div class="quarto-category">storage</div>
+    <div class="quarto-category">backup</div>
+    <div class="quarto-category">tailscale</div>
+    <div class="quarto-category">samba</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    How a repurposed 2016 MacBook Pro running Linux Mint serves a five-machine research fleet as its Borg repository host, its Time Machine share, and its remote of last resort for code that cannot go to GitHub. Covers the hardware realities of a laptop server, stable addressing over Tailscale, a default-deny firewall, an ext4 SSD with TRIM over USB, and the Samba details that kept the share unreachable until they were fixed.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta column-page-left">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ronald G. Thomas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 11, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- ============================================================================
+AUTHOR NOTES
+
+  [x] Rewritten 2026-10-01 for the security series (part 6 of 8).
+  [x] Config excerpts read from the server on 2026-10-01; LAN subnet
+      replaced by a documentation range, UUIDs removed.
+  [ ] Claims about restores must match what has been tested.
+  [x] Images: hero + 3 ambiance, all present in media/images/.
+============================================================================ -->
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>Five machines are enough to need a center. This post describes the one in our fleet: a 2016 MacBook Pro, retired from daily use, running Linux Mint, and serving the other four machines as their backup destination and as a home for the few things that must not leave the house.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Part 6 of the security series; start with <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a> for the overview.</p>
+</div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+<p>The server is called mercury. The other machines are julia (the primary workstation), athena (a laptop, and the only Mac running Time Machine), joe (a secondary Mac), and zeus (a Linux laptop). The backup policy that runs against mercury is the subject of <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>; this post is about the machine itself: what it does, how it is reached, how it is protected, and the configuration details that took more than one attempt to get right.</p>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<ul>
+<li>Four machines backing up nightly need a destination that is always on, inside the house, and under our control.</li>
+<li>athena’s Time Machine disk was a USB drive that had to be plugged into athena; a network share removes that dependency.</li>
+<li>Some repositories hold material that is forbidden from ever having a GitHub remote. They still need an off-machine copy.</li>
+<li>An old laptop was already on hand, with 16 GB of memory and a 1 TB internal SSD, and a battery that rides out short power cuts.</li>
+<li>Every service added to a machine on the LAN is a new way in. The server needed to be closed by default and opened deliberately.</li>
+</ul>
+</section>
+<section id="objectives" class="level2">
+<h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
+<ul>
+<li>Document the server’s roles and, as importantly, what it does not do.</li>
+<li>Show how a laptop is made to behave like a server: no sleep on lid close, no suspend, full-disk encryption.</li>
+<li>Explain why scripted connections use Tailscale addresses and only the Time Machine share uses the LAN.</li>
+<li>Give the firewall policy, the external SSD setup, and the Samba share configuration as trimmed, real excerpts.</li>
+<li>Record the failures, each of which produced a rule worth keeping.</li>
+</ul>
+<p><img src="media/images/ambiance1.jpg" class="img-fluid" style="height:3.5in"></p>
+</section>
+</section>
+<section id="what-is-the-home-server-for" class="level1">
+<h1>What Is the Home Server For?</h1>
+<p>mercury has five roles and several deliberate non-roles.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Role</th>
+<th>Mechanism</th>
+<th>Clients</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Borg repository host</td>
+<td>one repository per machine under <code>/srv/backup</code>, append-only access</td>
+<td>julia, athena, joe, zeus</td>
+</tr>
+<tr class="even">
+<td>Time Machine share</td>
+<td>Samba with <code>vfs_fruit</code>, on an external SSD</td>
+<td>athena</td>
+</tr>
+<tr class="odd">
+<td>Remote of last resort</td>
+<td>bare git repositories under <code>/srv/git</code></td>
+<td>any machine</td>
+</tr>
+<tr class="even">
+<td>Research data area</td>
+<td>plain directory under <code>/srv/data</code>, fetched, not synced</td>
+<td>any machine</td>
+</tr>
+<tr class="odd">
+<td>Simulation host (one of two)</td>
+<td>rootless Podman containers and a one-at-a-time job queue; see <a href="../zc-offload-simulations-home-server/">Offloading R Simulations to a Home Server</a></td>
+<td>julia, athena, joe</td>
+</tr>
+</tbody>
+</table>
+<p>The fifth role was added last and is the one that sits least comfortably with the others: it runs other people’s code, here the author’s own simulation scripts, on the machine that holds the backups. The limitations section returns to this, and the second host in the fleet exists partly so that heavy or untrusted work has somewhere else to go.</p>
+<p>The server’s own home directory and its <code>/srv/git</code> and <code>/srv/data</code> folders are backed up nightly in the other direction, to a Borg repository on julia, so the backup destination is itself backed up.</p>
+<p>What it does not do matters as much:</p>
+<ul>
+<li>It runs no file-sync daemon. The fleet left Dropbox precisely to stop every machine holding a mutable copy of everything; see <a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox</a>.</li>
+<li>It is not reachable from the internet. Remote access goes through Tailscale.</li>
+<li>It does not hold the backup passphrases. It stores four encrypted Borg repositories it cannot read.</li>
+<li>It does not hold the password store’s remote, which lives on one of the Macs; see <a href="../sec-pass-password-manager/">Setting Up pass</a>.</li>
+<li>It does not yet run an object store. Whether one is worth running for research data is argued in <a href="../sec-object-store-research-data/">Object Storage for Research Data</a>.</li>
+</ul>
+</section>
+<section id="prerequisites" class="level1">
+<h1>Prerequisites</h1>
+<ul>
+<li>A spare machine with enough disk for every client’s backups plus growth. mercury has a 1 TB internal SSD for the Borg repositories and a separate 1 TB USB SSD for Time Machine.</li>
+<li>Linux (here Linux Mint 22.3) installed with full-disk encryption (LUKS). Encryption at rest is a fleet-wide control; see the <a href="../sec-multi-laptop-threat-model/">series overview</a>.</li>
+<li>Tailscale installed on the server and on every client.</li>
+<li><code>borgbackup</code>, <code>samba</code>, and <code>ufw</code> from the distribution’s packages.</li>
+<li>A login on the server for the account that owns the backups.</li>
+</ul>
+</section>
+<section id="a-laptop-that-behaves-like-a-server" class="level1">
+<h1>A Laptop That Behaves Like a Server</h1>
+<p>A laptop wants to sleep. Three settings stop it.</p>
+<p>The lid switch is ignored whether or not the machine is on power, through a drop-in for <code>systemd-logind</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/logind.conf.d/99-mercury-no-sleep.conf</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># mercury is the LAN hub; it must not sleep.</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">[Login]</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="dt">HandleLidSwitch</span><span class="ot">=</span><span class="st">ignore</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="dt">HandleLidSwitchExternalPower</span><span class="ot">=</span><span class="st">ignore</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="dt">HandleLidSwitchDocked</span><span class="ot">=</span><span class="st">ignore</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">HandleSuspendKey</span><span class="ot">=</span><span class="st">ignore</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="dt">HandleHibernateKey</span><span class="ot">=</span><span class="st">ignore</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="dt">IdleAction</span><span class="ot">=</span><span class="st">ignore</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The sleep and suspend targets are masked, so nothing (a desktop power applet, an idle timer) can suspend the machine behind the drop-in’s back:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl mask sleep.target suspend.target</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-enabled sleep.target suspend.target</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># masked</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># masked</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The remaining hardware realities are less tractable:</p>
+<ul>
+<li><strong>No wired network.</strong> The 2016 MacBook Pro has no Ethernet port, and mercury runs on Wi-Fi. It has two Wi-Fi adapters, the built-in one and a USB adapter, both joined to the home network. That detail caused one of the Samba failures described below.</li>
+<li><strong>A battery is not a UPS.</strong> The battery carries the machine through a short outage, but there is no clean-shutdown trigger and the battery is old.</li>
+<li><strong>LUKS needs a passphrase at boot.</strong> An unattended reboot stops at the unlock prompt until someone types it. This is the server’s equivalent of the FileVault behavior described in the series overview, and it is the price of encryption at rest.</li>
+</ul>
+</section>
+<section id="addressing-tailscale-for-scripts-the-lan-for-samba" class="level1">
+<h1>Addressing: Tailscale for Scripts, the LAN for Samba</h1>
+<p>Every scripted connection to mercury uses its Tailscale address. Only Time Machine, through Samba, uses the LAN. (There is one deliberate exception, the simulation client on two of the Macs, which defaults to the server’s <code>.local</code> multicast name and keeps a Tailscale alias for use away from home. The name follows the address, but it depends on multicast DNS, which failed on the first lookup after a quiet period on both Macs tested (then worked), so this section’s rule argues for making the Tailscale form the default. That is not yet done.)</p>
+<p>The reason is a failure. mercury originally appeared in each client’s SSH configuration under its LAN address, which the home router assigns by DHCP. After a reboot in late September 2026 the router handed mercury new addresses. Nothing announced the change: the Borg jobs on athena, joe, and zeus simply timed out every night until a status check found them. julia was unaffected because its configuration already used the Tailscale address, which does not change when the LAN does.</p>
+<p>The fix had a second lesson in it. Each client names the server in two places: the general <code>~/.ssh/config</code>, and a separate SSH config that the Borg script passes with <code>ssh -F</code> so that only the restricted backup key is offered. Correcting the first file left the backups failing; only correcting the second fixed them. The client side is described in the backup post; on this side, the rule is simple:</p>
+<ul>
+<li>Scripts address the server by its Tailscale address (or its Tailscale name), never by a DHCP-assigned LAN address.</li>
+<li>Services that must be reached over the LAN, here the Samba share, should have their LAN address reserved in the router, so that a reboot cannot move them.</li>
+<li>When the address of a machine changes, search every client for every file that names it before declaring the fix done.</li>
+</ul>
+<p>One more addressing detail affects Samba clients. On the Macs, <code>mercury.local</code> (multicast DNS) resolves to both Wi-Fi adapters’ IPv4 addresses and to two IPv6 link-local addresses. A client that tries them one at a time can spend tens of seconds on the addresses that do not answer before reaching one that does.</p>
+</section>
+<section id="the-firewall-default-deny" class="level1">
+<h1>The Firewall: Default Deny</h1>
+<p>Before Samba was added, mercury ran with its firewall installed but inactive, relying on the home router and on the restricted Borg keys. Adding a second network-facing service was the point at which that stopped being defensible. <code>ufw</code> now denies all incoming connections by default and opens three things:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Policy as configured, shown as the commands that produce it.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The LAN subnet is shown as a documentation range.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default deny incoming</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default allow outgoing</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow in on tailscale0</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.0.2.0/24 to any port 22 proto tcp</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.0.2.0/24 to any port 445 proto tcp</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw enable</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The Tailscale interface is trusted as a whole because every machine on the tailnet is one of ours and the Borg traffic arrives that way. SSH and Samba are additionally reachable from the LAN subnet and from nowhere else. Enabling a firewall over SSH is the moment to be careful: allow SSH first, keep the existing session open, and test a second login before closing the first.</p>
+<p>Samba applies its own restriction on top of the firewall, so a mistake in either layer alone does not expose the share:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/samba/smb.conf, [grey] share (excerpt)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">hosts allow </span><span class="ot">=</span><span class="st"> 192.0.2.0/24 127.0.0.1</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">hosts deny </span><span class="ot">=</span><span class="st"> 0.0.0.0/0</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">valid users </span><span class="ot">=</span><span class="st"> &lt;backup-user&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="dt">guest ok </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="the-borg-repository-host" class="level1">
+<h1>The Borg Repository Host</h1>
+<p>Each client has its own repository under <code>/srv/backup/&lt;machine&gt;</code>, and its own SSH key. On the server, <code>~/.ssh/authorized_keys</code> pins each key to one command and one repository:</p>
+<pre class="text"><code>command="/usr/local/bin/borg serve --append-only \
+  --restrict-to-repository /srv/backup/athena",restrict ssh-ed25519 ...</code></pre>
+<p>(Shown wrapped; in the file it is one line per key.) The effect:</p>
+<ul>
+<li>A client key cannot open a shell, read another machine’s repository, or delete existing archives. The worst an attacker holding one key can do is add data to that one repository.</li>
+<li>Because access is append-only, clients cannot prune. Pruning runs quarterly and by hand, with the passphrase typed at the time, because the server holding the repositories never holds their passphrases. The policy and its reasoning are in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>.</li>
+<li>The repositories live on the internal SSD, not on the external Time Machine disk, so the two backup tiers do not share a device.</li>
+</ul>
+</section>
+<section id="the-external-ssd" class="level1">
+<h1>The External SSD</h1>
+<p>athena’s Time Machine disk, a 1 TB Samsung T7 USB SSD, moved from athena’s desk to mercury.</p>
+<section id="ext4-after-an-hfs-experiment-failed" class="level2">
+<h2 class="anchored" data-anchor-id="ext4-after-an-hfs-experiment-failed">ext4, After an HFS+ Experiment Failed</h2>
+<p>The first format was HFS+, chosen deliberately: HFS+ can be read natively by both Linux and macOS, so if mercury died the disk could be plugged straight into a Mac. No guide documents HFS+ under Samba as a supported Time Machine target, and the experiment showed why. The drive dropped off the USB bus in the middle of a write; the Linux HFS+ checker, <code>fsck.hfsplus</code>, then crashed on the drive’s long device path (a known bug, Launchpad #1450760), so the volume could not be verified. A Time Machine destination that cannot be checked after an unclean disconnect is not one to rely on.</p>
+<p>The disk was reformatted as ext4, which the Samba Time Machine guides do document. The cost is real and accepted: macOS cannot read the disk directly, so recovering it without mercury needs a Linux machine or a third-party ext4 driver.</p>
+</section>
+<section id="mounting-nofail-and-a-mountpoint-guard" class="level2">
+<h2 class="anchored" data-anchor-id="mounting-nofail-and-a-mountpoint-guard">Mounting: <code>nofail</code> and a Mountpoint Guard</h2>
+<pre class="text"><code># /etc/fstab (UUID shortened)
+UUID=...  /media/grey  ext4  defaults,noatime,nofail,\
+  x-systemd.device-timeout=10s  0  2</code></pre>
+<p><code>nofail</code> with a short device timeout lets mercury boot normally when the disk is unplugged; without it, a missing USB drive drops a Linux machine into emergency mode at boot, which on a headless server means a trip to the keyboard.</p>
+<p>The opposite failure is quieter and worse: with the disk absent, <code>/media/grey</code> is an empty directory on the internal SSD, and Samba would happily serve it. Time Machine would then fill the server’s system disk. The share refuses to start a session unless the disk is actually mounted:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/samba/smb.conf, [grey] share (excerpt)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dt">root preexec </span><span class="ot">=</span><span class="st"> /usr/bin/mountpoint -q /media/grey</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="dt">root preexec close </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>root preexec close = yes</code> turns a failing pre-exec command into a refused connection.</p>
+</section>
+<section id="trim-over-usb" class="level2">
+<h2 class="anchored" data-anchor-id="trim-over-usb">TRIM over USB</h2>
+<p>Linux does not pass TRIM to most USB SSDs by default; the SCSI layer reports the device’s provisioning mode as <code>full</code>, and <code>fstrim</code> answers that discard is not supported. A udev rule switches this drive model to <code>unmap</code> whenever it appears:</p>
+<pre class="text"><code># /etc/udev/rules.d/50-grey-trim.rules
+ACTION=="add|change", ATTRS{idVendor}=="04e8", \
+  ATTRS{idProduct}=="4001", SUBSYSTEM=="scsi_disk", \
+  ATTR{provisioning_mode}="unmap"</code></pre>
+<p>(Shown wrapped; udev needs one line.) Check it and trim:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /sys/block/sda/device/scsi_disk/<span class="pp">*</span>/provisioning_mode</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># unmap</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fstrim <span class="at">-v</span> /media/grey</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The first <code>fstrim</code> after the reformat released the whole drive, 915.6 GiB. The vendor and product IDs come from <code>lsusb</code>; the rule is specific to one drive model, which is intended, since forcing <code>unmap</code> on a bridge that does not support it can cause errors.</p>
+<p><img src="media/images/ambiance2.jpg" class="img-fluid" style="height:3.5in"></p>
+</section>
+</section>
+<section id="the-time-machine-share" class="level1">
+<h1>The Time Machine Share</h1>
+<p>The share definition, trimmed of comments:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[grey]</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">   comment </span><span class="ot">=</span><span class="st"> Time Machine backup for athena (ext4 on mercury)</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">   path </span><span class="ot">=</span><span class="st"> /media/grey</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="dt">   root preexec </span><span class="ot">=</span><span class="st"> /usr/bin/mountpoint -q /media/grey</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="dt">   root preexec close </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="dt">   vfs objects </span><span class="ot">=</span><span class="st"> fruit streams_xattr</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:time machine </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:time machine max size </span><span class="ot">=</span><span class="st"> </span><span class="dv">966367641600</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:metadata </span><span class="ot">=</span><span class="st"> stream</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:model </span><span class="ot">=</span><span class="st"> MacSamba</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="dt">   hosts allow </span><span class="ot">=</span><span class="st"> 192.0.2.0/24 127.0.0.1</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="dt">   hosts deny </span><span class="ot">=</span><span class="st"> 0.0.0.0/0</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="dt">   valid users </span><span class="ot">=</span><span class="st"> &lt;backup-user&gt;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="dt">   guest ok </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="dt">   read only </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="dt">   create mask </span><span class="ot">=</span><span class="st"> </span><span class="dv">0600</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="dt">   directory mask </span><span class="ot">=</span><span class="st"> </span><span class="dv">0700</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Notes on the choices:</p>
+<ul>
+<li><code>fruit:time machine = yes</code> makes the share advertise itself as a Time Machine destination; <code>max size</code> caps it below the disk’s capacity (here 900 GiB) so Time Machine prunes before the disk fills.</li>
+<li>The Samba account has its own password, set with <code>smbpasswd</code>, separate from the Linux login and from the password store.</li>
+<li>Encryption is the client’s job: Time Machine encrypts the backup only if Encrypt Backup is chosen when the destination is added. The server stores an encrypted sparse bundle it cannot read. The first attempt here was added without encryption and had to be deleted and restarted; the procedure is in the backup post.</li>
+</ul>
+<section id="binding-to-interfaces-and-waiting-for-them" class="level2">
+<h2 class="anchored" data-anchor-id="binding-to-interfaces-and-waiting-for-them">Binding to Interfaces, and Waiting for Them</h2>
+<p>The share was configured to listen only on chosen interfaces:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[global]</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">   interfaces </span><span class="ot">=</span><span class="st"> lo wlp2s0 wlx9cefd5fb70dd</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">   bind interfaces only </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This is good practice (Samba does not answer on the Tailscale interface at all) and it caused two failures.</p>
+<p><strong>Samba started before the network.</strong> At boot, <code>smbd</code> started before the USB Wi-Fi adapter had an address, bound only to loopback, and never retried. From the LAN the share simply refused connections, while the disk itself was mounted and writable. A systemd drop-in makes Samba wait for the network:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/smbd.service.d/wait-for-network.conf</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This only helps if a wait-online service is enabled for the network manager in use (<code>NetworkManager-wait-online.service</code> on Mint); check it, or <code>network-online.target</code> is reached immediately.</p>
+<p><strong>Samba listened on one of two adapters.</strong> The original line named only the USB adapter. Because <code>mercury.local</code> resolves to both adapters, a Mac reaching the built-in adapter’s address was refused. Listing both adapters fixed it. Confirm what Samba is actually listening on, rather than what the configuration says:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-tln</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">':445 '</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The general lesson: a service bound to named interfaces on a machine whose interfaces come up late or change needs both a boot ordering dependency and a check of its real listening sockets after every reboot.</p>
+</section>
+</section>
+<section id="research-data-and-git-remotes-of-last-resort" class="level1">
+<h1>Research Data and Git Remotes of Last Resort</h1>
+<p>Two smaller roles round out the server.</p>
+<p><code>/srv/git</code> holds bare repositories for work that must never have a GitHub remote, such as repositories holding subject-level clinical data. A clone over SSH (<code>git clone mercury:/srv/git/&lt;name&gt;.git</code>) gives them an off-machine copy without a third party.</p>
+<p><code>/srv/data</code> holds research data that is not in git. Clients fetch from it; they do not each keep a synchronized, mutable copy, which is the model that produced dozens of conflict copies under Dropbox. One practical warning from seeding it: macOS ships <code>openrsync</code> as <code>rsync</code>, and during the migration it twice exited with status 0 while silently omitting thousands of files. Seed with a <code>tar</code> stream, or install GNU rsync, and count files on both sides afterward.</p>
+<p>Whether this directory should become an S3-compatible object store, with content hashes and versioning, is argued in <a href="../sec-object-store-research-data/">Object Storage for Research Data</a>. Every lesson in this post (stable addressing, a firewall first, waiting for the network at boot, checking real listening sockets) would apply to that service unchanged.</p>
+</section>
+<section id="verification" class="level1">
+<h1>Verification</h1>
+<p>Run on the server after any change and after every reboot:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Encrypted root and the SSD mounted read-write</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,TYPE,FSTYPE,MOUNTPOINT</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> <span class="at">-n</span> <span class="at">-o</span> TARGET,FSTYPE,OPTIONS /media/grey</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># TRIM enabled on the USB SSD</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /sys/block/sda/device/scsi_disk/<span class="pp">*</span>/provisioning_mode</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Samba up and listening on the LAN adapters, not just loopback</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-active smbd</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-tln</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">':445 '</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Firewall active with the expected rules</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status verbose</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Sleep impossible</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-enabled sleep.target suspend.target</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>From a client:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS: the share answers on each LAN address</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nc</span> <span class="at">-z</span> <span class="at">-G</span> 5 <span class="op">&lt;</span>server-lan-address<span class="op">&gt;</span> 445</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Borg: the restricted key reaches only borg serve</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-F</span> ~/.borg/ssh_config mercury true</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># expected: a borg usage message, not a shell</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The last check is the one that proves the restriction: if <code>true</code> runs, the forced command is not in effect.</p>
+<p><img src="media/images/ambiance3.jpg" class="img-fluid" style="height:3.5in"></p>
+</section>
+<section id="things-to-watch-out-for" class="level1">
+<h1>Things to Watch Out For</h1>
+<ol type="1">
+<li><strong>DHCP addresses move.</strong> Address the server by its Tailscale address in scripts, and reserve LAN addresses for LAN services.</li>
+<li><strong>Server names live in more than one file.</strong> A restricted-key setup has its own SSH config; search every client for every file that names the server.</li>
+<li><strong>A status check must cover every machine.</strong> The first check after the address change looked only at the Macs; zeus’s backups had been failing just as long and were found a day later.</li>
+<li><strong><code>bind interfaces only</code> plus a late network means loopback only.</strong> Order Samba after <code>network-online.target</code> and verify with <code>ss</code>.</li>
+<li><strong>An unmounted mount point is an empty directory.</strong> Guard network shares with <code>mountpoint -q</code>, and use <code>nofail</code> so a missing disk does not stop boot.</li>
+<li><strong>USB SSDs do not TRIM by default on Linux.</strong> Set <code>provisioning_mode</code> with a udev rule scoped to the drive model.</li>
+<li><strong>HFS+ on Linux is not a recovery format.</strong> Without a working checker, cross-platform readability does not help.</li>
+<li><strong>Enabling a firewall over SSH can lock you out.</strong> Allow SSH before <code>ufw enable</code>, and test a second session.</li>
+<li><strong>LUKS and unattended reboots do not mix.</strong> Plan for someone to unlock the server after power loss or a kernel update.</li>
+</ol>
+</section>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
+<ul>
+<li><strong>The failures were silent.</strong> Borg timed out, Samba listened on loopback, and nothing reported either. Each was found by reading a log or checking a socket, not by an alert.</li>
+<li><strong>Stable names beat convenient ones.</strong> The LAN address was easy to type and wrong a week later; the Tailscale address has not changed.</li>
+<li><strong>Defense in depth is cheap here.</strong> The firewall, Samba’s <code>hosts allow</code>, a separate Samba password, and client-side encryption each cover a mistake in the others.</li>
+<li><strong>Experiments on a backup target need an exit.</strong> HFS+ was a reasonable hypothesis, tested, and abandoned the first time it could not be verified.</li>
+<li><strong>A server that cannot read what it stores is a smaller target, for confidentiality.</strong> Holding encrypted repositories without their passphrases keeps a compromise of mercury from becoming a compromise of every machine’s data. It does not protect availability: Borg’s append-only mode is enforced by the restricted keys, not by file permissions, so code running as the account that owns the repositories could delete the backups even though it could not read them. Simulation jobs originally ran as that account, which made the server’s second role a route to its first. They now run as a separate unprivileged account (described in <a href="../zc-offload-simulations-home-server/">Offloading R Simulations to a Home Server</a>), whose file permissions give it no access to the repositories.</li>
+</ul>
+</section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<ul>
+<li>One server is one point of failure for the Borg tier; the cloud copies and the server’s own backup to julia mitigate this, but a restore onto replacement hardware has not yet been rehearsed.</li>
+<li>Wi-Fi is the only network path, and the server’s throughput sets the pace of large first backups (a full Time Machine baseline runs for many hours).</li>
+<li>The Time Machine share is treated as a convenience tier. athena’s research data also exists in Borg and in its cloud copies; the share itself has no second copy.</li>
+<li>There is no automated alerting on the server’s services; the verification list above is run by hand.</li>
+<li>Simulation jobs run as a dedicated account, <code>simrun</code>, with no <code>sudo</code> and no access to the backup repositories, in rootless containers under that account. A job can still fill the disk or keep the CPU busy, so a runaway job affects availability, and <code>simrun</code> owns the simulation data store. Mercury remains the slower of the two simulation hosts, with four threads.</li>
+</ul>
+</section>
+<section id="opportunities-for-improvement" class="level2">
+<h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
+<ul>
+<li>A USB Ethernet adapter and a wired link to the router.</li>
+<li>A small UPS with a shutdown trigger, so power loss ends in a clean shutdown rather than a drained battery.</li>
+<li>A daily check that reports the services’ status and listening sockets, alongside the backup status check recommended in the backup post.</li>
+<li>A scheduled restore test from both the Borg repositories and the Time Machine share.</li>
+<li>An object store for research data, if the argument in post 7 holds up in practice.</li>
+</ul>
+</section>
+</section>
+<section id="wrapping-up" class="level1">
+<h1>Wrapping Up</h1>
+<p>A home server for a small fleet does not need to be new or fast. It needs to stay awake, keep a stable address, refuse everything it was not asked to accept, and fail loudly enough to be noticed. The old MacBook Pro does the first three well. The fourth is still done by reading logs, which is the reason the series keeps returning to monitoring.</p>
+<p>Takeaways:</p>
+<ul>
+<li>Address servers by a stable overlay name (Tailscale), not by a DHCP-assigned LAN address.</li>
+<li>Start with a default-deny firewall and open each service deliberately, then restrict it again at the service.</li>
+<li>Store backups the server cannot decrypt, through keys that can only append.</li>
+<li>For Samba on Linux: ext4, a mountpoint guard, <code>nofail</code>, TRIM via udev, and a boot ordering dependency on the network.</li>
+<li>After every reboot, check what is actually listening, not what the configuration intends.</li>
+</ul>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<p>Security series:</p>
+<ol type="1">
+<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a></li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li>A Home Server for a Five-Machine Research Fleet (this post)</li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+</ol>
+<p>External references:</p>
+<ul>
+<li>Samba <code>vfs_fruit</code> manual page: <a href="https://www.samba.org/samba/docs/current/man-html/vfs_fruit.8.html" class="uri">https://www.samba.org/samba/docs/current/man-html/vfs_fruit.8.html</a></li>
+<li>BorgBackup documentation, <code>borg serve</code> and append-only mode: <a href="https://borgbackup.readthedocs.io/en/stable/usage/serve.html" class="uri">https://borgbackup.readthedocs.io/en/stable/usage/serve.html</a></li>
+<li>Tailscale documentation: <a href="https://tailscale.com/kb" class="uri">https://tailscale.com/kb</a></li>
+<li>Ubuntu <code>ufw</code> documentation: <a href="https://help.ubuntu.com/community/UFW" class="uri">https://help.ubuntu.com/community/UFW</a></li>
+<li>Launchpad bug #1450760, <code>fsck.hfsplus</code> crash: <a href="https://bugs.launchpad.net/bugs/1450760" class="uri">https://bugs.launchpad.net/bugs/1450760</a></li>
+<li>ArchWiki, Solid state drive, TRIM on USB devices: <a href="https://wiki.archlinux.org/title/Solid_state_drive" class="uri">https://wiki.archlinux.org/title/Solid_state_drive</a></li>
+</ul>
+</section>
+<section id="reproducibility" class="level1">
+<h1>Reproducibility</h1>
+<p><strong>What was checked.</strong> The configuration excerpts (logind drop-in, masked sleep targets, Samba <code>[global]</code> binding and <code>[grey]</code> share, the smbd drop-in, the fstab line, the udev rule, the Borg forced commands) were read from the running server on 2026-10-01 and are shown trimmed, with the LAN subnet replaced by a documentation range and the filesystem UUID removed. The firewall policy is given as the commands that produce it, from the build notes; <code>ufw status</code> output was not captured for this post. Listening sockets, the mount, and TRIM were verified on the server; port 445 on both LAN addresses was verified from athena. The simulation role was added after those checks (2026-10-03 onward); for this post, only the file ownership behind the limitation above was read from the server on 2026-10-12: the Borg repositories and the Time Machine drive are owned by the backup account, which is in the <code>sudo</code> group. The separate <code>simrun</code> account was created on 2026-10-15; that it has no <code>sudo</code> membership and that the repositories are mode 0750 for another owner and group was read from the account listing and file modes, not tested by trying to read them as <code>simrun</code>. The simulation design itself is verified in its own post.</p>
+<p><strong>Versions.</strong> Server: Linux Mint 22.3, kernel 7.0.0-31, Samba 4.19.5, BorgBackup 1.4.5, Tailscale 1.102.4. Clients: macOS 26.</p>
+<p><strong>Not done.</strong> A restore from the Time Machine share, and a full restore from Borg onto replacement hardware, have not been tested.</p>
+<p><strong>AI involvement in this post:</strong> drafting was AI-assisted, and the configuration was read and verified with assistance. The design decisions and editorial judgment are the author’s.</p>
+<p><strong>Session information:</strong></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.6.1 (2026-06-24)
+Platform: aarch64-apple-darwin25.4.0
+Running under: macOS Tahoe 26.6.2
+
+Matrix products: default
+BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
+LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Los_Angeles
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] htmlwidgets_1.6.4 compiler_4.6.1    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.1       htmltools_0.5.9   parallel_4.6.1    otel_0.2.0       
+ [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
+[13] xfun_0.58         digest_0.6.39     rlang_1.3.0       evaluate_1.0.5   </code></pre>
+</div>
+</div>
+<hr>
+<p><em>Rendered on 2026-10-15 at 10:59 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/sec-five-machine-storage/analysis/report/index.qmd</em></p>
+</section>
+<section id="lets-connect" class="level1">
+<h1>Let’s Connect</h1>
+<p><em>Questions, suggestions, or corrections are welcome.</em></p>
+<ul>
+<li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
+<li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
+</ul>
+<p>I would like to hear from you if:</p>
+<ul>
+<li>You find an error, or a better approach to anything in this series.</li>
+<li>You run a small research fleet and have found where this design breaks.</li>
+<li>You want to compare notes on backups, secrets, or reproducible research infrastructure.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/focusonr\.org");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Ronald G. Thomas.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47/ryyblog">
+      <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<!-- Fix category filtering. itemValues.categories is always a base64+URI-
+     encoded comma-joined blob and must be decoded before comparing. The
+     incoming `category` argument's encoding is NOT reliable: Quarto's own
+     native click path decodes it to plain text before calling
+     filterListingCategory, but other call sites (older cached scripts,
+     manual calls, other Quarto builds) pass the raw base64 data-category
+     value instead. A word like "docker" also happens to be valid-shaped
+     base64, so blindly re-decoding an already-plain-text argument silently
+     corrupts it rather than failing loudly. Match against both
+     interpretations instead of guessing which one applies. -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    function decodeCategory(value) {
+      try {
+        return decodeURIComponent(atob(value));
+      } catch (e) {
+        return value;
+      }
+    }
+
+    window.filterListingCategory = function(category) {
+      const listingIds = Object.keys(window['quarto-listings']);
+      for (const listingId of listingIds) {
+        const list = window['quarto-listings'][listingId];
+        if (list) {
+          if (category === '') {
+            list.filter();
+          } else {
+            const decodedTarget = decodeCategory(category);
+            list.filter(function (item) {
+              const itemValues = item.values();
+              if (itemValues.categories !== null && itemValues.categories !== undefined) {
+                const categories = decodeCategory(itemValues.categories)
+                  .split(",")
+                  .map(c => c.trim());
+                return categories.includes(category) || categories.includes(decodedTarget);
+              } else {
+                return false;
+              }
+            });
+          }
+        }
+      }
+    };
+  }, 500);
+});
+</script>
+
+<!-- PDF view/download button for blog posts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only add the button on post pages
+  if (window.location.pathname.includes('/posts/') && !window.location.pathname.endsWith('/posts/') && !window.location.pathname.endsWith('/posts/index.html')) {
+    var currentPath = window.location.pathname;
+    // Handle both /posts/name/ and /posts/name/index.html formats
+    var pdfPath;
+    if (currentPath.endsWith('/')) {
+      pdfPath = currentPath + 'index.pdf';
+    } else {
+      pdfPath = currentPath.replace('.html', '.pdf');
+    }
+
+    // Check if PDF exists first
+    fetch(pdfPath, { method: 'HEAD' })
+      .then(function(response) {
+        if (response.ok) {
+          // PDF exists, show download button
+          showDownloadButton(pdfPath);
+        }
+        // If PDF doesn't exist, don't show any button
+      })
+      .catch(function(error) {
+        // Error checking PDF, don't show any button
+      });
+  }
+});
+
+function showDownloadButton(pdfPath) {
+  var downloadBtn = document.createElement('div');
+  downloadBtn.className = 'pdf-download-button';
+
+  // Get file size if possible
+  fetch(pdfPath, { method: 'HEAD' })
+    .then(function(response) {
+      var size = response.headers.get('Content-Length');
+      var sizeText = '';
+
+      if (size) {
+        // Convert to MB or KB
+        var sizeInMB = size / (1024 * 1024);
+        if (sizeInMB >= 1) {
+          sizeText = ' (' + sizeInMB.toFixed(1) + ' MB)';
+        } else {
+          sizeText = ' (' + (size / 1024).toFixed(0) + ' KB)';
+        }
+      }
+
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' + sizeText +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    })
+    .catch(function() {
+      // Basic fallback if we can't get file size
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    });
+
+  // Find where to insert the button (right after the title block)
+  var titleBlock = document.querySelector('.quarto-title-meta');
+  if (titleBlock) {
+    titleBlock.after(downloadBtn);
+  }
+}
+
+
+</script>
+
+<style>
+.pdf-download-button {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
+
+
+
+
+</body></html>

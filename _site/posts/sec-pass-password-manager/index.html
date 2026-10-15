@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-17">
-<meta name="description" content="I did not appreciate how fragile browser-based password storage was until I migrated 600 credentials to an encrypted, version-controlled store in a single afternoon.">
+<meta name="description" content="A password store that is a directory of GPG-encrypted files, tracked in git and synced through a private remote: how to set it up, use it on several machines, protect the key, and replace the key when it is exposed.">
 
 <title>Setting Up pass: a Unix Password Manager – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Setting Up pass: a Unix Password Manager – focusonr">
-<meta property="og:description" content="I did not appreciate how fragile browser-based password storage was until I migrated 600 credentials to an encrypted, version-controlled store in a single afternoon.">
+<meta property="og:description" content="A password store that is a directory of GPG-encrypted files, tracked in git and synced through a private remote: how to set it up, use it on several machines, protect the key, and replace the key when it is exposed.">
 <meta property="og:image" content="https://focusonr.org/posts/sec-pass-password-manager/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="893">
 <meta property="og:image:width" content="1600">
 <meta name="twitter:title" content="Setting Up pass: a Unix Password Manager – focusonr">
-<meta name="twitter:description" content="I did not appreciate how fragile browser-based password storage was until I migrated 600 credentials to an encrypted, version-controlled store in a single afternoon.">
+<meta name="twitter:description" content="A password store that is a directory of GPG-encrypted files, tracked in git and synced through a private remote: how to set it up, use it on several machines, protect the key, and replace the key when it is exposed.">
 <meta name="twitter:image" content="https://focusonr.org/posts/sec-pass-password-manager/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -235,17 +235,17 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#configuration" id="toc-configuration" class="nav-link" data-scroll-target="#configuration">Configuration</a>
   <ul class="collapse">
   <li><a href="#step-1-generate-a-gpg-key" id="toc-step-1-generate-a-gpg-key" class="nav-link" data-scroll-target="#step-1-generate-a-gpg-key">Step 1: Generate a GPG Key</a></li>
-  <li><a href="#step-2-initialize-the-password-store" id="toc-step-2-initialize-the-password-store" class="nav-link" data-scroll-target="#step-2-initialize-the-password-store">Step 2: Initialize the Password Store</a></li>
-  <li><a href="#step-3-insert-and-retrieve-a-credential" id="toc-step-3-insert-and-retrieve-a-credential" class="nav-link" data-scroll-target="#step-3-insert-and-retrieve-a-credential">Step 3: Insert and Retrieve a Credential</a></li>
-  <li><a href="#step-4-initialize-git-tracking" id="toc-step-4-initialize-git-tracking" class="nav-link" data-scroll-target="#step-4-initialize-git-tracking">Step 4: Initialize git Tracking</a></li>
-  <li><a href="#step-5-guard-the-store-against-accidental-git-commits" id="toc-step-5-guard-the-store-against-accidental-git-commits" class="nav-link" data-scroll-target="#step-5-guard-the-store-against-accidental-git-commits">Step 5: Guard the Store Against Accidental git Commits</a></li>
+  <li><a href="#step-2-initialize-the-store" id="toc-step-2-initialize-the-store" class="nav-link" data-scroll-target="#step-2-initialize-the-store">Step 2: Initialize the Store</a></li>
+  <li><a href="#step-3-add-and-retrieve-credentials" id="toc-step-3-add-and-retrieve-credentials" class="nav-link" data-scroll-target="#step-3-add-and-retrieve-credentials">Step 3: Add and Retrieve Credentials</a></li>
+  <li><a href="#step-4-track-the-store-in-git-with-a-private-remote" id="toc-step-4-track-the-store-in-git-with-a-private-remote" class="nav-link" data-scroll-target="#step-4-track-the-store-in-git-with-a-private-remote">Step 4: Track the Store in git with a Private Remote</a></li>
+  <li><a href="#step-5-keep-the-store-out-of-other-repositories" id="toc-step-5-keep-the-store-out-of-other-repositories" class="nav-link" data-scroll-target="#step-5-keep-the-store-out-of-other-repositories">Step 5: Keep the Store Out of Other Repositories</a></li>
   </ul></li>
-  <li><a href="#migration-from-1password" id="toc-migration-from-1password" class="nav-link" data-scroll-target="#migration-from-1password">Migration from 1Password</a></li>
+  <li><a href="#using-the-store-on-several-machines" id="toc-using-the-store-on-several-machines" class="nav-link" data-scroll-target="#using-the-store-on-several-machines">Using the Store on Several Machines</a></li>
+  <li><a href="#protecting-the-key" id="toc-protecting-the-key" class="nav-link" data-scroll-target="#protecting-the-key">Protecting the Key</a></li>
+  <li><a href="#replacing-the-key-and-re-encrypting-the-store" id="toc-replacing-the-key-and-re-encrypting-the-store" class="nav-link" data-scroll-target="#replacing-the-key-and-re-encrypting-the-store">Replacing the Key and Re-encrypting the Store</a></li>
+  <li><a href="#migrating-from-another-password-manager" id="toc-migrating-from-another-password-manager" class="nav-link" data-scroll-target="#migrating-from-another-password-manager">Migrating from Another Password Manager</a></li>
   <li><a href="#verification" id="toc-verification" class="nav-link" data-scroll-target="#verification">Verification</a></li>
-  <li><a href="#daily-workflow" id="toc-daily-workflow" class="nav-link" data-scroll-target="#daily-workflow">Daily Workflow</a>
-  <ul class="collapse">
-  <li><a href="#new-laptop-bootstrap-position" id="toc-new-laptop-bootstrap-position" class="nav-link" data-scroll-target="#new-laptop-bootstrap-position">New-Laptop Bootstrap Position</a></li>
-  </ul></li>
+  <li><a href="#daily-workflow" id="toc-daily-workflow" class="nav-link" data-scroll-target="#daily-workflow">Daily Workflow</a></li>
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
   <li><a href="#uninstall-rollback" id="toc-uninstall-rollback" class="nav-link" data-scroll-target="#uninstall-rollback">Uninstall / Rollback</a></li>
   <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
@@ -257,25 +257,14 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
   <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
   <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
-  <li><a href="#appendix-a" id="toc-appendix-a" class="nav-link" data-scroll-target="#appendix-a">Appendix A: iOS Sync with Pass for iOS</a>
+  <li><a href="#appendix-a" id="toc-appendix-a" class="nav-link" data-scroll-target="#appendix-a">Appendix A: Pass for iOS</a>
   <ul class="collapse">
-  <li><a href="#a.1-confirm-the-remote-is-set-up" id="toc-a.1-confirm-the-remote-is-set-up" class="nav-link" data-scroll-target="#a.1-confirm-the-remote-is-set-up">A.1 Confirm the Remote is Set Up</a></li>
-  <li><a href="#a.2-export-the-gpg-key" id="toc-a.2-export-the-gpg-key" class="nav-link" data-scroll-target="#a.2-export-the-gpg-key">A.2 Export the GPG Key</a></li>
-  <li><a href="#a.3-configure-the-ios-app" id="toc-a.3-configure-the-ios-app" class="nav-link" data-scroll-target="#a.3-configure-the-ios-app">A.3 Configure the iOS App</a></li>
-  <li><a href="#a.4-import-the-gpg-key-and-sync" id="toc-a.4-import-the-gpg-key-and-sync" class="nav-link" data-scroll-target="#a.4-import-the-gpg-key-and-sync">A.4 Import the GPG Key and Sync</a></li>
-  <li><a href="#a.5-common-snags" id="toc-a.5-common-snags" class="nav-link" data-scroll-target="#a.5-common-snags">A.5 Common Snags</a></li>
+  <li><a href="#a.1-confirm-the-remote" id="toc-a.1-confirm-the-remote" class="nav-link" data-scroll-target="#a.1-confirm-the-remote">A.1 Confirm the Remote</a></li>
+  <li><a href="#a.2-export-the-key-for-the-phone" id="toc-a.2-export-the-key-for-the-phone" class="nav-link" data-scroll-target="#a.2-export-the-key-for-the-phone">A.2 Export the Key for the Phone</a></li>
+  <li><a href="#a.3-configure-the-app" id="toc-a.3-configure-the-app" class="nav-link" data-scroll-target="#a.3-configure-the-app">A.3 Configure the App</a></li>
+  <li><a href="#a.4-common-snags" id="toc-a.4-common-snags" class="nav-link" data-scroll-target="#a.4-common-snags">A.4 Common Snags</a></li>
   </ul></li>
-  <li><a href="#appendix-b" id="toc-appendix-b" class="nav-link" data-scroll-target="#appendix-b">Appendix B: Security Considerations</a>
-  <ul class="collapse">
-  <li><a href="#b.1-gpg-subkey-architecture" id="toc-b.1-gpg-subkey-architecture" class="nav-link" data-scroll-target="#b.1-gpg-subkey-architecture">B.1 GPG Subkey Architecture</a></li>
-  <li><a href="#b.2-aws-and-api-credentials-via-pass" id="toc-b.2-aws-and-api-credentials-via-pass" class="nav-link" data-scroll-target="#b.2-aws-and-api-credentials-via-pass">B.2 AWS and API Credentials via pass</a></li>
-  <li><a href="#b.3-filevault" id="toc-b.3-filevault" class="nav-link" data-scroll-target="#b.3-filevault">B.3 FileVault</a></li>
-  <li><a href="#b.4-ssh-key-policy-for-multi-laptop-setups" id="toc-b.4-ssh-key-policy-for-multi-laptop-setups" class="nav-link" data-scroll-target="#b.4-ssh-key-policy-for-multi-laptop-setups">B.4 SSH Key Policy for Multi-Laptop Setups</a></li>
-  </ul></li>
-  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a>
-  <ul class="collapse">
-  <li><a href="#related-posts-in-this-cluster" id="toc-related-posts-in-this-cluster" class="nav-link" data-scroll-target="#related-posts-in-this-cluster">Related posts in this cluster</a></li>
-  </ul></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
     </div>
@@ -286,17 +275,17 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="quarto-title">
 <h1 class="title">Setting Up pass: a Unix Password Manager</h1>
   <div class="quarto-categories">
+    <div class="quarto-category">security</div>
     <div class="quarto-category">unix</div>
     <div class="quarto-category">shell</div>
     <div class="quarto-category">gpg</div>
-    <div class="quarto-category">security</div>
     <div class="quarto-category">setup</div>
   </div>
   </div>
 
 <div>
   <div class="description">
-    I did not appreciate how fragile browser-based password storage was until I migrated 600 credentials to an encrypted, version-controlled store in a single afternoon.
+    A password store that is a directory of GPG-encrypted files, tracked in git and synced through a private remote: how to set it up, use it on several machines, protect the key, and replace the key when it is exposed.
   </div>
 </div>
 
@@ -326,74 +315,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- ============================================================================
-AUTHOR PROVIDES — concrete inputs the blogger must supply
+AUTHOR NOTES
 
-Every item below maps to a placeholder in the body. Fill in this checklist
-FIRST, then paste your answers into the matching `[bracketed]` slots. Do not
-publish until every box is ticked.
+Part 2 of the security series (series map: sec-multi-laptop-threat-model).
+This post owns pass and GPG: key type and expiry, store layout, the private
+git remote, multi-machine and iOS use, key replacement and re-encryption,
+offline backup of the master key (as recommended practice), and the
+'generate then paste' workflow. Secrets other than passwords (API keys,
+cloud credentials, OAuth tokens) belong to sec-aws-and-pass-secrets; the
+exposure itself is told in sec-dropbox-to-portable-sync.
 
-YAML FRONT MATTER (lines 1-20)
-  [x] title           — '[Tool]' replaced with actual tool name, < 70 chars
-  [x] subtitle        — one-line elaboration of what the post sets up
-  [x] date            — YYYY-MM-DD of intended publication
-  [x] categories      — include `setup`, the tool name, and host OS
-  [x] description     — 1-2 sentences for blog listing card
-  [ ] image           — path to hero image (relative to this .qmd)
-  [x] draft: false    — flip when ready
-
-NARRATIVE INPUTS
-  [x] Hook sentence   — 'I didn't know how to configure [tool] until [trigger]'
-  [x] Pain point      — the specific friction the tool removes
-  [x] Motivations     — exactly 4-5 bullets (workflow gap, frustration,
-                         curiosity, learning)
-  [x] Objectives      — exactly 4 numbered, verifiable end states
-  [x] What is pass?   — 1-sentence definition + 1 analogy + 1 concrete example
-  [x] Daily-workflow paragraph — how this tool fits into your routine after
-                                  setup
-  [x] Things to Watch Out For — 5-7 gotchas (required; setup posts need this)
-  [x] Lessons Learnt  — 4 conceptual + 4 technical + 4 gotcha bullets
-  [x] Limitations     — 4-6 bullets (what this setup does NOT solve)
-  [x] Opportunities for Improvement — 5-6 numbered next-step extensions
-  [x] Wrapping Up     — 2-3 paragraph conclusion + 'Main takeaways'
-  [x] See Also        — 3-5 links (official docs + 1-2 related blog posts)
-
-CONFIGURATION DELIVERABLES (real, working artifacts, not snippets)
-  [x] Prerequisites list — OS version, hardware, prior knowledge,
-                           dependent tools
-  [x] Installation block — exact bash commands, tested on a clean machine
-  [x] Complete config file(s) — verbatim, copy-pasteable, with inline
-                                  comments
-        Place under: analysis/configs/<filename>
-  [x] Verification commands — `pass ls` plus 1-2 functional smoke tests
-  [x] Optional keybinding/command reference table — markdown table for
-                                                     daily use
-  [x] Uninstall / rollback steps — how the reader undoes what you just did
-  [ ] Optional appendices — 1Password migration, gitignore guard
-
-VERSION MATRIX (Reproducibility section)
-  [x] OS + version tested        (macOS 25.4 / Darwin)
-  [x] Tool version pinned        (pass 1.7.4, gpg 2.4)
-  [x] Dependency versions        (homebrew, pinentry-mac)
-  [ ] Date of last verification
-
-IMAGES (4 total: hero + 3 ambiance, all in media/images/)
-  [ ] Hero image (80% width)        — workspace/tool logo, sets tone
-  [x] Ambiance image 1 (100% width) — done (Gemini, 2026-08-25):
-      skeleton key ring on a door frame
-  [x] Ambiance image 2 (100% width) — done: wax-sealed envelope in
-      a wooden box
-  [x] Ambiance image 3 (100% width) — done: brass key mid-turn in
-      an old lock
-  [ ] media/images/README.md        — sources + attribution for every image
-
-CONTACT & METADATA
-  [x] Author name in YAML matches site author
-  [x] Social links in 'Let's Connect' updated (or removed)
-  [x] Giscus comments enabled (inherited from _quarto.yml)
-
-============================================================================ -->
-<!-- ============================================================================
-HERO IMAGE
+Verified 2026-10-01 on julia (macOS 26.6, pass 1.7.4, GnuPG 2.5) and zeus
+(Linux Mint 22.3, pass 1.7.4, GnuPG 2.4): key type, expiry, store remote,
+dotfiles .gitignore guard. Images: hero.png, ambiance1-3.jpg (see
+media/images/README.md).
 ============================================================================ -->
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -404,28 +339,40 @@ HERO IMAGE
 <p><em>A private, organized credential store: accessible only by key, each entry discrete and retrievable.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really appreciate how little control I had over my passwords until I tried to export them. I had accumulated over 600 credentials across a combination of 1Password, iCloud Keychain, and Chrome’s built-in password manager: three separate systems with no coherent policy, no consistent backup strategy, and no way to inspect the storage format without paying for a subscription.</p>
-<p>The turning point came when I discovered <code>pass</code>, the standard Unix password manager. It stores every password as a GPG-encrypted file in a plain directory tree. The store lives in <code>~/.password-store/</code> (a non-cloud-mounted path, outside any Dropbox or iCloud hierarchy), can be tracked in a private git repository, and requires no proprietary client to read: any machine with GPG installed can decrypt an entry. The architecture is deliberately minimal, which is precisely what makes it trustworthy.</p>
-<p>This post documents the setup procedure: generating a GPG key, installing <code>pass</code>, initializing the store, and migrating a 1Password vault. It also records the incident that followed the migration: accidentally committing <code>.password-store</code> to a public dotfiles repository. That incident was a symptom of a prior architectural error: the store had been placed under a Dropbox-synced path, which is wrong on two grounds. First, a git repository in a cloud-mounted directory is subject to index corruption from sync races. Second, an encrypted credential store belongs to no one’s sync pipeline but your own. This post corrects both errors.</p>
+<p>A password manager does not need to be a product. <code>pass</code> stores every credential as a GPG-encrypted file in an ordinary directory, records every change in git, and syncs through any git remote you control. No proprietary format stands between you and your secrets: any machine with GnuPG and the private key can read an entry.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Part 2 of the security series; start with <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a> for the overview.</p>
+</div>
+</div>
+<p>This post describes how the store is set up and run across a fleet of five machines: generating the key, initializing the store, tracking it in git with a private remote, using it on several machines and a phone, and protecting the key. It also covers the procedure that matters most and is least often rehearsed: replacing the key and re-encrypting the whole store after the key has been exposed. That procedure was needed in earnest after the exposure described in <a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox</a>, and the store came through it intact.</p>
 <section id="motivations" class="level2">
 <h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
 <ul>
-<li>Browser-based password managers (Chrome, iCloud Keychain) are opaque: the storage format is proprietary, the export options are limited, and the data is commingled with browser state.</li>
-<li>Storing credentials in a paid subscription service creates a single point of failure: if the service changes its pricing or closes, migrating 600 entries becomes an urgent, unplanned task.</li>
-<li>A plain-file store tracked with git provides a full audit trail: every addition, deletion, and edit is a commit with a timestamp.</li>
-<li>GPG encryption is the same mechanism that protects software release signatures; using it for daily credential storage is a concrete way to build familiarity with the toolchain.</li>
-<li>A terminal-native workflow integrates naturally with the rest of a command-line research environment without requiring a browser extension or GUI application.</li>
+<li>Browser and subscription password managers keep credentials in a format you cannot inspect, and leaving them means an export of everything in plaintext.</li>
+<li>Credentials for a research workflow are not only website passwords: backup passphrases, Time Machine encryption passwords and service logins all need one dependable home.</li>
+<li>A store tracked in git gives an audit trail: every addition, edit and deletion is a dated commit.</li>
+<li>A terminal-native tool fits a command-line research environment and can be called from scripts.</li>
+<li>GnuPG is the same tooling used to sign and verify software releases, so daily use builds a transferable skill.</li>
 </ul>
 </section>
 <section id="objectives" class="level2">
 <h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
 <ol type="1">
-<li>Generate a GPG key and confirm it is stored in the system keyring.</li>
-<li>Install <code>pass</code> and initialize a new password store keyed to that GPG identity.</li>
-<li>Insert at least one credential by hand and retrieve it via clipboard copy.</li>
-<li>Migrate an existing 1Password CSV export into the store using the <code>1password2pass.rb</code> conversion script.</li>
+<li>Generate a GPG key with a sensible algorithm and expiry, and keep its revocation certificate.</li>
+<li>Initialize a store, add credentials, and retrieve them through the clipboard without printing them.</li>
+<li>Track the store in git with a private remote and use it on every workstation in the fleet.</li>
+<li>Know, before you need it, how to back up the key offline and how to replace it and re-encrypt the store.</li>
 </ol>
-<p>This post documents the author’s own learning process. Errors spotted or better approaches are welcome in the comment thread below.</p>
+<p>This post documents the author’s own practice. Errors spotted or better approaches are welcome in the comment thread below.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance1.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -436,84 +383,80 @@ HERO IMAGE
 </section>
 <section id="what-is-pass" class="level1">
 <h1>What is pass?</h1>
-<p><code>pass</code> is a shell script that wraps GPG file encryption and presents a password store as a directory tree of <code>.gpg</code> files. Think of it as a filing cabinet where every drawer is sealed with your GPG key: only someone who holds the corresponding private key can open a drawer, and the cabinet itself is just a folder on your hard drive. A concrete example: <code>pass insert email/gmail</code> encrypts whatever you type at the prompt and writes the ciphertext to <code>~/.password-store/email/gmail.gpg</code>; <code>pass -c email/gmail</code> decrypts that file and copies the first line (the password) to the clipboard for 45 seconds before clearing it.</p>
+<p><code>pass</code> is a shell script that wraps GnuPG and presents a password store as a directory tree of <code>.gpg</code> files under <code>~/.password-store/</code>. Think of a filing cabinet in which every drawer is sealed with your key: the cabinet is just a folder, and only the holder of the private key can open a drawer. For example, <code>pass insert email/work</code> encrypts what you type and writes <code>~/.password-store/email/work.gpg</code>; <code>pass -c email/work</code> decrypts that file and copies the first line to the clipboard, clearing it after 45 seconds.</p>
+<p>Two properties follow from the design. The store is portable, because it is plain files and a standard cipher. And the security of every entry reduces to two things: the private key and its passphrase. Most of this post is about protecting those two things.</p>
 </section>
 <section id="prerequisites" class="level1">
 <h1>Prerequisites</h1>
-<p>This post assumes:</p>
 <ul>
-<li><strong>Operating system:</strong> macOS 13+ (Apple Silicon or x86_64) or a Linux distribution with bash 5+</li>
-<li><strong>Already installed:</strong> Homebrew (macOS); GPG is installed as a dependency automatically</li>
-<li><strong>Background knowledge:</strong> comfort running shell commands and editing dotfiles; basic understanding of public-key cryptography is helpful but not required</li>
-<li><strong>1Password export (optional):</strong> a CSV export of an existing vault, needed only for the migration section</li>
-<li><strong>Time required:</strong> approximately 20 minutes for install, GPG key generation, and a first smoke test; the migration step depends on vault size</li>
+<li><strong>Operating system:</strong> macOS 13 or later, or a Linux distribution with bash 5 or later. The commands below were checked on macOS 26 and Linux Mint 22.</li>
+<li><strong>Full-disk encryption:</strong> FileVault or LUKS turned on. The GPG agent holds the unlocked key in memory, and an unencrypted disk can leak it through swap or a lost machine. See the <a href="../sec-multi-laptop-threat-model/">series overview</a>.</li>
+<li><strong>Already installed:</strong> Homebrew on macOS; GnuPG arrives as a dependency.</li>
+<li><strong>Background:</strong> comfort in a shell; a basic idea of public-key cryptography helps but is not required.</li>
+<li><strong>A private git host you control</strong> (optional, for sync): any machine you can reach over SSH and on which you can create a bare repository.</li>
+<li><strong>Time:</strong> about 20 minutes for installation, key generation and a first test.</li>
 </ul>
-<p>On Linux, substitute <code>apt install pass gnupg</code> for the Homebrew commands below.</p>
 </section>
 <section id="installation" class="level1">
 <h1>Installation</h1>
-<p>On macOS, Homebrew installs <code>pass</code> and its GPG dependencies in a single command. The <code>pinentry-mac</code> package provides the graphical passphrase dialog that macOS requires for GPG operations outside a terminal session.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install pass gnupg pinentry-mac</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Confirm that <code>pass</code> is available:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> <span class="at">--version</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: pass 1.7.4 or later</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--version</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: gpg (GnuPG) 2.4.x</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On macOS:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install pass gnupg</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>On Debian, Ubuntu or Linux Mint:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install pass gnupg</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Confirm the versions:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> version     <span class="co"># 1.7.4 or later</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--version</span>    <span class="co"># GnuPG 2.4 or later</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>GnuPG prompts for the passphrase through a ‘pinentry’ program. The terminal version that ships with GnuPG works for interactive shell use. If you also want a graphical dialog, for example when <code>pass</code> is called from a launcher, install <code>pinentry-mac</code> and point the agent at it (see Things to Watch Out For).</p>
 </section>
 <section id="configuration" class="level1">
 <h1>Configuration</h1>
 <section id="step-1-generate-a-gpg-key" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-generate-a-gpg-key">Step 1: Generate a GPG Key</h2>
-<p><code>pass</code> requires a GPG key to encrypt and decrypt entries. Generate one interactively:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--full-gen-key</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>At the prompts, select:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--full-generate-key</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Choose:</p>
 <ul>
-<li><strong>Key type:</strong> ECC (sign and encrypt, the default in GnuPG 2.4+). Ed25519 / Curve 25519 is the correct choice for new keys in 2026: constant-time operations, smaller keys, and equivalent or stronger security than RSA 4096. RSA remains an option but is not recommended for new keys.</li>
-<li><strong>Curve:</strong> Curve 25519 (default when ECC is selected)</li>
-<li><strong>Expiration:</strong> 2y (two years) rather than 0. A key that never expires remains valid indefinitely if compromised; a two-year expiration creates a forced review point. Add the renewal date to a calendar immediately. See Gotcha 3 for what happens when a key lapses.</li>
-<li><strong>Real name:</strong> your name as you want it associated with the key</li>
-<li><strong>Email address:</strong> the address you will use to identify the key when initializing the store</li>
-<li><strong>Passphrase:</strong> a minimum of six random words (diceware) or a 25-character random string. Avoid sentences constructed from real phrases: dictionary attacks against GPG keys use pattern-aware wordlists. The passphrase protects every credential in the store.</li>
+<li><strong>Key type:</strong> ECC (sign and encrypt). With Curve 25519 this produces an Ed25519 primary key and a cv25519 encryption subkey, the default in current GnuPG and the right choice for new keys: small, fast and at least as strong as RSA 4096.</li>
+<li><strong>Expiration:</strong> <code>2y</code>. A key that never expires stays valid forever if it leaks; a two-year expiry forces a review. Put the renewal date in a calendar now. Extending an expiry later takes a minute with <code>gpg --edit-key KEYID</code> and the <code>expire</code> command.</li>
+<li><strong>Name and email:</strong> the identity you will pass to <code>pass init</code>.</li>
+<li><strong>Passphrase:</strong> six or more random words, or a 25-character random string. This passphrase protects every credential in the store.</li>
 </ul>
-<p>After generation, verify the key is visible:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-keys</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The output will show a block beginning with <code>pub</code>, followed by the key fingerprint. Note the email address; it will be used in the next step.</p>
+<p>Check the result:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-secret-keys</span> <span class="at">--keyid-format</span> long</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The output shows a <code>sec</code> line (<code>ed25519</code>, with the expiry date) and an <code>ssb</code> line (<code>cv25519</code>, capability <code>[E]</code>). The <code>ssb</code> subkey is the one <code>pass</code> encrypts to.</p>
+<p>GnuPG writes a revocation certificate for the new key to <code>~/.gnupg/openpgp-revocs.d/</code> at creation time. Copy it somewhere off the machine now (see <a href="#protecting-the-key">Protecting the Key</a>). If the key is ever lost or exposed, this certificate is what lets you tell the world to stop trusting it.</p>
 </section>
-<section id="step-2-initialize-the-password-store" class="level2">
-<h2 class="anchored" data-anchor-id="step-2-initialize-the-password-store">Step 2: Initialize the Password Store</h2>
-<p>Initialize <code>pass</code> with the email address associated with the GPG key:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> init your@email.address</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>This creates <code>~/.password-store/</code> and writes a <code>.gpg-id</code> file containing your email. Every subsequent <code>pass insert</code> call will encrypt to this identity.</p>
+<section id="step-2-initialize-the-store" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-initialize-the-store">Step 2: Initialize the Store</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> init you@example.org</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This creates <code>~/.password-store/</code> and a <code>.gpg-id</code> file naming the recipient key. Every later entry is encrypted to that key. Keep the store on a local path, never inside a folder that a sync service mirrors (Dropbox, iCloud Drive, OneDrive): a git repository in a synced folder is exposed to index corruption from sync races, and the store belongs to no sync pipeline but your own.</p>
 </section>
-<section id="step-3-insert-and-retrieve-a-credential" class="level2">
-<h2 class="anchored" data-anchor-id="step-3-insert-and-retrieve-a-credential">Step 3: Insert and Retrieve a Credential</h2>
-<p>Insert a password by name:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert Microsoft</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>pass</code> will prompt for the password (and confirmation) and write the encrypted file to <code>~/.password-store/Microsoft.gpg</code>.</p>
-<p>To copy the password to the clipboard without printing it:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> <span class="at">-c</span> Microsoft</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The clipboard is cleared automatically after 45 seconds. To print to standard output instead (use with caution in shared terminal sessions):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> Microsoft</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Entries can be organized into subdirectories:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert email/gmail</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert finance/chase</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>pass ls</code> displays the full tree of stored entries.</p>
+<section id="step-3-add-and-retrieve-credentials" class="level2">
+<h2 class="anchored" data-anchor-id="step-3-add-and-retrieve-credentials">Step 3: Add and Retrieve Credentials</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert email/work          <span class="co"># prompts twice, never echoes</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> generate shop/example 24   <span class="co"># creates a random 24-char password</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> <span class="at">-c</span> email/work              <span class="co"># clipboard, cleared after 45 s</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls                         <span class="co"># the tree of entries</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>pass show name</code> (or just <code>pass name</code>) prints the entry. Prefer <code>-c</code> in any terminal that might be recorded, shared or scrolled back through later.</p>
+<p>Multi-line entries hold the password on the first line and anything else below it:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert <span class="at">-m</span> service/example</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Generate first, then paste.</strong> When a program asks you to invent a new secret in a dialog (the encryption password for a new Time Machine backup, a new account password, a disk image passphrase), create it in the store first and paste it into the dialog:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> generate timemachine/laptop 32</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> <span class="at">-c</span> timemachine/laptop</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The secret is stored before it is ever used, so it cannot end up living only inside the dialog. This habit is what keeps an encrypted backup readable after the machine that made it is gone.</p>
 </section>
-<section id="step-4-initialize-git-tracking" class="level2">
-<h2 class="anchored" data-anchor-id="step-4-initialize-git-tracking">Step 4: Initialize git Tracking</h2>
-<p><code>pass</code> can manage a git repository inside the store automatically. Every <code>pass insert</code>, <code>pass edit</code>, and <code>pass rm</code> is then committed without any extra steps.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git init</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Use <code>pass git log</code> to review history. To push to a remote (for off-site backup), add one now:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git remote add origin git@your-private-host:password-store.git</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git push <span class="at">-u</span> origin main</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Choose the remote carefully.</strong> Credentials sit outside the sync layers that project content uses. The password store should not go to a public cloud git host, even in a ‘private’ repository: the entry names are metadata (they reveal which services you have accounts with) and a breach of the host exposes that metadata and the ciphertext. Prefer one of:</p>
-<ul>
-<li>A self-hosted Gitea or Forgejo instance on a home server or NAS.</li>
-<li>A VPS you control, accessed over SSH.</li>
-<li>No remote at all, with periodic offline exports of the GPG key and store as the backup strategy (see Uninstall / Rollback).</li>
-</ul>
-<p>Accepting per-machine state for the password store (no remote sync, manual key import on each new machine) is architecturally honest and the simplest option for single-laptop setups.</p>
+<section id="step-4-track-the-store-in-git-with-a-private-remote" class="level2">
+<h2 class="anchored" data-anchor-id="step-4-track-the-store-in-git-with-a-private-remote">Step 4: Track the Store in git with a Private Remote</h2>
+<p><code>pass</code> can manage a git repository inside the store and commit every change automatically:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git init</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git log <span class="at">--oneline</span> <span class="kw">|</span> <span class="fu">head</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>For sync and an off-machine copy, add a remote. Use a bare repository on a machine you control, reached over SSH:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># On the host (once):</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> you@your-host <span class="st">'git init --bare git/password-store.git'</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># On the first workstation:</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git remote add origin you@your-host:git/password-store.git</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git push <span class="at">-u</span> origin main</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>In the fleet described in this series the remote is a bare repository on one of the Macs, and every workstation pushes to it and pulls from it over SSH. No third party ever holds the ciphertext.</p>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -524,26 +467,18 @@ Warning
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Do not use GitHub, GitLab.com, or any third-party-hosted git service as the remote for your password store. Even a ‘private’ repository on those services places your credential metadata and ciphertext under a third party’s access controls.</p>
+<p>Do not use GitHub, GitLab.com or any other hosted service as the remote, even with a private repository. Entry names are metadata (they list the services you use), and a breach of the host exposes that metadata and the ciphertext together.</p>
 </div>
 </div>
 </section>
-<section id="step-5-guard-the-store-against-accidental-git-commits" class="level2">
-<h2 class="anchored" data-anchor-id="step-5-guard-the-store-against-accidental-git-commits">Step 5: Guard the Store Against Accidental git Commits</h2>
-<p>Post 65’s sensitive-files inventory (Blocker 3) lists <code>~/.password-store</code> explicitly alongside <code>~/.gnupg</code>, <code>~/.ssh</code>, and <code>~/.aws</code> as items that ‘must never be committed to git, even in a private repository.’ Write the <code>.gitignore</code> entry before the first <code>git add</code> in any dotfiles repository; after the first commit the only remediation is a full <code>git filter-repo</code> rewrite and credential rotation.</p>
-<p>For any <code>dotfiles</code> repository in use, add <code>.password-store</code> and <code>.gnupg</code> to its <code>.gitignore</code> before <code>git init</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In ~/dotfiles/.gitignore, before git init:</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">.password-store</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">.gnupg</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">.ssh</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">.aws</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="ex">secrets/*</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="ex">!secrets/README.md</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>This step was missed during the original migration. Recovery after an accidental commit to a local-only repository:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> rm <span class="at">--cached</span> <span class="at">-r</span> <span class="st">'.password-store'</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">'removed .pass'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If the data reached a public remote, <code>git rm --cached</code> is insufficient: use <code>git filter-repo</code> to rewrite history and rotate any credentials the ciphertext could represent. See <a href="https://github.com/newren/git-filter-repo">git-filter-repo</a> for the full procedure.</p>
-<p>The encrypted files are GPG-protected and would require the private key and passphrase to decrypt, but publishing them publicly is still inadvisable: the entry names reveal which services you have accounts with and the ciphertext is material for offline cryptanalysis.</p>
+<section id="step-5-keep-the-store-out-of-other-repositories" class="level2">
+<h2 class="anchored" data-anchor-id="step-5-keep-the-store-out-of-other-repositories">Step 5: Keep the Store Out of Other Repositories</h2>
+<p>The most common accident is not a weak passphrase but a stray commit: a dotfiles repository created with <code>git add .</code> in a home directory picks up <code>.password-store</code>, <code>.gnupg</code> and <code>.ssh</code> with everything else. Write the guard before the first commit of any repository near your home directory:</p>
+<pre class="gitignore"><code>**/.password-store/
+**/.gnupg/
+**/.ssh/
+**/.aws/</code></pre>
+<p>The post’s <code>analysis/configs/gitignore-guard.sh</code> appends equivalent entries idempotently. If the store has already been committed to a repository that was pushed anywhere, <code>git rm --cached</code> is not enough: rewrite the history with <a href="https://github.com/newren/git-filter-repo">git-filter-repo</a> and treat every credential in the store as exposed. The ciphertext is protected by the key, but the entry names are now public and the ciphertext is available for offline attack for as long as the key is in use.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -552,55 +487,78 @@ Warning
 </div>
 </section>
 </section>
-<section id="migration-from-1password" class="level1">
-<h1>Migration from 1Password</h1>
-<p><code>pass</code> ships with a collection of import scripts for common password managers. For 1Password, use the <code>1password2pass.rb</code> Ruby script.</p>
-<p><strong>Step 1:</strong> Export from 1Password. In the 1Password desktop app, choose <em>File &gt; Export</em> and export in CSV format. Rename the file for convenience:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="st">'1Password 2021-03-14, 04_47 PM (648 items and 1 folders).csv'</span> <span class="dt">\</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  onepass.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Step 2:</strong> Download and run the conversion script:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Obtain the script from the pass import collection</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (see https://www.passwordstore.org/#other)</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x 1password2pass.rb</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./1password2pass.rb</span> onepass.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The script creates one <code>.gpg</code> file per entry in <code>~/.password-store/</code>, preserving folder structure where present. A 648-entry vault typically completes in under two minutes.</p>
-<p><strong>Step 3:</strong> Verify a sample entry:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls <span class="kw">|</span> <span class="fu">head</span> <span class="at">-20</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> <span class="at">-c</span> Amazon</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Delete the plaintext CSV export after migration. It contains every password in unencrypted form. On macOS, <code>rm</code> does not overwrite file content on APFS/SSD; the data persists until the block is reused. If FileVault full-disk encryption is enabled (it should be), the block is protected at rest. If FileVault is not enabled, use a secure-delete tool before discarding the machine. In either case, ensure <code>~/Downloads/</code> is not synced to iCloud Drive before running the export.</p>
-</div>
-</div>
+<section id="using-the-store-on-several-machines" class="level1">
+<h1>Using the Store on Several Machines</h1>
+<p>One GPG identity serves every workstation; the store travels through the git remote. To add a machine:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># On a machine that has the key: export it to removable media or</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># another channel you trust, never through a synced folder.</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-secret-keys</span> <span class="at">--armor</span> KEYID <span class="op">&gt;</span> key.asc</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># On the new machine:</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--import</span> key.asc</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--edit-key</span> KEYID trust   <span class="co"># choose 5 (ultimate) for your own key</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git clone you@your-host:git/password-store.git <span class="dt">\</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  ~/.password-store</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> key.asc   <span class="co"># full-disk encryption protects the freed blocks</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>There is no background sync. Make it a habit to run <code>pass git pull</code> before editing on a machine you have not used for a while, and <code>pass git push</code> after. <code>pass</code> commits automatically, so a forgotten push only means the other machines are behind until the next one; a conflict is resolved like any other git conflict, entry by entry.</p>
+<p>On Linux the same commands work unchanged; the distribution packages of <code>pass</code> behave identically to the Homebrew build.</p>
+<p>The order of setup on a new machine matters. Credentials must exist before anything that needs them: restore the GPG key and clone the store immediately after the dotfiles, and before configuring mail sync, cloud backups or API access.</p>
+</section>
+<section id="protecting-the-key" class="level1">
+<h1>Protecting the Key</h1>
+<p>Everything in the store is exactly as safe as the private key and its passphrase. Four practices follow.</p>
+<ol type="1">
+<li><p><strong>Keep an offline backup of the key.</strong> Export the secret key and the revocation certificate to encrypted removable media (an encrypted USB drive kept away from the workstations), or print the secret key with a tool such as <code>paperkey</code> (not tested here). The backup must not be on any machine in daily use or in any cloud folder: its purpose is to survive the loss of every workstation at once, through theft, fire or ransomware.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-secret-keys</span> <span class="at">--armor</span> KEYID <span class="op">&gt;</span> master-key.asc</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> ~/.gnupg/openpgp-revocs.d/<span class="pp">*</span>.rev .   <span class="co"># the revocation cert</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Keep the revocation certificate in more than one place.</strong> If the only copy is on the machine that is lost, the key cannot be revoked.</p></li>
+<li><p><strong>Store other machines’ secrets here too.</strong> A backup passphrase that exists only on the machine it protects is lost with that machine, which makes the backup unreadable exactly when it is needed. Every Borg repository passphrase and the Time Machine encryption password in this fleet live in the store (see <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>).</p></li>
+<li><p><strong>Consider the subkey architecture.</strong> The setup above keeps the primary key, which can certify and sign, on every workstation. The stronger model keeps the primary key offline (or on a hardware token) and gives the workstations only the encryption subkey. A lost laptop then exposes a subkey that the offline primary key can revoke and replace without changing the identity. This is the recommended next step once the basic setup is stable; see <a href="#opportunities-for-improvement">Opportunities for Improvement</a>.</p></li>
+</ol>
+</section>
+<section id="replacing-the-key-and-re-encrypting-the-store" class="level1">
+<h1>Replacing the Key and Re-encrypting the Store</h1>
+<p>If the private key may have been copied (a synced settings folder, a lost machine without disk encryption, a backup in the wrong place), treat it as compromised and replace it. In this fleet that happened after the GPG directory on two machines turned out to have been a symlink into a cloud-synced folder for months. The replacement took under an hour and every entry survived:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Generate the replacement key (Ed25519, cv25519 subkey, 2y)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--full-generate-key</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Re-encrypt every entry to the new key. pass rewrites .gpg-id,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co">#    re-encrypts the whole tree and commits the result.</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> init NEW_KEY_ID</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git push</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Revoke the old key with its revocation certificate</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--import</span> old-key-revocation.rev</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Then, on every other machine: delete the old secret key, import the new one, and <code>pass git pull</code>. Finally, check that nothing still encrypts to the old key (<code>cat ~/.password-store/.gpg-id</code> on each machine should name the new key).</p>
+<p>Re-encrypting the store protects the future, not the past. Anyone who obtained the old key and an old copy of the store can still decrypt that copy. If the old ciphertext might also have leaked, every credential in it must be rotated at the service as well. That rotation, and the discipline of confirming that old credentials are really dead, is covered in <a href="../sec-aws-and-pass-secrets/">Secrets Management</a>.</p>
+</section>
+<section id="migrating-from-another-password-manager" class="level1">
+<h1>Migrating from Another Password Manager</h1>
+<p>The <a href="https://www.passwordstore.org/#other">pass website</a> lists import scripts for most managers (1Password, KeePass, LastPass, browser exports). The pattern is the same for all of them:</p>
+<ol type="1">
+<li>Export to CSV on a machine with full-disk encryption, into a folder that no sync service mirrors.</li>
+<li>Run the importer (for example <code>1password2pass.rb export.csv</code>).</li>
+<li>Spot-check entries with <code>pass -c</code>, especially multi-line notes and custom fields, which importers handle unevenly.</li>
+<li>Delete the export at once. It contains every password in plaintext.</li>
+</ol>
+<p>A 648-entry 1Password vault imported in under two minutes. Importing moves passwords; it does not improve them. Regenerating weak or reused ones is a separate, gradual task.</p>
 </section>
 <section id="verification" class="level1">
 <h1>Verification</h1>
-<p>After installation and initial population, run the following checks:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. List all entries (confirms store is readable)</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> ls</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Insert a test entry and retrieve it</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert test/smoke-test</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> <span class="at">-c</span> test/smoke-test   <span class="co"># copies to clipboard</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Confirm GPG identity is correct</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.password-store/.gpg-id</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If <code>pass ls</code> renders a tree and <code>pass -c</code> copies to the clipboard without a decryption error, the setup is correct.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-secret-keys</span> <span class="at">--keyid-format</span> long   <span class="co"># key present, not expired</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.password-store/.gpg-id                <span class="co"># names the right key</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert test/smoke <span class="kw">&amp;&amp;</span> <span class="ex">pass</span> <span class="at">-c</span> test/smoke <span class="co"># round trip works</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git status                              <span class="co"># clean, tracking origin</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> rm test/smoke</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If the round trip copies to the clipboard without a decryption error and <code>pass git status</code> reports a clean tree that is up to date with <code>origin</code>, the store is working and synced.</p>
 </section>
 <section id="daily-workflow" class="level1">
 <h1>Daily Workflow</h1>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 42%">
-<col style="width: 57%">
+<col style="width: 41%">
+<col style="width: 58%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -614,102 +572,72 @@ Warning
 <td>List all entries</td>
 </tr>
 <tr class="even">
-<td><code>pass insert name</code></td>
-<td>Insert a new credential</td>
+<td><code>pass -c name</code></td>
+<td>Copy password to clipboard (45 s)</td>
 </tr>
 <tr class="odd">
-<td><code>pass insert -m name</code></td>
-<td>Insert a multi-line entry (notes, TOTP)</td>
+<td><code>pass insert name</code></td>
+<td>Add a credential</td>
 </tr>
 <tr class="even">
-<td><code>pass -c name</code></td>
-<td>Copy password to clipboard (clears in 45s)</td>
+<td><code>pass insert -m name</code></td>
+<td>Add a multi-line entry</td>
 </tr>
 <tr class="odd">
-<td><code>pass generate name 20</code></td>
-<td>Generate a 20-character random password</td>
+<td><code>pass generate name 32</code></td>
+<td>Create and store a random password</td>
 </tr>
 <tr class="even">
 <td><code>pass edit name</code></td>
-<td>Open entry in <code>$EDITOR</code></td>
+<td>Edit in <code>$EDITOR</code></td>
 </tr>
 <tr class="odd">
-<td><code>pass rm name</code></td>
-<td>Delete an entry</td>
-</tr>
-<tr class="even">
 <td><code>pass mv old new</code></td>
 <td>Rename or move an entry</td>
 </tr>
+<tr class="even">
+<td><code>pass rm name</code></td>
+<td>Delete an entry</td>
+</tr>
 <tr class="odd">
-<td><code>pass git log</code></td>
-<td>Show the git history of the store</td>
+<td><code>pass git pull</code> / <code>push</code></td>
+<td>Sync with the private remote</td>
 </tr>
 <tr class="even">
-<td><code>gpg --list-keys</code></td>
-<td>Confirm your key is still present</td>
+<td><code>pass git log</code></td>
+<td>Audit history</td>
 </tr>
 </tbody>
 </table>
-<p>After a short adjustment period, these commands displace the muscle memory built up around a GUI password manager. The clipboard-copy workflow (<code>pass -c name</code>) integrates cleanly with browser login fields and terminal credential prompts alike.</p>
-<section id="new-laptop-bootstrap-position" class="level2">
-<h2 class="anchored" data-anchor-id="new-laptop-bootstrap-position">New-Laptop Bootstrap Position</h2>
-<p>In a three-layer bootstrap sequence, credentials must be available before any credential-dependent step (IMAP sync, cloud storage auth, API key injection) can run. The pass setup therefore belongs immediately after the dotfiles layer, before any service authentication:</p>
-<pre><code>1. gh repo clone rgt47/dotfiles ~/dotfiles
-2. cd ~/dotfiles &amp;&amp; ./install.sh
-   # Installer prints: "Restore ~/.aws, ~/.ssh, ~/.gnupg
-   #                    from secure storage"
-3. gpg --import private-key.asc          # from offline backup
-4. pass git clone git@your-host:pass.git ~/.password-store
-5. pass ls                                # verify store is readable
-6. mbsync -a                             # now IMAP credentials exist
-7. ... (remaining bootstrap steps)</code></pre>
-<p>Step 2 is the dotfiles-repository <code>install.sh</code>, which deploys dotfiles symlinks and prints a reminder to restore <code>~/.gnupg</code> before any credential-dependent step runs. The offline GPG key backup (<code>gpg --export-secret-keys --armor ...</code>) is a prerequisite for step 3 on any new machine; keep it on encrypted removable media, not in cloud storage.</p>
-</section>
 </section>
 <section id="things-to-watch-out-for" class="level1">
 <h1>Things to Watch Out For</h1>
 <ol type="1">
-<li><p><strong>The <code>.password-store</code> directory must not appear in any public git repository.</strong> Even though files are GPG-encrypted, their names reveal which services you have accounts with. Add <code>.password-store</code> to <code>.gitignore</code> in your dotfiles repo before doing anything else. This step was missed during the original migration and required a history rewrite to correct.</p></li>
-<li><p><strong>GPG passphrase prompts can fail silently on macOS without <code>pinentry-mac</code>.</strong> If <code>pass insert</code> appears to succeed but subsequent <code>pass</code> commands fail with a decryption error, the GPG agent may not have cached the passphrase correctly. Install <code>pinentry-mac</code> and add this to <code>~/.gnupg/gpg-agent.conf</code>:</p>
+<li><p><strong>Clipboard managers defeat the 45-second clear.</strong> Any clipboard history tool, and Apple’s Universal Clipboard between Macs signed in to the same account, captures what <code>pass -c</code> copies and may keep or sync it. Exclude <code>pass</code> from clipboard history, or turn history off. On Linux, <code>pass -c</code> needs <code>wl-copy</code>, <code>xclip</code> or <code>xsel</code>.</p></li>
+<li><p><strong>Passphrase prompts from a non-terminal context.</strong> The terminal pinentry cannot prompt when <code>pass</code> runs from a launcher or GUI. The symptom is a decryption failure with no prompt. Install <code>pinentry-mac</code> and add to <code>~/.gnupg/gpg-agent.conf</code>:</p>
 <pre><code>pinentry-program /opt/homebrew/bin/pinentry-mac
 default-cache-ttl 300
 max-cache-ttl 600</code></pre>
-<p>The path <code>/opt/homebrew/bin/pinentry-mac</code> is correct for Apple Silicon. On Intel Macs, Homebrew installs to <code>/usr/local/bin/</code>; substitute accordingly, or use <code>$(brew --prefix)/bin/pinentry-mac</code> in a setup script. The <code>default-cache-ttl</code> (300 s) controls how long after the last use the passphrase stays cached; <code>max-cache-ttl</code> (600 s) is the absolute ceiling. Omitting these leaves the default at 600 s, which is long for an unattended machine.</p></li>
-<li><p><strong>The GPG key expiration date applies to all stored credentials.</strong> A key set to expire that is not renewed will make every entry unreadable. Either set no expiration or establish a calendar reminder to extend the validity date before it lapses.</p></li>
-<li><p><strong><code>pass -c</code> clears the clipboard after 45 seconds, but clipboard managers bypass this entirely.</strong> On macOS this requires <code>pbcopy</code>, which is present by default. On Linux it requires <code>xclip</code> or <code>xsel</code>. If neither is available, <code>pass -c</code> will fail. More importantly: any clipboard manager (Alfred, Raycast, ClipMenu, the macOS Universal Clipboard synced via iCloud) captures the <code>pass -c</code> output before the 45-second timer fires and stores it permanently, possibly syncing it to other devices. Disable clipboard history, or exclude <code>pass</code> invocations, in any clipboard manager running on the system. On a two-laptop setup with iCloud Universal Clipboard enabled, every <code>pass -c</code> on one machine appears in plaintext on the other.</p></li>
-<li><p><strong>The <code>1password2pass.rb</code> migration script handles standard CSV exports but may mangle multi-line secure notes or custom field names.</strong> Review a sample of migrated entries for completeness before deleting the source vault.</p></li>
-<li><p><strong>The store is as secure as your GPG private key.</strong> If the private key is stored unencrypted, or if the passphrase is weak, the GPG layer provides limited protection. Use a passphrase of at least 20 characters.</p></li>
-<li><p><strong>Renaming the GPG key email address after store initialization requires re-encrypting every entry.</strong> The <code>.gpg-id</code> file stores the recipient identity; changing it with <code>pass init new@email</code> triggers a batch re-encryption of the whole store.</p></li>
-<li><p><strong>Pass for iOS generates its own SSH key pair; add that key to your self-hosted server, not your desktop key.</strong> A common mistake is copying the desktop SSH public key to the server’s <code>authorized_keys</code> while the iOS app is using a different key it generated internally. The symptom is a ‘permission denied (publickey)’ error on every sync attempt. Go to the app’s Settings, copy the displayed public key, and append it to <code>~/.ssh/authorized_keys</code> on the git server as a separate entry. Also verify that the GPG key fingerprint shown in the app matches the fingerprint in <code>~/.password-store/.gpg-id</code>.</p></li>
+<p>then run <code>gpg-connect-agent reloadagent /bye</code>. The cache values are a trade-off: shorter means more prompts and less exposure on an unattended machine.</p></li>
+<li><p><strong>An expired key makes every entry unreadable.</strong> The error is not obvious. When decryption fails unexpectedly, check <code>gpg --list-secret-keys</code> for an expiry date in the past, and extend it with <code>gpg --edit-key KEYID</code> then <code>expire</code>.</p></li>
+<li><p><strong>A printed secret is an exposed secret.</strong> <code>pass name</code> in a session that is logged, screen-shared or pasted into a chat or an issue puts the secret in someone else’s records. Use <code>-c</code>, and rotate any secret that was printed where others can read it.</p></li>
+<li><p><strong>The phone has its own SSH key.</strong> Pass for iOS generates its own key pair for the git remote. Add the app’s public key to the host’s <code>authorized_keys</code>; the desktop key will not work on the phone. The symptom is ‘permission denied (publickey)’ on every sync.</p></li>
+<li><p><strong>Changing the recipient re-encrypts everything.</strong> <code>pass init</code> with a different key ID rewrites every file. That is exactly what you want when replacing a key; make sure it is what you want otherwise, and push the result so the other machines do not keep committing to the old recipient.</p></li>
+<li><p><strong>The store directory must never be inside a synced folder or another repository.</strong> See Steps 2 and 5. Audit with <code>ls -la ~ | grep -- '-&gt;'</code>: a home-directory settings folder that is a symlink into a sync service is the failure mode that forced this fleet’s key replacement.</p></li>
 </ol>
 </section>
 <section id="uninstall-rollback" class="level1">
 <h1>Uninstall / Rollback</h1>
-<p>To remove <code>pass</code> and its configuration from the workstation:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Remove the password store (IRREVERSIBLE without a backup)</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    Only run this if you have exported or backed up all credentials.</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> ~/.password-store</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Remove the GPG key (IRREVERSIBLE)</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-keys</span>                           <span class="co"># note the key ID</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--delete-secret-and-public-key</span> KEYID</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Uninstall the tools</span></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> uninstall pass gnupg pinentry-mac</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Back up the password store and the GPG private key before uninstalling. Export the private key with <code>gpg --export-secret-keys --armor your@email &gt; key-backup.asc</code> and store the file offline.</p>
-</div>
-</div>
+<p>Back up first: export the secret key and keep a copy of the store (a <code>git clone</code> from the remote is enough).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Remove the store (irreversible without a backup)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> ~/.password-store</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Remove the key (irreversible without a backup)</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--list-secret-keys</span> <span class="at">--keyid-format</span> long</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--delete-secret-and-public-key</span> KEYID</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Remove the tools</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> uninstall pass gnupg      <span class="co"># or: sudo apt remove pass gnupg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -723,73 +651,82 @@ Warning
 <h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
 <p><strong>Conceptual Understanding:</strong></p>
 <ul>
-<li><code>pass</code> is thin by design: it delegates all cryptographic work to GPG and all version control to git, composing two well-audited tools rather than reimplementing them.</li>
-<li>A GPG identity is portable: the same key pair can encrypt and decrypt entries across any machine where the private key is installed, which is the correct model for multi-device credential access.</li>
-<li>Password store organization mirrors filesystem organization: the mental model for <code>pass insert email/gmail</code> is identical to <code>mkdir email &amp;&amp; touch email/gmail</code>, which makes navigation intuitive for anyone comfortable at a terminal.</li>
-<li>Accidental publication of encrypted data is still a security event: ciphertext reveals metadata (entry names, creation dates) and provides material for offline cryptanalysis.</li>
+<li><code>pass</code> composes two well-audited tools, GnuPG for cryptography and git for history and sync, instead of reimplementing either. That is why it is easy to trust and easy to recover.</li>
+<li>The store’s security is the key’s security. Hardening effort belongs around the key: passphrase, offline backup, revocation certificate, and where its directory lives.</li>
+<li>Encrypted data that leaks is still a security event: entry names are metadata, and old ciphertext stays decryptable by anyone who also holds the old key.</li>
+<li>A secret that lives only on the machine it protects is not backed up. The store is the natural home for every passphrase the fleet depends on.</li>
 </ul>
 <p><strong>Technical Skills:</strong></p>
 <ul>
-<li>Generating a GPG key with <code>gpg --full-gen-key</code> and inspecting it with <code>gpg --list-keys</code> are foundational skills that transfer to signing git commits, verifying software releases, and encrypting arbitrary files.</li>
-<li>The <code>pass git</code> subcommand proxies any git command against the password store repository, making it easy to push the store to a private remote for backup.</li>
-<li><code>git rm --cached -r</code> removes a tracked directory from the index without deleting the local copy, which is the correct recovery command when a sensitive directory is accidentally staged.</li>
-<li><code>pinentry-mac</code> bridges the macOS graphical environment and the GPG agent; configuring it correctly eliminates most passphrase prompt failures.</li>
+<li><code>pass init NEW_KEY_ID</code> re-encrypts the whole store in one command, which turns key replacement from a project into a routine.</li>
+<li><code>pass git</code> proxies any git command to the store, so sync, history and recovery use the git you already know.</li>
+<li>GnuPG writes a revocation certificate at key creation; the work is keeping copies of it somewhere other than the machine itself.</li>
+<li>A bare repository on a machine you control is all the sync server that several workstations and a phone need.</li>
 </ul>
 <p><strong>Gotchas and Pitfalls:</strong></p>
 <ul>
-<li>Forgetting to add <code>.password-store</code> to <code>.gitignore</code> before the first <code>git add .</code> in a dotfiles repo is the most common first-week mistake.</li>
-<li>A GPG key that has expired will cause all <code>pass</code> operations to fail with a non-obvious error message; check <code>gpg --list-keys</code> first when debugging decryption failures.</li>
-<li>The 1Password CSV export may contain entries whose names include characters that are invalid in filenames (<code>/</code>, <code>:</code>, <code>?</code>); the migration script silently truncates or skips these.</li>
-<li>The clipboard-clear timer (<code>45s</code>) runs in a background process; it will not fire if the shell exits before the timer elapses.</li>
+<li>A home-directory settings folder symlinked into a sync service silently uploads the private key. Check for symlinks before trusting any sync setup.</li>
+<li>A stray <code>git add .</code> in the home directory is the most common way the store ends up in the wrong repository; the <code>.gitignore</code> guard has to come first.</li>
+<li>Clipboard history and Universal Clipboard bypass the clipboard clear.</li>
+<li>An expired key fails with an unhelpful error; check expiry first.</li>
 </ul>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
 <ul>
-<li><strong>Multi-device synchronization is manual.</strong> <code>pass</code> can push and pull from a git remote, but the user must manage this explicitly; there is no background sync daemon.</li>
-<li><strong>Mobile access requires a companion app and key transfer.</strong> Pass for iOS exists and syncs via a git remote, but it requires importing the GPG private key to the device. The key transfer itself (AirDrop or similar) is a security event: the private key is briefly in plaintext and in transit. See Appendix A for the full procedure.</li>
-<li><strong>No breach monitoring.</strong> Unlike some commercial managers, <code>pass</code> does not check credentials against known-breached password lists.</li>
-<li><strong>Bulk password generation is not built in.</strong> Generating unique passwords for 600 migrated entries is a manual process; the migration script imports existing passwords but does not regenerate them.</li>
-<li><strong>The security model depends entirely on the GPG key.</strong> Loss of the private key, or compromise of the passphrase, results in loss of access to all credentials. Offline key backups are essential but add operational complexity.</li>
+<li><strong>Sync is manual.</strong> There is no daemon; pulls and pushes are a habit, not a guarantee.</li>
+<li><strong>One identity across machines.</strong> Every workstation holds the same private key, so the compromise of any one is the compromise of all, until the subkey architecture limits workstations to a revocable subkey.</li>
+<li><strong>The phone needs the private key.</strong> Importing it on iOS is a deliberate, sensitive step, and the phone becomes one more place the key lives.</li>
+<li><strong>No breach monitoring.</strong> <code>pass</code> does not check entries against breached-password lists.</li>
+<li><strong>Loss of the key, or of its passphrase, loses everything.</strong> The offline backup is not optional.</li>
 </ul>
 </section>
 <section id="opportunities-for-improvement" class="level2">
 <h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
 <ol type="1">
-<li>Push the store to a private self-hosted remote (Gitea, Forgejo, or a bare git repository on a NAS) using <code>pass git init</code> and <code>pass git remote add</code> (covered in Configuration Step 4). Avoid third-party cloud git hosts even with private repositories.</li>
-<li>Install and configure Pass for iOS to enable mobile access; see Appendix A for the git sync, GPG key export, and SSH configuration procedure.</li>
-<li>Configure the GPG agent to use a hardware security key (YubiKey) so the private key never exists in plaintext on disk.</li>
-<li>Add a shell alias (e.g., <code>alias p='pass -c'</code>) to reduce the keystrokes for the most common operation.</li>
-<li>Periodically audit the store with <code>pass ls</code> to remove stale entries for defunct accounts and services.</li>
-<li>Enable <code>pass git</code> push as a post-commit hook so the remote backup is updated automatically after every change.</li>
+<li>Move to the subkey architecture: primary key offline or on a hardware token, encryption subkey only on the workstations.</li>
+<li>Hold the encryption subkey on a hardware security key so it never exists on disk.</li>
+<li>Add a periodic check (part of the <a href="../sec-multi-laptop-threat-model/">quarterly audit</a>) that every machine’s store is in sync with the remote and that the key’s expiry is more than three months away.</li>
+<li>Use <code>pass-otp</code> for time-based one-time codes that should not live on the phone that is also the second factor (weigh this carefully: it puts both factors behind one key).</li>
+<li>Prune entries for defunct accounts once a year.</li>
 </ol>
 </section>
 </section>
 <section id="wrapping-up" class="level1">
 <h1>Wrapping Up</h1>
-<p>Switching to <code>pass</code> from a combination of browser password managers and a commercial vault took one afternoon and produced a credential store that is simpler, more auditable, and more portable than anything it replaced. The migration of 648 entries from 1Password was completed in under two minutes using the <code>1password2pass.rb</code> script. The entire store is a directory of GPG-encrypted files: no proprietary format, no subscription required to read it.</p>
-<p>The most instructive moment in the setup was the accidental commit to a public repository. Recovering from it was straightforward, but the incident made concrete a rule that had previously felt theoretical: sensitive directories belong in <code>.gitignore</code> before the repository is created, not after.</p>
-<p>In conclusion, four points merit emphasis. First, <code>pass</code> stores passwords as GPG-encrypted files in a plain directory tree, composing GPG and git rather than replacing them. Second, the store must be added to <code>.gitignore</code> in any dotfiles repository before the first commit; this step is easy to miss and non-trivial to reverse. Third, <code>pinentry-mac</code> is required on macOS for reliable passphrase prompts outside the terminal and must be configured in <code>~/.gnupg/gpg-agent.conf</code>. Fourth, the <code>1password2pass.rb</code> script migrates a 1Password CSV export to the store in one command; the plaintext CSV should be deleted afterwards.</p>
+<p><code>pass</code> reduces a password manager to its essentials: encrypted files, a history, and a remote you control. The setup takes an afternoon and runs unchanged on macOS and Linux. The store proved its design when it mattered: after the GPG key was exposed through a synced settings folder, a single <code>pass init</code> re-encrypted every entry to a new key, the other machines pulled the result, and no credential was lost.</p>
+<p>The lasting work is around the key rather than the store. Keep the revocation certificate and an offline backup somewhere that would survive losing every workstation, keep the store out of synced folders and other repositories, and put every passphrase the fleet depends on into the store, generated there before it is used anywhere else.</p>
+<p>Main takeaways:</p>
+<ul>
+<li>The store is only as safe as the private key and its passphrase.</li>
+<li>Use a private git remote on a machine you control, never a hosted service.</li>
+<li>Generate secrets in the store first, then paste them where needed.</li>
+<li>Rehearse key replacement: <code>pass init NEW_KEY_ID</code>, revoke, pull everywhere, rotate whatever the old ciphertext could reveal.</li>
+<li>Keep an offline backup of the key and its revocation certificate.</li>
+</ul>
 </section>
 <section id="see-also" class="level1">
 <h1>See Also</h1>
-<p><strong>Official documentation:</strong></p>
+<p>Security series:</p>
+<ol type="1">
+<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a></li>
+<li>Setting Up pass: a Unix Password Manager (this post)</li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+</ol>
+<p>External references:</p>
 <ul>
-<li><a href="https://www.passwordstore.org/">passwordstore.org</a>: the official <code>pass</code> homepage with install instructions and the full list of compatible import scripts</li>
-<li><a href="https://www.passwordstore.org/#other">passwordstore.org/#other</a>: companion apps and import scripts, including <code>1password2pass.rb</code></li>
+<li><a href="https://www.passwordstore.org/">passwordstore.org</a>: the official site, with import scripts and companion apps.</li>
 <li><a href="https://www.gnupg.org/documentation/">GnuPG documentation</a></li>
+<li><a href="https://github.com/newren/git-filter-repo">git-filter-repo</a>: history rewriting after an accidental commit.</li>
 </ul>
-<p><strong>Related posts:</strong></p>
-<ul>
-<li><a href="../wf-git-for-data-science/">Setting Up Git for Data Science Workflows</a>: relevant if you plan to track the password store in a private self-hosted git remote.</li>
-<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a>: the broader case for keeping git repositories, including this one, out of any cloud-mounted directory.</li>
-<li><a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a>: the dotfiles repository and <code>install.sh</code> that this post’s bootstrap sequence assumes is already in place.</li>
-</ul>
-<hr>
 </section>
 <section id="reproducibility" class="level1">
 <h1>Reproducibility</h1>
-<p><strong>Tested configuration:</strong></p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -799,241 +736,96 @@ Warning
 </thead>
 <tbody>
 <tr class="odd">
-<td>Operating system</td>
-<td>macOS 15.4 (Sequoia)</td>
+<td>macOS</td>
+<td>26.6</td>
 </tr>
 <tr class="even">
+<td>Linux</td>
+<td>Linux Mint 22.3</td>
+</tr>
+<tr class="odd">
 <td>pass</td>
 <td>1.7.4</td>
 </tr>
-<tr class="odd">
-<td>gnupg</td>
-<td>2.4.x</td>
-</tr>
 <tr class="even">
-<td>pinentry-mac</td>
-<td>1.3.x</td>
+<td>GnuPG</td>
+<td>2.5 (macOS), 2.4 (Linux)</td>
 </tr>
 <tr class="odd">
 <td>Shell</td>
-<td>zsh 5.9</td>
+<td>zsh (macOS), bash (Linux)</td>
 </tr>
 <tr class="even">
-<td>Homebrew</td>
-<td>4.x</td>
-</tr>
-<tr class="odd">
 <td>Last verified</td>
-<td>2026-05-17</td>
+<td>2026-10-01</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Configuration files:</strong></p>
+<p><strong>Configuration files</strong> (in <code>analysis/configs/</code>):</p>
 <ul>
-<li><code>analysis/configs/gpg-agent.conf</code>: <code>pinentry-mac</code> configuration</li>
-<li><code>analysis/configs/gitignore-guard.sh</code>: one-liner to add <code>.password-store</code> to an existing dotfiles <code>.gitignore</code></li>
+<li><code>gpg-agent.conf</code>: the <code>pinentry-mac</code> and cache settings from Things to Watch Out For, item 2.</li>
+<li><code>gitignore-guard.sh</code>: appends the sensitive-directory guard to a dotfiles <code>.gitignore</code>.</li>
 </ul>
-<p><strong>To reproduce the core setup:</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install pass gnupg pinentry-mac</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--full-gen-key</span>         <span class="co"># follow prompts</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> init your@email.com</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert test/smoke</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> <span class="at">-c</span> test/smoke         <span class="co"># confirm clipboard copy works</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Core setup:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> install pass gnupg</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--full-generate-key</span>          <span class="co"># ECC, Curve 25519, 2y</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> init you@example.org</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git init</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert test/smoke <span class="kw">&amp;&amp;</span> <span class="ex">pass</span> <span class="at">-c</span> test/smoke</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
 </section>
 <section id="appendix-a" class="level1">
-<h1>Appendix A: iOS Sync with Pass for iOS</h1>
-<p>The Pass for iOS app reads the same GPG-encrypted <code>.gpg</code> files that the desktop <code>pass</code> command produces. Once the store is in a private git remote (Configuration Step 4), the iOS app can pull and decrypt entries on the device. The procedure has four parts.</p>
-<section id="a.1-confirm-the-remote-is-set-up" class="level2">
-<h2 class="anchored" data-anchor-id="a.1-confirm-the-remote-is-set-up">A.1 Confirm the Remote is Set Up</h2>
-<p>From the desktop:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git remote <span class="at">-v</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Should show: origin  git@your-private-host:password-store.git</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git push</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If no remote is configured, add one first (see Configuration Step 4). Note that this remote should be a self-hosted server, not a public cloud service. The iOS app will pull directly from the same remote.</p>
+<h1>Appendix A: Pass for iOS</h1>
+<p>The Pass for iOS app reads the same encrypted files and syncs through the same private remote.</p>
+<section id="a.1-confirm-the-remote" class="level2">
+<h2 class="anchored" data-anchor-id="a.1-confirm-the-remote">A.1 Confirm the Remote</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git remote <span class="at">-v</span>    <span class="co"># origin  you@your-host:git/password-store.git</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> git push</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The phone must be able to reach the host. A remote reachable only on the home network syncs only at home; a host on a private overlay network such as Tailscale is reachable wherever the phone runs the overlay client.</p>
 </section>
-<section id="a.2-export-the-gpg-key" class="level2">
-<h2 class="anchored" data-anchor-id="a.2-export-the-gpg-key">A.2 Export the GPG Key</h2>
-<p>The app needs your private key to decrypt entries. Export both the public and private key to armored text files:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-armor</span> YOUR_KEY_ID <span class="op">&gt;</span> public.asc</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-secret-keys</span> <span class="at">--armor</span> YOUR_KEY_ID <span class="op">&gt;</span> private.asc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Transfer <code>private.asc</code> to the iPhone securely. AirDrop is acceptable for this step: the file is protected only by your GPG passphrase, so ensure the passphrase is strong before transferring. Delete the <code>.asc</code> files from the desktop immediately after transfer.</p>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Warning
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The exported private key is a sensitive file. Do not email it, do not store it in Dropbox or iCloud unencrypted, and delete it from the Files app on the iPhone after importing into Pass.</p>
-</div>
-</div>
+<section id="a.2-export-the-key-for-the-phone" class="level2">
+<h2 class="anchored" data-anchor-id="a.2-export-the-key-for-the-phone">A.2 Export the Key for the Phone</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export</span> <span class="at">--armor</span> KEYID <span class="op">&gt;</span> public.asc</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">gpg</span> <span class="at">--export-secret-keys</span> <span class="at">--armor</span> KEYID <span class="op">&gt;</span> private.asc</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Transfer <code>private.asc</code> to the phone directly (AirDrop is acceptable; the file is protected by the passphrase). Do not email it or place it in a cloud folder. Delete both files from the computer and from the phone’s Files app once imported.</p>
 </section>
-<section id="a.3-configure-the-ios-app" class="level2">
-<h2 class="anchored" data-anchor-id="a.3-configure-the-ios-app">A.3 Configure the iOS App</h2>
-<p>Install <strong>Pass - Password Store</strong> from the App Store. In the app:</p>
+<section id="a.3-configure-the-app" class="level2">
+<h2 class="anchored" data-anchor-id="a.3-configure-the-app">A.3 Configure the App</h2>
 <ol type="1">
-<li>Go to <strong>Settings → Password Store</strong>.</li>
-<li>Set the <strong>Git Repository URL</strong> to your self-hosted remote.</li>
+<li>Install <strong>Pass - Password Store</strong> from the App Store.</li>
+<li>In <strong>Settings → Password Store</strong>, set the repository URL to the private remote.</li>
+<li>In <strong>Settings → SSH Key</strong>, let the app generate its own key, copy the public half, and append it to <code>~/.ssh/authorized_keys</code> on the host as a separate entry.</li>
+<li>In <strong>Settings → PGP Key</strong>, import <code>private.asc</code> and enter the passphrase.</li>
+<li>Tap <strong>Sync</strong> and open a known entry to confirm decryption.</li>
 </ol>
-<p><strong>SSH (recommended for a self-hosted remote):</strong></p>
+</section>
+<section id="a.4-common-snags" class="level2">
+<h2 class="anchored" data-anchor-id="a.4-common-snags">A.4 Common Snags</h2>
 <ul>
-<li>The app generates its own SSH key pair. Go to <strong>Settings → SSH Key</strong>, copy the displayed public key, and add it to <code>~/.ssh/authorized_keys</code> on your self-hosted git server. Do not copy your desktop key; the iOS app generates a separate key internally.</li>
+<li><strong>‘Permission denied (publickey)’:</strong> the app’s own SSH key is not in the host’s <code>authorized_keys</code>.</li>
+<li><strong>‘No secret key’:</strong> the key imported on the phone does not match <code>.gpg-id</code>. After a key replacement the phone needs the new key too.</li>
+<li><strong>Sync works at home only:</strong> the host is reachable only on the LAN; see A.1.</li>
 </ul>
-<p><strong>HTTPS (if your remote supports it):</strong></p>
-<ul>
-<li>Use the credentials for your self-hosted service (Gitea, Forgejo, etc.). If the service supports tokens, use a token scoped to the password-store repository only rather than your account password.</li>
-</ul>
-</section>
-<section id="a.4-import-the-gpg-key-and-sync" class="level2">
-<h2 class="anchored" data-anchor-id="a.4-import-the-gpg-key-and-sync">A.4 Import the GPG Key and Sync</h2>
-<ol type="1">
-<li>In the app, go to <strong>Settings → PGP Key → Import Key</strong>.</li>
-<li>Select the <code>private.asc</code> file from Files.</li>
-<li>Enter your GPG passphrase when prompted.</li>
-<li>Tap <strong>Sync</strong>. The app pulls the repository and decrypts the entry list.</li>
-</ol>
-<p>Confirm that a known entry is visible and tappable. Tapping an entry copies the password to the iOS clipboard.</p>
-</section>
-<section id="a.5-common-snags" class="level2">
-<h2 class="anchored" data-anchor-id="a.5-common-snags">A.5 Common Snags</h2>
-<ul>
-<li><strong>‘Permission denied (publickey)’ on sync:</strong> the app’s SSH key has not been added to your self-hosted server’s <code>authorized_keys</code>. Copy the public key from Settings → SSH Key in the app and append it to <code>~/.ssh/authorized_keys</code> on the git server.</li>
-<li><strong>‘No secret key’ decryption error:</strong> the fingerprint in the app does not match the <code>.gpg-id</code> in the repository. Check both values: <code>cat ~/.password-store/.gpg-id</code> on the desktop, Settings → PGP Key in the app.</li>
-<li><strong>HTTPS 401 error:</strong> the Personal Access Token has expired or was not granted write access to the repository. Regenerate it.</li>
-</ul>
-<hr>
-</section>
-</section>
-<section id="appendix-b" class="level1">
-<h1>Appendix B: Security Considerations</h1>
-<p>The following items do not fit neatly into the setup steps but materially affect the security posture of the overall credential architecture. Post 67 addresses these topics in depth; this appendix summarizes the key points for quick reference.</p>
-<section id="b.1-gpg-subkey-architecture" class="level2">
-<h2 class="anchored" data-anchor-id="b.1-gpg-subkey-architecture">B.1 GPG Subkey Architecture</h2>
-<p>The setup above creates a single key pair used for both certification and encryption. The correct operational model for daily use is:</p>
-<ul>
-<li><strong>Master key (certify only):</strong> signs new subkeys and revocation certificates. Generated once, then moved to offline storage or a hardware security key (YubiKey). Never used in daily operation.</li>
-<li><strong>Encryption subkey:</strong> the only key needed by <code>pass</code> for day-to-day encrypt/decrypt operations. Shorter expiry than the master.</li>
-<li><strong>Signing subkey (optional):</strong> used for <code>git commit --gpg-sign</code>.</li>
-</ul>
-<p>With this architecture, the master private key never needs to exist on the laptop’s disk during normal operation. A compromised laptop exposes only the encryption subkey, which can be revoked by signing a new revocation certificate with the (offline) master key. This is the mechanism by which hardware security keys (Opportunity #3) work. Implementing the full subkey architecture is beyond this post’s scope but is the recommended next step after the basic setup is stable.</p>
-</section>
-<section id="b.2-aws-and-api-credentials-via-pass" class="level2">
-<h2 class="anchored" data-anchor-id="b.2-aws-and-api-credentials-via-pass">B.2 AWS and API Credentials via pass</h2>
-<p>The <code>~/.aws/credentials</code> file is plaintext on disk. Having a working <code>pass</code> store makes it straightforward to remove it:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Store AWS credentials in pass</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert aws/access-key-id</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pass</span> insert aws/secret-access-key</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve on demand via a shell function in ~/.zshrc:</span></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">aws_env()</span> <span class="kw">{</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  <span class="bu">export</span> <span class="va">AWS_ACCESS_KEY_ID</span><span class="op">=</span><span class="va">$(</span><span class="ex">pass</span> aws/access-key-id<span class="va">)</span></span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  <span class="bu">export</span> <span class="va">AWS_SECRET_ACCESS_KEY</span><span class="op">=</span><span class="va">$(</span><span class="ex">pass</span> aws/secret-access-key<span class="va">)</span></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Call <code>aws_env</code> at the start of a session that needs AWS access. The plaintext credentials are in memory only, not on disk. Remove <code>~/.aws/credentials</code> after confirming the function works. The same pattern applies to any plaintext credential file (<code>~/.npmrc</code> tokens, <code>~/.config/rclone/rclone.conf</code>, API keys in <code>~/.env</code>).</p>
-</section>
-<section id="b.3-filevault" class="level2">
-<h2 class="anchored" data-anchor-id="b.3-filevault">B.3 FileVault</h2>
-<p>Full-disk encryption (FileVault on macOS) is a prerequisite, not an enhancement, for any local credential store. The GPG encrypted files in <code>~/.password-store/</code> are strong, but the GPG agent caches the decrypted private key in memory; if the machine is lost while unlocked, or if a swap file captures memory, the cached key is readable without FileVault. Confirm FileVault status:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">fdesetup</span> status</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Expected: FileVault is On.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>If FileVault is not enabled, enable it before populating the password store.</p>
-</section>
-<section id="b.4-ssh-key-policy-for-multi-laptop-setups" class="level2">
-<h2 class="anchored" data-anchor-id="b.4-ssh-key-policy-for-multi-laptop-setups">B.4 SSH Key Policy for Multi-Laptop Setups</h2>
-<p>Post 65’s bootstrap sequence says ‘Restore <code>~/.ssh</code> from secure storage.’ For SSH private keys, the correct multi-machine policy is NOT to copy keys between machines but to generate a new key pair on each machine:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span> <span class="at">-t</span> ed25519 <span class="at">-C</span> <span class="st">"</span><span class="va">$(</span><span class="fu">hostname</span><span class="va">)</span><span class="st">-</span><span class="va">$(</span><span class="fu">date</span> +%Y%m<span class="va">)</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Then add the new public key to GitHub, servers, and anywhere the previous key was authorized. This is more work initially, but it means a compromised laptop exposes only that machine’s key, and revocation is surgical. Copying a private key between machines means all machines are compromised if any one of them is.</p>
-<p>The one exception is the GPG private key, which is a single identity and must be the same across machines by design. The mitigant is the subkey architecture described above, which limits the blast radius of any single machine compromise.</p>
 <hr>
 </section>
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>
-<p><em>Have questions, suggestions, or spot an error? Let me know.</em></p>
+<p><em>Questions, suggestions, or corrections are welcome.</em></p>
 <ul>
 <li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
 <li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
 <li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
 </ul>
-<p>I would enjoy hearing from you if:</p>
+<p>I would like to hear from you if:</p>
 <ul>
-<li>You spot an error or a better approach to any of the steps above.</li>
-<li>You have suggestions for topics you would like to see covered.</li>
-<li>You use a different OS or password manager and want to compare notes.</li>
+<li>You find an error, or a better approach to anything in this series.</li>
+<li>You run a small research fleet and have found where this design breaks.</li>
+<li>You want to compare notes on backups, secrets, or reproducible research infrastructure.</li>
 </ul>
-<hr>
-<p><em>Rendered on 2026-05-17 at 09:08 PDT.</em><br> <em>Source: ~/prj/rgtlab/posts/sec-pass-password-manager/index.qmd</em></p>
-<hr>
-<!-- ============================================================================
-PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
-
-This is the verification pass that mirrors the AUTHOR PROVIDES list at the
-top of this file. If anything below is unchecked, the post is not ready.
-
-[ ] YAML
-    [ ] title, subtitle, date, categories, description, image filled in
-    [x] document-type: 'blog'
-    [x] draft: false
-
-[ ] Narrative complete (no remaining `[bracketed]` placeholders)
-    [ ] grep '\[' index.qmd returns only legitimate code/links
-
-[ ] Configuration artifacts present and tested
-    [ ] Full config file shown verbatim, not snippets
-    [ ] Install commands tested on a clean machine (or VM)
-    [ ] Verification commands produce the documented output
-    [ ] Uninstall / rollback steps documented
-
-[ ] Things to Watch Out For
-    [ ] At least 5 gotchas listed (setup posts require this)
-    [ ] Each gotcha has both a symptom AND a fix
-
-[x] Visual design
-    [x] 1 hero image (width=80%) immediately after AUTHOR PROVIDES block
-    [x] Exactly 3 ambiance images ({.img-fluid} only, no width=NN%,
-        no fig-align): after Objectives, after Configuration, before
-        Lessons Learnt
-    [x] Hero and ambiance captions describe the actual image (not a
-        placeholder description)
-    [ ] No hand-coded "Download PDF" link in body. The site auto-injects
-        one via _includes/after-body.html for any post with format: pdf
-        in YAML.
-    [ ] media/images/README.md attributes every image
-
-[ ] Content quality
-    [ ] Learner voice: author positioned as peer, not expert
-    [ ] Zero emoji anywhere (narrative, comments, captions)
-    [ ] Zero em dashes (forbidden per house style; use parens or commas)
-    [ ] Single quotes preferred over double quotes in prose
-    [ ] Each command and config setting interpreted in plain language
-
-[ ] Reproducibility
-    [ ] Version matrix table filled in (OS, tool, dependencies, date)
-    [ ] Config files committed under analysis/configs/
-    [ ] Install script (if provided) is runnable on a clean machine
-
-[ ] Render verification
-    [x] quarto render index.qmd produces clean HTML with no warnings
-    [x] Hero image displays in /blog/ listing card
-    [ ] Internal links resolve
-
-============================================================================ -->
-<section id="related-posts-in-this-cluster" class="level2">
-<h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
-<p>This post is part of the <em>Security, Backup, and Sync</em> series. Recommended reading order:</p>
-<ol type="1">
-<li>Post 31: <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a></li>
-<li><strong>Post 33: Setting Up pass: a Unix Password Manager</strong> (this post)</li>
-<li>Post 34: <a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
-<li>Post 35: <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Laptop Research Cluster</a></li>
-</ol>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

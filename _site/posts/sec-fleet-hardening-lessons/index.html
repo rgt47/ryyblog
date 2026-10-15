@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ronald G. Thomas">
+<meta name="dcterms.date" content="2026-09-27">
+<meta name="description" content="The first full quarterly audit of a five-machine research fleet, and the week that followed. Every control in the threat model held; the failures lived elsewhere: credentials with the wrong coverage, OAuth grants shared across machines, backups that reported success while covering less than intended, and fixes verified on one machine but not the others.">
+
+<title>Running the Quarterly Security Audit for the First Time: What Actually Broke – focusonr</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d1f979f567abd94e3c058709025db867.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Open+Sans:ital,wght@0,400;0,600;1,400&amp;family=Fira+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0fba9333d8.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+<!-- Custom meta tags for social sharing -->
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@rgt47">
+
+<!-- Add responsive features -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Add analytics if needed -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script> -->
+
+<!-- Add custom javascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove code tools button completely
+  const codeButton = document.querySelector('.code-tools-button');
+  if (codeButton) {
+    codeButton.remove();
+  }
+
+  // Smooth scrolling for in-page anchor links (skip listing category elements)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    if (anchor.closest('.quarto-listing-category')) return;
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+});
+</script>
+
+
+<meta property="og:title" content="Running the Quarterly Security Audit for the First Time: What Actually Broke – focusonr">
+<meta property="og:description" content="The first full quarterly audit of a five-machine research fleet, and the week that followed. Every control in the threat model held; the failures lived elsewhere: credentials with the wrong coverage, OAuth grants shared across machines, backups that reported success while covering less than intended, and fixes verified on one machine but not the others.">
+<meta property="og:image" content="https://focusonr.org/posts/sec-fleet-hardening-lessons/media/images/hero.jpg">
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:title" content="Running the Quarterly Security Audit for the First Time: What Actually Broke – focusonr">
+<meta name="twitter:description" content="The first full quarterly audit of a five-machine research fleet, and the week that followed. Every control in the threat model held; the failures lived elsewhere: credentials with the wrong coverage, OAuth grants shared across machines, backups that reported success while covering less than intended, and fixes verified on one machine but not the others.">
+<meta name="twitter:image" content="https://focusonr.org/posts/sec-fleet-hardening-lessons/media/images/hero.jpg">
+<meta name="twitter:creator" content="@rgt47">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">focusonr</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://rgtlab.org"> 
+<span class="menu-text">rgtlab.org</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/rgt47"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  </ul></li>
+  <li><a href="#what-is-a-quarterly-audit" id="toc-what-is-a-quarterly-audit" class="nav-link" data-scroll-target="#what-is-a-quarterly-audit">What is a quarterly audit?</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#the-findings" id="toc-the-findings" class="nav-link" data-scroll-target="#the-findings">The Findings</a>
+  <ul class="collapse">
+  <li><a href="#credentials-with-the-wrong-coverage" id="toc-credentials-with-the-wrong-coverage" class="nav-link" data-scroll-target="#credentials-with-the-wrong-coverage">1. Credentials with the wrong coverage</a></li>
+  <li><a href="#the-exposure-and-what-rotation-actually-involved" id="toc-the-exposure-and-what-rotation-actually-involved" class="nav-link" data-scroll-target="#the-exposure-and-what-rotation-actually-involved">2. The exposure, and what rotation actually involved</a></li>
+  <li><a href="#one-revocation-every-machine-logged-out" id="toc-one-revocation-every-machine-logged-out" class="nav-link" data-scroll-target="#one-revocation-every-machine-logged-out">3. One revocation, every machine logged out</a></li>
+  <li><a href="#a-login-token-inside-the-dotfiles-repository" id="toc-a-login-token-inside-the-dotfiles-repository" class="nav-link" data-scroll-target="#a-login-token-inside-the-dotfiles-repository">4. A login token inside the dotfiles repository</a></li>
+  <li><a href="#the-linux-laptop-from-bare-metal" id="toc-the-linux-laptop-from-bare-metal" class="nav-link" data-scroll-target="#the-linux-laptop-from-bare-metal">5. The Linux laptop, from bare metal</a></li>
+  <li><a href="#backup-coverage-that-vanished-with-a-folder" id="toc-backup-coverage-that-vanished-with-a-folder" class="nav-link" data-scroll-target="#backup-coverage-that-vanished-with-a-folder">6. Backup coverage that vanished with a folder</a></li>
+  <li><a href="#two-machines-racing-for-one-cloud-destination" id="toc-two-machines-racing-for-one-cloud-destination" class="nav-link" data-scroll-target="#two-machines-racing-for-one-cloud-destination">7. Two machines racing for one cloud destination</a></li>
+  <li><a href="#a-self-referencing-link-that-stopped-every-deletion" id="toc-a-self-referencing-link-that-stopped-every-deletion" class="nav-link" data-scroll-target="#a-self-referencing-link-that-stopped-every-deletion">8. A self-referencing link that stopped every deletion</a></li>
+  <li><a href="#skipped-runs-that-looked-like-failures-and-the-fix-that-broke-joe" id="toc-skipped-runs-that-looked-like-failures-and-the-fix-that-broke-joe" class="nav-link" data-scroll-target="#skipped-runs-that-looked-like-failures-and-the-fix-that-broke-joe">9. Skipped runs that looked like failures, and the fix that broke joe</a></li>
+  <li><a href="#an-address-the-router-chose" id="toc-an-address-the-router-chose" class="nav-link" data-scroll-target="#an-address-the-router-chose">10. An address the router chose</a></li>
+  <li><a href="#a-job-that-left-the-scheduler" id="toc-a-job-that-left-the-scheduler" class="nav-link" data-scroll-target="#a-job-that-left-the-scheduler">11. A job that left the scheduler</a></li>
+  <li><a href="#archives-that-never-expired" id="toc-archives-that-never-expired" class="nav-link" data-scroll-target="#archives-that-never-expired">12. Archives that never expired</a></li>
+  <li><a href="#a-second-service-and-no-firewall" id="toc-a-second-service-and-no-firewall" class="nav-link" data-scroll-target="#a-second-service-and-no-firewall">13. A second service and no firewall</a></li>
+  <li><a href="#time-machine-a-file-system-that-could-not-be-checked-and-a-missed-checkbox" id="toc-time-machine-a-file-system-that-could-not-be-checked-and-a-missed-checkbox" class="nav-link" data-scroll-target="#time-machine-a-file-system-that-could-not-be-checked-and-a-missed-checkbox">14. Time Machine: a file system that could not be checked, and a missed checkbox</a></li>
+  <li><a href="#a-share-that-listened-only-to-itself" id="toc-a-share-that-listened-only-to-itself" class="nav-link" data-scroll-target="#a-share-that-listened-only-to-itself">15. A share that listened only to itself</a></li>
+  <li><a href="#making-a-full-backup-affordable" id="toc-making-a-full-backup-affordable" class="nav-link" data-scroll-target="#making-a-full-backup-affordable">16. Making a full backup affordable</a></li>
+  <li><a href="#one-login-for-git" id="toc-one-login-for-git" class="nav-link" data-scroll-target="#one-login-for-git">17. One login for git</a></li>
+  </ul></li>
+  <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
+  <ul class="collapse">
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
+  </ul></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Running the Quarterly Security Audit for the First Time: What Actually Broke</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">security</div>
+    <div class="quarto-category">backup</div>
+    <div class="quarto-category">audit</div>
+    <div class="quarto-category">macos</div>
+    <div class="quarto-category">linux</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    The first full quarterly audit of a five-machine research fleet, and the week that followed. Every control in the threat model held; the failures lived elsewhere: credentials with the wrong coverage, OAuth grants shared across machines, backups that reported success while covering less than intended, and fixes verified on one machine but not the others.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta column-page-left">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ronald G. Thomas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 27, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!--
+AUTHOR NOTES
+- Part 8 (final) of the security series: the audit narrative.
+- Durable practices live in the owning posts; this post tells what
+  was checked, what broke, how it was found, and what changed, and
+  links out for the practice.
+- Facts follow the series guide and the fleet's internal reference
+  notes. No addresses, account names, or currently open items.
+-->
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption>A row of five padlocks of different ages and finishes, one newly installed and shining among four older, weathered ones.</figcaption>
+</figure>
+</div>
+<p><em>A control verified once is a control verified once. Nothing about that guarantees it is still true today.</em></p>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>The series hub recommends a quarterly audit: a fixed checklist, run against every machine, that re-verifies controls instead of assuming they still hold. This post reports the first full run of that audit across the fleet, in the last week of September 2026, and the week of follow-up work it triggered. The audit was planned as an afternoon. It took several days, rebuilt one machine from bare metal, gave the home server a second job, and produced a list of findings in which none of the original threat model’s controls failed. Full-disk encryption was on everywhere. The password store and its key were intact. The failures were in the spaces between controls.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Part 8 of the security series; start with <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a> for the overview.</p>
+</div>
+</div>
+<p>The findings are told in the order they surfaced, each as a short account of what was checked, what broke, how it was found, and what changed. The lasting practice behind each one is described in depth in the post that owns the topic, and each finding links there.</p>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<ul>
+<li>A security posture configured once and never re-checked degrades quietly. The only way to know whether it still holds is to look.</li>
+<li>The fleet had grown to five machines (three Macs, a Linux laptop, and a Linux home server), and the Linux machines had never been held to the same standard as the Macs.</li>
+<li>Several categories of risk, notably OAuth grants and backup coverage, had no row in the original threat model, and the audit was the first time either produced a live problem.</li>
+<li>Backups that report success are not the same as backups that cover what they should. The audit was the first systematic comparison of the two.</li>
+</ul>
+</section>
+<section id="objectives" class="level2">
+<h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
+<ol type="1">
+<li>Run the hub’s audit checklist against all five machines and record every deviation.</li>
+<li>Bring the Linux laptop to parity with the Macs: disk encryption, keys, password store, dotfiles, and its own backup.</li>
+<li>Compare what each backup job actually covers with what it was meant to cover, by reading logs and exit statuses rather than schedules.</li>
+<li>Turn every finding into a fix, verified on every machine it touches, and a line in the fleet’s written reference.</li>
+</ol>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance1.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
+<figcaption>A single weathered rope bridge stretching between two rock faces, with a brand new, unweathered plank installed partway across.</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="what-is-a-quarterly-audit" class="level1">
+<h1>What is a quarterly audit?</h1>
+<p>The audit is a checklist, not an investigation. The canonical copy lives in the <a href="../sec-multi-laptop-threat-model/">series hub</a>; in outline it asks, for every machine: is the disk encrypted; which keys exist and where are they authorized; where do secrets live, and does anything sync or print them; which scheduled jobs exist, are they loaded, what was their last exit status, and what do their logs say; and does every repository and backup destination point where it should. The point of a fixed list is that it is run the same way each quarter, so a deviation stands out rather than being explained away.</p>
+<p>What the first run showed is that most failures are not found by the check that targets them. They are found by a neighboring check, or by doing ordinary work carefully: reading a log line that should not be there, noticing a modified file in a repository nobody touched, or running a fix on the second machine and watching it fail.</p>
+</section>
+<section id="prerequisites" class="level1">
+<h1>Prerequisites</h1>
+<p>This post assumes the fleet and controls described in the earlier parts of the series:</p>
+<ul>
+<li>the five machines and the threat model (<a href="../sec-multi-laptop-threat-model/">part 1</a>);</li>
+<li><code>pass</code> with GPG for credentials (<a href="../sec-pass-password-manager/">part 2</a>) and on-demand loading of other secrets (<a href="../sec-aws-and-pass-secrets/">part 3</a>);</li>
+<li>dotfiles in a git repository instead of a synced folder (<a href="../sec-dropbox-to-portable-sync/">part 4</a>);</li>
+<li>Borg, cloud copies, and Time Machine (<a href="../sec-three-tier-backup-architecture/">part 5</a>);</li>
+<li>the home server, mercury (<a href="../sec-five-machine-storage/">part 6</a>).</li>
+</ul>
+<p>No code needs to be run to follow it. The few commands shown are the checks actually used.</p>
+</section>
+<section id="the-findings" class="level1">
+<h1>The Findings</h1>
+<section id="credentials-with-the-wrong-coverage" class="level2">
+<h2 class="anchored" data-anchor-id="credentials-with-the-wrong-coverage">1. Credentials with the wrong coverage</h2>
+<p><strong>Checked:</strong> where every secret on every machine lives, and whether that location is backed up, synced, or both.</p>
+<p><strong>Broke:</strong> coverage was wrong in both directions. Two machines held their Borg passphrases only in a plain file on the machine being backed up, not in the password store. Losing either machine would have meant losing the ability to decrypt its own backup on the home server. At the same time, the files holding API keys and cloud credentials (<code>.Renviron</code>, <code>.env</code>, the AWS credentials folder) were in no backup at all, with no other copy anywhere.</p>
+<p><strong>Found by:</strong> walking the home folder of each machine and comparing it with each backup job’s include list, item by item.</p>
+<p><strong>Changed:</strong> every Borg passphrase now lives in <code>pass</code>, confirmed to match the copy in use. The secret-holding files were added to every machine’s Borg include list, and a backup was run and verified on each. The rules for where secrets may live are in <a href="../sec-aws-and-pass-secrets/">part 3</a>.</p>
+</section>
+<section id="the-exposure-and-what-rotation-actually-involved" class="level2">
+<h2 class="anchored" data-anchor-id="the-exposure-and-what-rotation-actually-involved">2. The exposure, and what rotation actually involved</h2>
+<p><strong>Checked:</strong> whether any secret had ever been somewhere it should not.</p>
+<p><strong>Broke:</strong> a personal settings folder on two Macs had for months been a symlink into a synced cloud folder. Everything saved there, including the GPG private key, both machines’ backup passphrases, the cloud-storage OAuth tokens, and an API key, had been syncing to the provider’s servers. Older leftover copies of the password store sat there too.</p>
+<p><strong>Found by:</strong> following the symlink. Nothing about daily use revealed it.</p>
+<p><strong>Changed:</strong> because access by anyone else could not be ruled out, every exposed credential was treated as compromised and replaced: a new GPG key with the store re-encrypted to it, new Borg passphrases, new SSH keys for both code hosts, new rclone OAuth tokens, a new <code>gh</code> token, and a new app password. The step that mattered most came after revoking: testing that each old credential was actually dead. Most were. A Copilot token and an old GitLab key were still live and had to be revoked separately. The migration away from the synced folder, and how to delete a shared copy safely, are in <a href="../sec-dropbox-to-portable-sync/">part 4</a>; rotation discipline is in <a href="../sec-aws-and-pass-secrets/">part 3</a>.</p>
+</section>
+<section id="one-revocation-every-machine-logged-out" class="level2">
+<h2 class="anchored" data-anchor-id="one-revocation-every-machine-logged-out">3. One revocation, every machine logged out</h2>
+<p><strong>Checked:</strong> each machine’s login state for the tools that hold OAuth tokens.</p>
+<p><strong>Broke:</strong> during the audit two tokens were exposed by the audit itself. A routine “which account is this connected to” check on one tool printed a complete, live token to the terminal, and inspecting a plaintext token file on another machine did the same. Both were revoked at once, as a printed secret is a rotated secret. Each revocation logged out every machine using that client, not only the one being fixed, because an OAuth grant belongs to the pairing of account and client application, not to one machine’s session.</p>
+<p><strong>Found by:</strong> the next morning’s failures on machines nobody had touched.</p>
+<p><strong>Changed:</strong> before revoking any grant, the list of machines that will need to log in again is written down first. One machine’s <code>gh</code> token had also been stored in a plain file rather than the Keychain; it was reissued into the Keychain like the others. <a href="../sec-aws-and-pass-secrets/">Part 3</a> covers the practice.</p>
+</section>
+<section id="a-login-token-inside-the-dotfiles-repository" class="level2">
+<h2 class="anchored" data-anchor-id="a-login-token-inside-the-dotfiles-repository">4. A login token inside the dotfiles repository</h2>
+<p><strong>Checked:</strong> <code>git status</code> in the dotfiles repository on a machine where nothing had been changed.</p>
+<p><strong>Broke:</strong> a modified file appeared that nobody had edited. The <code>gh</code> tool’s configuration folder is one of the folders under <code>~/.config</code> that the dotfiles setup symlinks into the repository, so every <code>gh auth login</code> on any machine had written that machine’s live login token into a file inside the repository’s working tree. It had happened on every machine. By luck it had never been committed: the only version in the history was the blank template from when the repository was created. It was a loaded gap rather than a past leak, one careless <code>git commit -a</code> away from putting a live token into the repository’s history.</p>
+<p><strong>Found by:</strong> the unexpected modified file.</p>
+<p><strong>Changed:</strong> that file is now excluded from the repository on every machine, so <code>gh</code> keeps working with its file in the usual place while git no longer tracks it. The broader lesson is that a rule which symlinks whole configuration folders will eventually carry a credential nobody meant to share. Secret scanning on commit is the recommended guard (<a href="../sec-aws-and-pass-secrets/">part 3</a>).</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
+<figcaption>An old woven fishing net with several large, unrepaired holes, held up against bright sky.</figcaption>
+</figure>
+</div>
+</section>
+<section id="the-linux-laptop-from-bare-metal" class="level2">
+<h2 class="anchored" data-anchor-id="the-linux-laptop-from-bare-metal">5. The Linux laptop, from bare metal</h2>
+<p><strong>Checked:</strong> the Linux laptop, zeus, against the same list as the Macs.</p>
+<p><strong>Broke:</strong> nearly everything, in the sense that it had never been configured: no disk encryption, no shared credential access, no backup.</p>
+<p><strong>Changed:</strong> zeus was reinstalled with LUKS full-disk encryption (unlike FileVault, it must be chosen before partitioning), given its own keys, the GPG key copied over a trusted channel and verified to decrypt before being trusted, the password store and dotfiles cloned, and a nightly Borg backup scheduled as a systemd user timer. Two Linux differences mattered. The backup script looked for its tool in the Mac package manager’s locations, which a one-line per-machine override file fixed without forking the script. And a user timer on Linux keeps running after logout only if lingering is enabled for the user; without it, the backup would have looked configured and stopped the first time the session ended. The whole process is now a written runbook rather than memory.</p>
+</section>
+<section id="backup-coverage-that-vanished-with-a-folder" class="level2">
+<h2 class="anchored" data-anchor-id="backup-coverage-that-vanished-with-a-folder">6. Backup coverage that vanished with a folder</h2>
+<p><strong>Checked:</strong> what each Borg archive contains, against what it was meant to contain.</p>
+<p><strong>Broke:</strong> the include lists on the three Macs named the project, documents, and utilities folders indirectly, through the old synced folder they used to be symlinked into. When that folder was removed, Borg began skipping all three, logging a one-line warning each night and otherwise reporting success.</p>
+<p><strong>Found by:</strong> reading one morning’s backup log line by line.</p>
+<p><strong>Changed:</strong> the lists now name the folders directly. File counts per archive went from about 24,000 to between 68,000 and 88,000 per machine, which confirmed the missing content was now captured. Borg does not fail when a listed path disappears, by design, so coverage has to be checked by reading the log (<a href="../sec-three-tier-backup-architecture/">part 5</a>).</p>
+</section>
+<section id="two-machines-racing-for-one-cloud-destination" class="level2">
+<h2 class="anchored" data-anchor-id="two-machines-racing-for-one-cloud-destination">7. Two machines racing for one cloud destination</h2>
+<p><strong>Checked:</strong> the destinations of the nightly cloud copies.</p>
+<p><strong>Broke:</strong> julia and athena each mirrored their own copy of the project folder to the same cloud location. A mirror treats the other machine’s version as drift to be corrected, so whichever ran last won, and neither copy was reliably complete. The same jobs had also never excluded regenerable caches; one night’s upload ran fifteen hours on tens of thousands of tiny files.</p>
+<p><strong>Changed:</strong> every machine now has its own destination folder, and the jobs exclude the same regenerable categories Borg already skips (<a href="../sec-three-tier-backup-architecture/">part 5</a>).</p>
+</section>
+<section id="a-self-referencing-link-that-stopped-every-deletion" class="level2">
+<h2 class="anchored" data-anchor-id="a-self-referencing-link-that-stopped-every-deletion">8. A self-referencing link that stopped every deletion</h2>
+<p><strong>Checked:</strong> each cloud job’s log, not its schedule.</p>
+<p><strong>Broke:</strong> every run on both machines ended in errors. A student repository contained a link pointing to itself. The cloud copies follow links (<code>rclone sync -L</code>), hit the loop, and, as a safety measure, skipped every deletion for the run. Files deleted or renamed locally were never removed from any cloud copy, which kept growing, while each run looked routine.</p>
+<p><strong>Changed:</strong> the link was removed on every machine that had it, and the cloud copies now run cleanly. Watching for listing errors in these logs is part of the backup check (<a href="../sec-three-tier-backup-architecture/">part 5</a>).</p>
+</section>
+<section id="skipped-runs-that-looked-like-failures-and-the-fix-that-broke-joe" class="level2">
+<h2 class="anchored" data-anchor-id="skipped-runs-that-looked-like-failures-and-the-fix-that-broke-joe">9. Skipped runs that looked like failures, and the fix that broke joe</h2>
+<p><strong>Checked:</strong> why one machine’s cloud copy had not run for three nights.</p>
+<p><strong>Broke:</strong> each job takes a lock so two runs to one destination cannot overlap. When the lock was held by a long manual run, the scheduled job gave up with exit status 1 and logged nothing, indistinguishable from a real failure.</p>
+<p><strong>Changed:</strong> a skipped run now logs a dated line and exits with its own code:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/opt/homebrew/bin/flock</span> <span class="at">-n</span> <span class="at">-E</span> 75 <span class="st">"</span><span class="va">$lock</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  rclone sync <span class="at">-L</span> <span class="st">"</span><span class="va">$PRJ_ROOT</span><span class="st">"</span> <span class="st">"</span><span class="va">$dest</span><span class="st">"</span> <span class="st">"</span><span class="va">$@</span><span class="st">"</span> <span class="kw">||</span> <span class="va">rc</span><span class="op">=</span><span class="va">$?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>That fix then broke joe. It calls the lock tool at a fixed path, and joe had never installed it, so every cloud job there failed at once. Installing it revealed that joe had never had rclone configured either: its cloud jobs had been scheduled for weeks with nothing able to run. They were removed, since Borg covers joe. The fix had been tested on one machine and rolled out to three.</p>
+</section>
+<section id="an-address-the-router-chose" class="level2">
+<h2 class="anchored" data-anchor-id="an-address-the-router-chose">10. An address the router chose</h2>
+<p><strong>Checked:</strong> a general status check of the Macs’ scheduled jobs, a few days after the audit.</p>
+<p><strong>Broke:</strong> the home server had been restarted for routine work and the home router gave it new addresses. athena and joe still reached it by the old one, so their nightly Borg backups timed out and failed for three nights, while each scheduler recorded the failure the whole time. The first fix changed the address in the general SSH configuration and the backups still failed: the Borg script deliberately uses its own SSH configuration file, so that only the restricted backup key is offered, and the address lived there too. A day later, a check that also covered the Linux machines found that zeus had been failing the same way for four nights. The first status check had looked only at the Macs.</p>
+<p><strong>Changed:</strong> every Borg client now reaches the home server by its Tailscale address, which does not change, as julia already did. The new address was trusted only after confirming the server’s host key matched the one recorded for the old address. The networking practice is in <a href="../sec-five-machine-storage/">part 6</a>; the backup side is in <a href="../sec-three-tier-backup-architecture/">part 5</a>.</p>
+<p>The checks themselves were one line per platform:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS: last exit status of each backup agent</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">launchctl</span> list <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'borg|rclone'</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux: result of the last Borg run</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> show <span class="at">-p</span> Result,ExecMainStatus borg-backup.service</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="a-job-that-left-the-scheduler" class="level2">
+<h2 class="anchored" data-anchor-id="a-job-that-left-the-scheduler">11. A job that left the scheduler</h2>
+<p><strong>Broke:</strong> julia’s Borg job had dropped out of launchd, apparently at a restart, with its definition file intact, so a night passed with no run at all. A job that is not loaded produces no failure to notice.</p>
+<p><strong>Changed:</strong> the job was loaded again and a manual run verified. The status check now confirms that jobs are loaded, not only that their last run succeeded. A related hazard surfaced the next night: a Mac’s 02:00 job can fire during a brief dark wake before the network is up and fail, so a backup script should wait or retry for connectivity before giving up (<a href="../sec-three-tier-backup-architecture/">part 5</a>).</p>
+</section>
+<section id="archives-that-never-expired" class="level2">
+<h2 class="anchored" data-anchor-id="archives-that-never-expired">12. Archives that never expired</h2>
+<p><strong>Checked:</strong> how much space the Borg repositories used, and why.</p>
+<p><strong>Broke:</strong> nothing had ever pruned an archive. Every repository grew without limit.</p>
+<p><strong>Changed:</strong> a retention policy (two weeks of dailies, two months of weeklies, a year of monthlies, three years of yearlies) is now applied by hand each quarter. Automating it would require each repository’s passphrase on the machine that stores it, which is exactly what the design prevents: the storage host can append but cannot decrypt. The manual step is the design working, not a gap in it (<a href="../sec-three-tier-backup-architecture/">part 5</a>).</p>
+</section>
+<section id="a-second-service-and-no-firewall" class="level2">
+<h2 class="anchored" data-anchor-id="a-second-service-and-no-firewall">13. A second service and no firewall</h2>
+<p><strong>Changed situation:</strong> athena’s Time Machine drive moved to the home server and was shared over Samba, giving a single-purpose machine a second job.</p>
+<p><strong>Broke:</strong> the server had no firewall running. Its security had rested on the narrow restricted backup keys and on nothing else listening. That was an implicit assumption, never a decision, and it stopped holding when a second service appeared.</p>
+<p><strong>Changed:</strong> ufw now denies incoming connections by default, trusts the Tailscale interface, and allows SSH and Samba only from the home network (<a href="../sec-five-machine-storage/">part 6</a>).</p>
+</section>
+<section id="time-machine-a-file-system-that-could-not-be-checked-and-a-missed-checkbox" class="level2">
+<h2 class="anchored" data-anchor-id="time-machine-a-file-system-that-could-not-be-checked-and-a-missed-checkbox">14. Time Machine: a file system that could not be checked, and a missed checkbox</h2>
+<p><strong>Broke, twice.</strong> The external drive was first formatted HFS+, chosen deliberately because both macOS and Linux can read it. Within a week the drive dropped off USB in the middle of a write, and the Linux HFS+ checker could not verify the volume afterward. A backup volume that cannot be checked on the machine it is attached to is not one to trust, so it was reformatted ext4, a documented choice for this setup. Separately, the first Time Machine backup to the share was created without encryption, which Time Machine offers only when a destination is first added. It had reached 258 GB of one Mac’s files, unencrypted, on another machine before the omission was noticed.</p>
+<p><strong>Changed:</strong> the unencrypted backup was deleted, the freed space trimmed, and the backup restarted with encryption on and its password stored in <code>pass</code>. The setup is described in <a href="../sec-five-machine-storage/">part 6</a> and the policy in <a href="../sec-three-tier-backup-architecture/">part 5</a>.</p>
+</section>
+<section id="a-share-that-listened-only-to-itself" class="level2">
+<h2 class="anchored" data-anchor-id="a-share-that-listened-only-to-itself">15. A share that listened only to itself</h2>
+<p><strong>Broke:</strong> after the server restart in finding 10, Samba was configured to listen on one named Wi-Fi adapter, started before that adapter had an address, and listened only on the server’s loopback address. The share was unreachable from the network and nothing reported an error. The server also turned out to have two adapters on the same network, with Samba bound to only one, so connecting by name reached the refused address about half the time.</p>
+<p><strong>Found by:</strong> a direct write test on the server succeeded while athena could not connect; checking what Samba was actually listening on explained why.</p>
+<p><strong>Changed:</strong> Samba now waits for the network at boot and listens on both adapters. It is tested from another machine after a restart, not only on the server itself (<a href="../sec-five-machine-storage/">part 6</a>).</p>
+</section>
+<section id="making-a-full-backup-affordable" class="level2">
+<h2 class="anchored" data-anchor-id="making-a-full-backup-affordable">16. Making a full backup affordable</h2>
+<p><strong>Checked:</strong> why athena’s Time Machine configuration excluded applications and system libraries.</p>
+<p><strong>Changed:</strong> rather than excluding them, the installed applications on all three Macs were cut back to a research minimum. A cleanup script removed each application’s support files while refusing to touch anything carrying the identifier of an application being kept, which mattered: one office suite’s uninstall list would otherwise have taken a kept word processor’s data with it. The full TeX distribution was replaced with per-user TinyTeX and a package list in the dotfiles repository, and the remaining applications are recorded in a Brewfile. With a small application set, Time Machine backs up everything except data that is regenerable or held elsewhere, and a reinstall has a list to work from.</p>
+</section>
+<section id="one-login-for-git" class="level2">
+<h2 class="anchored" data-anchor-id="one-login-for-git">17. One login for git</h2>
+<p><strong>Checked:</strong> how each repository authenticates to the code host.</p>
+<p><strong>Broke:</strong> nothing, yet, but the mix was a liability: most project repositories used SSH keys while the dotfiles repository used the <code>gh</code> tool’s login.</p>
+<p><strong>Changed:</strong> project repositories moved to HTTPS remotes authenticated through the <code>gh</code> credential helper, whose token sits in the Keychain. A script rewrote only remotes pointing at the code host (over a hundred on the primary workstation) and confirmed along the way that no confidential, local-only repository had acquired such a remote. Two consequences were worth knowing in advance: the token needs the <code>workflow</code> scope before it can push changes to automated workflow files, and a command run over a plain SSH session into a Mac cannot reach the Keychain login, even though scheduled jobs in the logged-in session can. The same pass caught a blog post folder still pointing at the template repository it was copied from; it now has its own.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
+<figcaption>A single burning candle positioned so its flame lights the next candle in an otherwise unlit row.</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="things-to-watch-out-for" class="level1">
+<h1>Things to Watch Out For</h1>
+<ul>
+<li><strong>Revoking an OAuth grant logs out every machine using that client.</strong> List the machines that will need to log in again before revoking.</li>
+<li><strong>Some tools print raw secrets on an ordinary status check.</strong> Know which ones, and treat anything printed as exposed.</li>
+<li><strong>Symlinking whole configuration folders into a repository sweeps in files nobody chose,</strong> including login tokens. Check <code>git status</code> on machines where nothing changed.</li>
+<li><strong>Borg does not fail when an included path disappears.</strong> Read the log, and check file counts after any folder move.</li>
+<li><strong>Two machines mirroring to one destination race; they do not back each other up.</strong> Give each machine its own destination.</li>
+<li><strong>One self-referencing link can make rclone skip every deletion,</strong> while the run still looks routine.</li>
+<li><strong>A skipped run and a failed run should not share an exit status.</strong></li>
+<li><strong>An address assigned by the router is not an identity.</strong> Reach always-on machines by a stable address, and know every file that names them; a restricted key’s separate SSH configuration is easy to forget.</li>
+<li><strong>A job that is not loaded produces no failure.</strong> Check that scheduled jobs are loaded, not only that they last succeeded.</li>
+<li><strong>Options that can only be chosen at setup, such as Time Machine encryption, will eventually be missed at setup.</strong> Verify the result immediately.</li>
+<li><strong>A service bound to a named interface can start before the interface exists.</strong> Make it wait for the network, and test from another machine after restarts.</li>
+<li><strong>A single-purpose machine’s security is often implicit.</strong> When it gains a second purpose, check what actually filters incoming connections.</li>
+</ul>
+</section>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
+<ul>
+<li><strong>Verify by reading logs and exit statuses, not by trusting schedules.</strong> Every backup failure in this post was already recorded by the scheduler or in a log. None was announced. A job that is scheduled, a job that ran, and a job that covered what it should are three different claims.</li>
+<li><strong>A fix is not done until it has run on every machine it touches.</strong> The lock fix was correct and broke joe. The address fix was correct on two machines and missed the third. The status check that found the outage covered the Macs and missed the Linux laptop.</li>
+<li><strong>The blast radius of a fix is not always one machine.</strong> OAuth revocations, shared scripts, and broad symlink rules act on everything that uses the same mechanism. Know which kind of fix is in hand before applying it.</li>
+<li><strong>Rebuilding a machine from bare metal is the cheapest audit available,</strong> because a fresh machine has no accumulated exceptions hiding real gaps.</li>
+<li><strong>Write it down.</strong> Every finding went into the fleet’s internal reference the day it was fixed, which is why the second week’s failures were diagnosed in minutes rather than hours.</li>
+</ul>
+</section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<ul>
+<li>The audit checked the architecture this series describes. It was not a penetration test and does not claim to have found every gap.</li>
+<li>Several findings came from incidents observed directly, not from a systematic check, so there is no guarantee every instance of those problems has been found.</li>
+<li>The reinstall runbook has been exercised on one machine.</li>
+<li>Every failure here was found by a person looking. Until an automated check exists, the backups are only as verified as the last time someone read their status.</li>
+</ul>
+</section>
+<section id="opportunities-for-improvement" class="level2">
+<h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
+<ol type="1">
+<li>A daily status check that reports, for every machine including the Linux ones, each backup job’s loaded state, last exit status, and log freshness, and flags anything older than a day or not successful.</li>
+<li>Backup scripts that wait or retry for network connectivity before failing.</li>
+<li>A scheduled restore test, so that “backed up” means “restored at least once.”</li>
+<li>Secret scanning on every commit to the dotfiles repository.</li>
+<li>A second exercise of the reinstall runbook, to find the parts that were specific to the first machine by accident.</li>
+</ol>
+</section>
+</section>
+<section id="wrapping-up" class="level1">
+<h1>Wrapping Up</h1>
+<p>The audit the hub recommends was worth doing, though not in the shape expected. Every control the threat model named held. The failures lived around those controls: credentials with too little coverage or too much, OAuth grants whose fate is shared across machines, backups that succeeded while covering less than intended, and the slow drift of everything near a correct configuration, from a router-assigned address to a tool one machine never installed. None of these were configuration errors when they were configured. All of them were found by checking, and none by an alert.</p>
+<p><strong>Takeaways:</strong></p>
+<ul>
+<li>Read backup logs and exit statuses on every machine; a schedule is not evidence.</li>
+<li>Before revoking any credential or grant, know everything that depends on it.</li>
+<li>Verify every fix on every machine it touches, including the ones that run a different operating system.</li>
+<li>Prefer addresses and configurations that cannot change underneath you, and know every file that names a machine.</li>
+<li>Record each finding in writing the day it is fixed.</li>
+</ul>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<p>Security series:</p>
+<ol type="1">
+<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a></li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
+<li>Running the Quarterly Security Audit for the First Time: What Actually Broke (this post)</li>
+</ol>
+<p>External references:</p>
+<ul>
+<li><a href="https://borgbackup.readthedocs.io/">BorgBackup documentation</a></li>
+<li><a href="https://rclone.org/docs/">rclone documentation</a></li>
+<li><a href="https://cli.github.com/manual/">GitHub CLI manual</a></li>
+<li><a href="https://tailscale.com/kb/">Tailscale documentation</a></li>
+<li><a href="https://www.samba.org/samba/docs/current/man-html/vfs_fruit.8.html">Samba vfs_fruit manual page</a></li>
+</ul>
+</section>
+<section id="reproducibility" class="level1">
+<h1>Reproducibility</h1>
+<p>This post contains no executable analysis. The commands shown are the checks and the lock line used on the fleet during the audit. Environment at the time of writing: macOS 26.6 on the three Macs, Linux Mint 22.3 on the Linux laptop and Linux Mint on the home server, Borg 1.4.5, rclone 1.75, flock 0.4.0 (Homebrew). Exact command output, host names beyond the machine names, and addresses are omitted deliberately.</p>
+<hr>
+</section>
+<section id="lets-connect" class="level1">
+<h1>Let’s Connect</h1>
+<p><em>Questions, suggestions, or corrections are welcome.</em></p>
+<ul>
+<li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
+<li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
+</ul>
+<p>I would like to hear from you if:</p>
+<ul>
+<li>You find an error, or a better approach to anything in this series.</li>
+<li>You run a small research fleet and have found where this design breaks.</li>
+<li>You want to compare notes on backups, secrets, or reproducible research infrastructure.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/focusonr\.org");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Ronald G. Thomas.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47/ryyblog">
+      <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<!-- Fix category filtering. itemValues.categories is always a base64+URI-
+     encoded comma-joined blob and must be decoded before comparing. The
+     incoming `category` argument's encoding is NOT reliable: Quarto's own
+     native click path decodes it to plain text before calling
+     filterListingCategory, but other call sites (older cached scripts,
+     manual calls, other Quarto builds) pass the raw base64 data-category
+     value instead. A word like "docker" also happens to be valid-shaped
+     base64, so blindly re-decoding an already-plain-text argument silently
+     corrupts it rather than failing loudly. Match against both
+     interpretations instead of guessing which one applies. -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    function decodeCategory(value) {
+      try {
+        return decodeURIComponent(atob(value));
+      } catch (e) {
+        return value;
+      }
+    }
+
+    window.filterListingCategory = function(category) {
+      const listingIds = Object.keys(window['quarto-listings']);
+      for (const listingId of listingIds) {
+        const list = window['quarto-listings'][listingId];
+        if (list) {
+          if (category === '') {
+            list.filter();
+          } else {
+            const decodedTarget = decodeCategory(category);
+            list.filter(function (item) {
+              const itemValues = item.values();
+              if (itemValues.categories !== null && itemValues.categories !== undefined) {
+                const categories = decodeCategory(itemValues.categories)
+                  .split(",")
+                  .map(c => c.trim());
+                return categories.includes(category) || categories.includes(decodedTarget);
+              } else {
+                return false;
+              }
+            });
+          }
+        }
+      }
+    };
+  }, 500);
+});
+</script>
+
+<!-- PDF view/download button for blog posts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only add the button on post pages
+  if (window.location.pathname.includes('/posts/') && !window.location.pathname.endsWith('/posts/') && !window.location.pathname.endsWith('/posts/index.html')) {
+    var currentPath = window.location.pathname;
+    // Handle both /posts/name/ and /posts/name/index.html formats
+    var pdfPath;
+    if (currentPath.endsWith('/')) {
+      pdfPath = currentPath + 'index.pdf';
+    } else {
+      pdfPath = currentPath.replace('.html', '.pdf');
+    }
+
+    // Check if PDF exists first
+    fetch(pdfPath, { method: 'HEAD' })
+      .then(function(response) {
+        if (response.ok) {
+          // PDF exists, show download button
+          showDownloadButton(pdfPath);
+        }
+        // If PDF doesn't exist, don't show any button
+      })
+      .catch(function(error) {
+        // Error checking PDF, don't show any button
+      });
+  }
+});
+
+function showDownloadButton(pdfPath) {
+  var downloadBtn = document.createElement('div');
+  downloadBtn.className = 'pdf-download-button';
+
+  // Get file size if possible
+  fetch(pdfPath, { method: 'HEAD' })
+    .then(function(response) {
+      var size = response.headers.get('Content-Length');
+      var sizeText = '';
+
+      if (size) {
+        // Convert to MB or KB
+        var sizeInMB = size / (1024 * 1024);
+        if (sizeInMB >= 1) {
+          sizeText = ' (' + sizeInMB.toFixed(1) + ' MB)';
+        } else {
+          sizeText = ' (' + (size / 1024).toFixed(0) + ' KB)';
+        }
+      }
+
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' + sizeText +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    })
+    .catch(function() {
+      // Basic fallback if we can't get file size
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    });
+
+  // Find where to insert the button (right after the title block)
+  var titleBlock = document.querySelector('.quarto-title-meta');
+  if (titleBlock) {
+    titleBlock.after(downloadBtn);
+  }
+}
+
+
+</script>
+
+<style>
+.pdf-download-button {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
+
+
+
+
+</body></html>
