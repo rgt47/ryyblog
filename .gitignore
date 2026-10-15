@@ -27,3 +27,6 @@ _freeze/posts/
 **/HOME_CLEANUP_PLAN.*
 **/PASS_STORE_RECOVERY.*
 **/MULTI_LAPTOP_PLAN.*
+
+# Generated hero-image candidates; chosen images are copied into posts
+_candidates/
