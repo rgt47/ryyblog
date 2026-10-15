@@ -445,7 +445,7 @@ Note
 </section>
 <section id="addressing-tailscale-for-scripts-the-lan-for-samba" class="level1">
 <h1>Addressing: Tailscale for Scripts, the LAN for Samba</h1>
-<p>Every scripted connection to mercury uses its Tailscale address. Only Time Machine, through Samba, uses the LAN. (There is one deliberate exception, the simulation client on two of the Macs, which defaults to the server’s <code>.local</code> multicast name and keeps a Tailscale alias for use away from home. The name follows the address, but it depends on multicast DNS, which failed on the first lookup after a quiet period on both Macs tested (then worked), so this section’s rule argues for making the Tailscale form the default. That is not yet done.)</p>
+<p>Every scripted connection to mercury uses its Tailscale address. Only Time Machine, through Samba, uses the LAN. (The simulation client was briefly an exception: on two of the Macs it defaulted to the server’s <code>.local</code> multicast name. That name depends on multicast DNS, which failed on the first lookup after a quiet period on both Macs tested (then worked), so all three Macs now default to the Tailscale alias, and the <code>.local</code> aliases are used only when typed. The cost is that submitting a job needs Tailscale running even at home.)</p>
 <p>The reason is a failure. mercury originally appeared in each client’s SSH configuration under its LAN address, which the home router assigns by DHCP. After a reboot in late September 2026 the router handed mercury new addresses. Nothing announced the change: the Borg jobs on athena, joe, and zeus simply timed out every night until a status check found them. julia was unaffected because its configuration already used the Tailscale address, which does not change when the LAN does.</p>
 <p>The fix had a second lesson in it. Each client names the server in two places: the general <code>~/.ssh/config</code>, and a separate SSH config that the Borg script passes with <code>ssh -F</code> so that only the restricted backup key is offered. Correcting the first file left the backups failing; only correcting the second fixed them. The client side is described in the backup post; on this side, the rule is simple:</p>
 <ul>
@@ -717,7 +717,7 @@ loaded via a namespace (and not attached):
 </div>
 </div>
 <hr>
-<p><em>Rendered on 2026-10-15 at 10:59 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/sec-five-machine-storage/analysis/report/index.qmd</em></p>
+<p><em>Rendered on 2026-10-15 at 12:23 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/sec-five-machine-storage/analysis/report/index.qmd</em></p>
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>
