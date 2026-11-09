@@ -243,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#migration-sequence" id="toc-migration-sequence" class="nav-link" data-scroll-target="#migration-sequence">Migration Sequence</a></li>
   <li><a href="#deleting-a-shared-copy-safely" id="toc-deleting-a-shared-copy-safely" class="nav-link" data-scroll-target="#deleting-a-shared-copy-safely">Deleting a Shared Copy Safely</a></li>
   <li><a href="#uninstalling-the-client" id="toc-uninstalling-the-client" class="nav-link" data-scroll-target="#uninstalling-the-client">Uninstalling the Client</a></li>
+  <li><a href="#after-the-uninstall-what-was-left" id="toc-after-the-uninstall-what-was-left" class="nav-link" data-scroll-target="#after-the-uninstall-what-was-left">After the Uninstall: What Was Left</a></li>
   <li><a href="#keeping-machines-in-step-afterwards" id="toc-keeping-machines-in-step-afterwards" class="nav-link" data-scroll-target="#keeping-machines-in-step-afterwards">Keeping Machines in Step Afterwards</a></li>
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
   <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
@@ -304,6 +305,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR NOTES
 
@@ -491,18 +505,31 @@ Note
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The audit also found a stale checkout of the dotfiles repository on one Mac whose backup scripts still read the old Dropbox path. That machine’s nightly cloud backup had been copying a frozen copy of the project tree for weeks while every run completed normally.</p>
 </section>
+<section id="after-the-uninstall-what-was-left" class="level1">
+<h1>After the Uninstall: What Was Left</h1>
+<p>An uninstall is not the end of the migration. More than two weeks after the client was gone from every machine, a sweep for the old name found more.</p>
+<p><strong>References in live configuration.</strong> Across the five machines, the sweep found a shell directory-shortcut list and an editing alias that still named the old folder; a project-root fallback list that tried the new location first and the old ones after; a mail-sync certificate path that no longer existed; commented-out editor paths; settings and caches of command-line tools; a link to a tool installed inside the old tree (the command had been broken since the move); a link to a teaching project; and a standalone shell file on the server. None of these failed loudly. The fallback list in particular kept working, which is exactly why it had survived. The tracked configuration, each machine’s <code>~/.config</code> and the assistant’s instruction files were cleaned, and a search of the tracked files now returns nothing:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tracked configuration: any mention of the old name</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> ~/dotfiles grep <span class="at">-n</span> <span class="at">-i</span> dropbox</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Per-machine settings and tool caches (an unreadable file makes grep</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># exit non-zero even after a match, so read the listing, not the status)</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-rIl</span> <span class="at">-i</span> dropbox ~/.config</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Left in place on purpose: the migration records and the backups’ history, which describe what happened. Not rewritten: nearly four hundred files in dozens of project folders that mention the old path in notes, render stamps or documents. That is a separate, mechanical job with commits in each project.</p>
+<p><strong>The account itself.</strong> The client was gone, but the account still held things the file listing did not show: a whole-computer backup of a Mac that no longer had the client (about 11 GB, made by the client’s backup feature), a connected-app folder of public-domain ebooks from years earlier, empty folders named for the old settings directories, and batches of deleted files from the cleanup days that were still recoverable. The paid plan was set to lapse to the free tier on a later date. The app folder and the empty folders had been deleted by 2026-10-09; deleting the backup and purging the deleted-file batches was still to be done when this section was written, and has not been verified since.</p>
+</section>
 <section id="keeping-machines-in-step-afterwards" class="level1">
 <h1>Keeping Machines in Step Afterwards</h1>
 <p>Nothing synchronizes the machines automatically any more, and that is deliberate. Two habits replace the daemon.</p>
 <p><strong>Pull the shared configuration.</strong> A change made in <code>~/dotfiles</code> on one machine reaches the others only after a <code>git pull</code> on each. The shell helps: entering any git repository compares it with its last-fetched upstream and, if it is behind, prints a one-time warning and keeps a small <code>↓N</code> indicator in the prompt until the repository is pulled. The underlying fetch is throttled to once every four hours per repository, so the check costs nothing on every prompt.</p>
 <p><strong>Authenticate git through the GitHub CLI.</strong> Repository remotes use HTTPS, and git obtains credentials from the <code>gh</code> credential helper, which keeps its token in the macOS Keychain. This removes the need for a separate SSH key per machine for code hosting. Two details matter. The token needs the <code>workflow</code> scope, or GitHub refuses any push that adds or changes an Actions workflow file. And Keychain items are not available to a plain SSH session, so a pull run remotely into a Mac fails where the same command at the keyboard succeeds.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-time setup on each Mac: log in, then let gh act as git's</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># credential helper and default to HTTPS for new clones.</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth login <span class="at">--hostname</span> github.com <span class="at">--git-protocol</span> https</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth setup-git</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> config set git_protocol https <span class="at">--host</span> github.com</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the scope needed to push changes to Actions workflow files.</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth refresh <span class="at">--hostname</span> github.com <span class="at">--scopes</span> workflow</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-time setup on each Mac: log in, then let gh act as git's</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># credential helper and default to HTTPS for new clones.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth login <span class="at">--hostname</span> github.com <span class="at">--git-protocol</span> https</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth setup-git</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> config set git_protocol https <span class="at">--host</span> github.com</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the scope needed to push changes to Actions workflow files.</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth refresh <span class="at">--hostname</span> github.com <span class="at">--scopes</span> workflow</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Project work follows the same discipline: commit and push before leaving a machine, pull before starting on another. For content that is not in git, the rule is one machine at a time per project.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -550,13 +577,15 @@ Note
 <li>The device list of the sync account is the only reliable inventory of who can restore deleted content.</li>
 <li>A job that exits normally has not necessarily done its work; read the log.</li>
 <li>A stale checkout of shared scripts on one machine reproduces old bugs there, however long ago they were fixed elsewhere.</li>
+<li>A path list that tries the new location first and the old one second keeps working after the old one disappears, so nothing ever flags it. Sweep configuration for the old name, not only the links.</li>
+<li>The account has residue the files page does not show. The client’s backup and connected-app features store data on the server that survives the client’s uninstall; check those pages too.</li>
 </ul>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
 <ul>
 <li>The account described here was single-user. A folder shared with collaborators needs agreement on the move and is out of scope.</li>
-<li>The sync account itself remains open; the client is gone, but closing the account is a separate decision.</li>
+<li>The sync account itself remains open. The client is gone and the paid plan is set to lapse to the free tier, but deleting the account is a separate decision, and its last contents (see the section above) were not fully cleared when this was written.</li>
 <li>Moving to local folders gives up instant cross-machine availability of uncommitted work. The rule of committing before switching machines is a habit, not an enforcement mechanism.</li>
 <li>The fresh-machine bootstrap time has not been measured since the move; a restore runbook and the Brewfile exist, but no timed rebuild has been run.</li>
 </ul>
@@ -567,7 +596,8 @@ Note
 <li>Add a <code>verify</code> target to the dotfiles repository that checks, on demand, that every link resolves, <code>$PRJ_ROOT</code> exists, and each scheduled job’s last exit status is zero.</li>
 <li>Time a full rebuild of one machine from the runbook and record the result.</li>
 <li>Add a pre-commit secret scanner to the dotfiles repository, so the next token that lands in the working tree is caught by a tool rather than by chance (see <a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a>).</li>
-<li>Decide whether to close the sync account, after a final review of its remaining contents and version history.</li>
+<li>Decide whether to close the sync account, after a final review of its remaining contents and version history, once the plan has lapsed to the free tier and the leftover backup and deleted-file batches are gone.</li>
+<li>Rewrite the old path in the project files that still mention it, in one mechanical pass with a commit per project.</li>
 </ol>
 </section>
 </section>
@@ -644,7 +674,7 @@ Note
 </tr>
 </tbody>
 </table>
-<p>The <code>PRJ_ROOT</code> block and the <code>gh</code> commands are the ones in use on the fleet. The link-audit loop was written for this post and checked on one Mac; adapt the pattern for other sync clients.</p>
+<p>The <code>PRJ_ROOT</code> block and the <code>gh</code> commands are the ones in use on the fleet. The link-audit loop was written for this post and checked on one Mac; adapt the pattern for other sync clients. The post-uninstall sweep and the account observations are dated 2026-10-09 to 2026-10-12: the sweep was run on all five machines and its results checked by running it again; the account’s contents were read from its web pages, and whether the remaining items there have since been deleted was not checked.</p>
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>

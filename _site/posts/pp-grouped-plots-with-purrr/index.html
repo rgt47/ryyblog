@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-01">
-<meta name="description" content="I did not really know how to programmatically generate multiple plots from grouped data until I discovered purrr’s map2 and pmap functions – this post walks through the approach step by step using Palmer Penguins.">
+<meta name="description" content="Generating multiple plots from grouped data programmatically is a job for purrr’s map2 and pmap functions. This post walks through the approach step by step using Palmer Penguins.">
 
 <title>Functional Plot Generation with purrr – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Functional Plot Generation with purrr – focusonr">
-<meta property="og:description" content="I did not really know how to programmatically generate multiple plots from grouped data until I discovered purrr’s map2 and pmap functions – this post walks through the approach step by step using Palmer Penguins.">
+<meta property="og:description" content="Generating multiple plots from grouped data programmatically is a job for purrr’s map2 and pmap functions. This post walks through the approach step by step using Palmer Penguins.">
 <meta property="og:image" content="https://focusonr.org/posts/pp-grouped-plots-with-purrr/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="873">
 <meta property="og:image:width" content="1600">
 <meta name="twitter:title" content="Functional Plot Generation with purrr – focusonr">
-<meta name="twitter:description" content="I did not really know how to programmatically generate multiple plots from grouped data until I discovered purrr’s map2 and pmap functions – this post walks through the approach step by step using Palmer Penguins.">
+<meta name="twitter:description" content="Generating multiple plots from grouped data programmatically is a job for purrr’s map2 and pmap functions. This post walks through the approach step by step using Palmer Penguins.">
 <meta name="twitter:image" content="https://focusonr.org/posts/pp-grouped-plots-with-purrr/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how to programmatically generate multiple plots from grouped data until I discovered purrr’s map2 and pmap functions – this post walks through the approach step by step using Palmer Penguins.
+    Generating multiple plots from grouped data programmatically is a job for purrr’s map2 and pmap functions. This post walks through the approach step by step using Palmer Penguins.
   </div>
 </div>
 
@@ -300,6 +300,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.png" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -309,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Generating publication-quality plot grids without writing the same code three times.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how to programmatically generate multiple plots from grouped data until I started working with the Palmer Penguins dataset. The task seemed straightforward: produce scatter plots for every pairwise combination of numeric variables, separately for each penguin species, and then assemble them into a single coherent grid.</p>
+<p>Generating multiple plots from grouped data programmatically is a recurring task, and the Palmer Penguins dataset is a good place to work it out. The task seemed straightforward: produce scatter plots for every pairwise combination of numeric variables, separately for each penguin species, and then assemble them into a single coherent grid.</p>
 <p>My first instinct was to copy-paste code for each species and each variable pair. That approach collapsed quickly once I counted the combinations: three species, four numeric variables, six pairwise combinations per species – eighteen plots total. Copy-pasting eighteen ggplot calls is tedious, brittle, and nearly impossible to maintain.</p>
 <p>The <code>purrr</code> package solved this problem cleanly. By splitting the data by species and mapping a plotting function over every variable combination, I could generate all eighteen plots with a single pipeline and assemble them into a structured grid using <code>patchwork</code>. This post documents that workflow.</p>
 <section id="motivations" class="level2">
@@ -629,7 +642,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="index_files/figure-html/final-composite-1.png" class="img-fluid figure-img" alt="A grid of 18 scatter plots arranged in three upper-triangular blocks, one per penguin species, showing pairwise relationships between bill length, bill depth, flipper length, and body mass with LOESS smoothing lines." width="768"></p>
-<figcaption>Pairwise scatter plots for four numeric penguin measurements, stratified by species. Each row group shows one species with a LOESS smooth and points coloured by sex.</figcaption>
+<figcaption>Pairwise scatter plots for four numeric penguin measurements, stratified by species. Each row group shows one species with a LOESS smooth and points colored by sex.</figcaption>
 </figure>
 </div>
 </div>
@@ -731,13 +744,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.1 (2026-06-24)
-Platform: aarch64-apple-darwin25.4.0
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
 Running under: macOS Tahoe 26.6.2
 
 Matrix products: default
-BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
-LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -750,23 +763,23 @@ attached base packages:
 [8] base     
 
 other attached packages:
- [1] rlang_1.3.0          patchwork_1.3.2      lubridate_1.9.5     
+ [1] rlang_1.2.0          patchwork_1.3.2      lubridate_1.9.5     
  [4] forcats_1.0.1        stringr_1.6.0        dplyr_1.2.1         
  [7] purrr_1.2.2          readr_2.2.0          tidyr_1.3.2         
 [10] tibble_3.3.1         ggplot2_4.0.3        tidyverse_2.0.0     
 [13] palmerpenguins_0.1.1
 
 loaded via a namespace (and not attached):
- [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.1    
- [5] tidyselect_1.2.1   parallel_4.6.1     splines_4.6.1      scales_1.4.0      
+ [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.0    
+ [5] tidyselect_1.2.1   parallel_4.6.0     splines_4.6.0      scales_1.4.0      
  [9] yaml_2.3.12        fastmap_1.2.0      lattice_0.22-9     R6_2.6.1          
 [13] labeling_0.4.3     generics_0.1.4     knitr_1.51         htmlwidgets_1.6.4 
-[17] pillar_1.11.1      RColorBrewer_1.1-3 tzdb_0.5.0         stringi_1.8.9     
-[21] xfun_0.58          S7_0.2.2           otel_0.2.0         timechange_0.4.0  
-[25] cli_3.6.6          mgcv_1.9-4         withr_3.0.3        magrittr_2.0.5    
+[17] pillar_1.11.1      RColorBrewer_1.1-3 tzdb_0.5.0         stringi_1.8.7     
+[21] xfun_0.62          S7_0.2.2           otel_0.2.0         timechange_0.4.0  
+[25] cli_3.6.6          mgcv_1.9-4         withr_3.0.2        magrittr_2.0.5    
 [29] digest_0.6.39      hms_1.1.4          nlme_3.1-169       lifecycle_1.0.5   
 [33] vctrs_0.7.3        evaluate_1.0.5     glue_1.8.1         farver_2.1.2      
-[37] rmarkdown_2.31     tools_4.6.1        pkgconfig_2.0.3    htmltools_0.5.9   </code></pre>
+[37] rmarkdown_2.31     tools_4.6.0        pkgconfig_2.0.3    htmltools_0.5.9   </code></pre>
 </div>
 </div>
 </section>

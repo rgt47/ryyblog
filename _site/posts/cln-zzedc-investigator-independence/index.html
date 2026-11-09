@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-12-07">
-<meta name="description" content="I did not really know how achievable investigator independence in clinical data management was until I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.">
+<meta name="description" content="Investigator independence in clinical data management is more achievable than it appears: I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.">
 
 <title>Running ZZedc Independently for Clinical Research Data Management – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Running ZZedc Independently for Clinical Research Data Management – focusonr">
-<meta property="og:description" content="I did not really know how achievable investigator independence in clinical data management was until I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.">
+<meta property="og:description" content="Investigator independence in clinical data management is more achievable than it appears: I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.">
 <meta property="og:image" content="https://focusonr.org/posts/cln-zzedc-investigator-independence/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="800">
 <meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="Running ZZedc Independently for Clinical Research Data Management – focusonr">
-<meta name="twitter:description" content="I did not really know how achievable investigator independence in clinical data management was until I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.">
+<meta name="twitter:description" content="Investigator independence in clinical data management is more achievable than it appears: I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.">
 <meta name="twitter:image" content="https://focusonr.org/posts/cln-zzedc-investigator-independence/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how achievable investigator independence in clinical data management was until I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.
+    Investigator independence in clinical data management is more achievable than it appears: I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement.
   </div>
 </div>
 
@@ -317,6 +317,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -326,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Investigator-controlled electronic data capture returns data ownership to the research team.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how achievable investigator independence in clinical data management was until I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement. For years, my research programs depended on commercial EDC systems with annual licensing fees, proprietary data formats, and vendor-controlled infrastructure. When a vendor relationship deteriorated, the estimated cost of migration reached $20,000.</p>
+<p>Investigator independence in clinical data management is more achievable than it appears. I deployed ZZedc on a personal AWS instance and ran a pilot study without vendor involvement. For years, my research programs depended on commercial EDC systems with annual licensing fees, proprietary data formats, and vendor-controlled infrastructure. When a vendor relationship deteriorated, the estimated cost of migration reached $20,000.</p>
 <p>The experience taught me that the barriers to investigator-managed EDC are not primarily technical. ZZedc installs in minutes, runs on standard infrastructure, and stores data in portable SQLite databases. The barriers are organizational: convincing the research team and institution that they can manage the infrastructure, security, and maintenance that vendors normally handle.</p>
 <p>We examine ZZedc as an open-source EDC system designed for investigator-controlled deployment. It presents three deployment paths (solo researcher, team research, enterprise), evaluates the technical architecture, and provides step-by-step guides for each scenario. The assessment is honest about both the advantages and the significant responsibilities that come with managing one’s own clinical data infrastructure.</p>
 <p>More formally, this post documents the convergence of the Cloud and Applications layers of the Workflow Construct described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>, specifically running ZZedc as a Shiny application on EC2 with an independently provisioned database. This is the construct’s worked example for hosting a researcher-facing clinical data tool end-to-end on the construct’s own cloud infrastructure, rather than depending on a third-party managed service.</p>

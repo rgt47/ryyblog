@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-01-02">
-<meta name="description" content="Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.86, demonstrating the power of biological groupings in multiple regression.">
+<meta name="description" content="Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.85, demonstrating the power of biological groupings in multiple regression.">
 
 <title>Palmer Penguins Part 2: Multiple Regression and Species Effects – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Palmer Penguins Part 2: Multiple Regression and Species Effects – focusonr">
-<meta property="og:description" content="Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.86, demonstrating the power of biological groupings in multiple regression.">
+<meta property="og:description" content="Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.85, demonstrating the power of biological groupings in multiple regression.">
 <meta property="og:image" content="https://focusonr.org/posts/pp-multiple-regression/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="873">
 <meta property="og:image:width" content="1600">
 <meta name="twitter:title" content="Palmer Penguins Part 2: Multiple Regression and Species Effects – focusonr">
-<meta name="twitter:description" content="Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.86, demonstrating the power of biological groupings in multiple regression.">
+<meta name="twitter:description" content="Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.85, demonstrating the power of biological groupings in multiple regression.">
 <meta name="twitter:image" content="https://focusonr.org/posts/pp-multiple-regression/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.86, demonstrating the power of biological groupings in multiple regression.
+    Adding species identity to the body mass prediction model causes R-squared to jump from 0.76 to 0.85, demonstrating the power of biological groupings in multiple regression.
   </div>
 </div>
 
@@ -313,6 +313,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.png" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -330,12 +343,12 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><strong>Palmer Penguins Series:</strong> This is part 2 of 5: <a href="../../posts/08-palmerpenguinspart1/">Part 1</a> | <a href="../../posts/09-palmerpenguinspart2/">Part 2</a> | <a href="../../posts/10-palmerpenguinspart3/">Part 3</a> | <a href="../../posts/11-palmerpenguinspart4/">Part 4</a> | <a href="../../posts/12-palmerpenguinspart5/">Part 5</a></p>
+<p><strong>Palmer Penguins Series:</strong> This is part 2 of 5: <a href="../../posts/pp-eda/">Part 1</a> | <a href="../../posts/pp-multiple-regression/">Part 2</a> | <a href="../../posts/pp-cross-validation/">Part 3</a> | <a href="../../posts/pp-diagnostics/">Part 4</a> | <a href="../../posts/pp-random-forest/">Part 5</a></p>
 </div>
 </div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>How much predictive power hides in the species variable? In Part 1, the analysis established that flipper length alone explains roughly 76% of body mass variance, a respectable baseline. Watching the R-squared climb past 0.86 after incorporating species identity is one of those clarifying moments in applied statistics where biological context transforms a good model into a substantially better one.</p>
+<p>How much predictive power hides in the species variable? In Part 1, the analysis established that flipper length alone explains roughly 76% of body mass variance, a respectable baseline. Watching the R-squared climb past 0.84 after incorporating species identity is one of those clarifying moments in applied statistics where biological context transforms a good model into a substantially better one.</p>
 <p>The question that motivated this post was straightforward: if one morphometric predictor captures 76% of the variance, how much can we recover by combining all available measurements and accounting for species differences? The answer, as we shall see, is both quantitatively satisfying and conceptually instructive.</p>
 <p>This second installment examines the process of building multiple regression models, diagnosing multicollinearity, and measuring the contribution of species identity to prediction accuracy.</p>
 <section id="motivations" class="level2">
@@ -408,16 +421,16 @@ Note
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Part 1 Baseline:</span><span class="sc">\n</span><span class="st">"</span>,</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  R-squared ="</span>,</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(simple_metrics<span class="sc">$</span>r.squared, <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  RMSE ="</span>,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  Residual SE ="</span>,</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">sigma</span>(simple_model), <span class="dv">1</span>), <span class="st">"grams</span><span class="sc">\n</span><span class="st">"</span></span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Part 1 Baseline:
    R-squared = 0.762 
-   RMSE = 393.3 grams</code></pre>
+   Residual SE = 393.3 grams</code></pre>
 </div>
 </div>
-<p>The simple model sets our floor: R-squared of 0.762 and an RMSE of approximately 394 grams. Every model built here should improve upon these values or explain why it does not.</p>
+<p>The simple model sets our floor: R-squared of 0.762 and a residual standard error of approximately 393 grams. Every model built here should improve upon these values or explain why it does not.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -451,16 +464,16 @@ Note
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"vs"</span>,</span>
 <span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(simple_metrics<span class="sc">$</span>r.squared, <span class="dv">3</span>),</span>
 <span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">"(simple)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  RMSE:"</span>,</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  Residual SE:"</span>,</span>
 <span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">sigma</span>(multiple_model), <span class="dv">1</span>), <span class="st">"grams</span><span class="sc">\n</span><span class="st">"</span></span>
 <span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Multiple Regression Results:
    R-squared: 0.764 vs 0.762 (simple)
-   RMSE: 393 grams</code></pre>
+   Residual SE: 393 grams</code></pre>
 </div>
 </div>
-<p>The improvement from 0.762 to approximately 0.816 confirms that bill measurements carry predictive information beyond what flipper length provides. This 5.4 percentage point gain is meaningful in biological data, where measurement noise and individual variation typically limit gains.</p>
+<p>The improvement is negligible: R-squared moves from 0.762 to roughly 0.764, a gain of about two tenths of a percentage point. Bill length and bill depth, added to flipper length, buy almost nothing. This is a useful negative result rather than a disappointment. It says that whatever the residual plot in Part 1 was signaling, more morphometric measurements of the same kind do not supply it, and it sets up the contrast with what happens when species identity enters the model.</p>
 </section>
 <section id="checking-multicollinearity-with-vif" class="level2">
 <h2 class="anchored" data-anchor-id="checking-multicollinearity-with-vif">Checking Multicollinearity with VIF</h2>
@@ -561,7 +574,7 @@ Note
    RMSE: 314.8 grams</code></pre>
 </div>
 </div>
-<p>The jump from 0.816 to 0.863 confirms that species identity provides substantial predictive power beyond morphometrics. This is the single largest incremental gain in this analysis.</p>
+<p>The jump from 0.764 to 0.849 confirms that species identity provides substantial predictive power beyond morphometrics. At roughly 8.6 percentage points it is by far the single largest incremental gain in this analysis, and it dwarfs the negligible contribution of the two extra bill measurements.</p>
 </section>
 <section id="species-effects" class="level2">
 <h2 class="anchored" data-anchor-id="species-effects">Species Effects</h2>
@@ -629,13 +642,13 @@ Note
 <span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
 <span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-species-model" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot showing predicted versus actual body mass with species-coloured points. The three species form distinct clusters, and the overall pattern follows a tight diagonal line from lower-left to upper-right.">
+<div id="fig-species-model" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot showing predicted versus actual body mass with species-colored points. The three species form distinct clusters, and the overall pattern follows a tight diagonal line from lower-left to upper-right.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-species-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-species-model-1.png" class="img-fluid figure-img" alt="Scatter plot showing predicted versus actual body mass with species-coloured points. The three species form distinct clusters, and the overall pattern follows a tight diagonal line from lower-left to upper-right." width="672">
+<img src="index_files/figure-html/fig-species-model-1.png" class="img-fluid figure-img" alt="Scatter plot showing predicted versus actual body mass with species-colored points. The three species form distinct clusters, and the overall pattern follows a tight diagonal line from lower-left to upper-right." width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-species-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Predicted vs actual body mass from the species model, colour-coded by species. Points clustering tightly along the diagonal indicate strong predictive performance (R-squared = 0.863).
+Figure&nbsp;1: Predicted vs actual body mass from the species model, color-coded by species. Points clustering tightly along the diagonal indicate strong predictive performance (R-squared = 0.849).
 </figcaption>
 </figure>
 </div>
@@ -645,28 +658,39 @@ Figure&nbsp;1: Predicted vs actual body mass from the species model, colour-code
 <section id="model-comparison-summary" class="level2">
 <h2 class="anchored" data-anchor-id="model-comparison-summary">Model Comparison Summary</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model Progression:</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  Simple (Part 1):    R-squared = 0.762</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  Multiple predictors: R-squared = 0.816"</span>,</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"(+5.4%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"  + Species:           R-squared = 0.863"</span>,</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"(+4.7%)</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>,</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"RMSE Reduction:"</span>,</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">sigma</span>(simple_model), <span class="dv">0</span>), <span class="st">"-&gt;"</span>,</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">sigma</span>(species_model), <span class="dv">0</span>), <span class="st">"grams</span><span class="sc">\n</span><span class="st">"</span></span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>r2_simple <span class="ot">&lt;-</span> simple_metrics<span class="sc">$</span>r.squared</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>r2_multiple <span class="ot">&lt;-</span> multiple_metrics<span class="sc">$</span>r.squared</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>r2_species <span class="ot">&lt;-</span> species_metrics<span class="sc">$</span>r.squared</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Model Progression:</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sprintf</span>(</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  Simple (Part 1):     R-squared = %.3f</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    r2_simple</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sprintf</span>(</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  Multiple predictors: R-squared = %.3f (%+.1f pts)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    r2_multiple, (r2_multiple <span class="sc">-</span> r2_simple) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sprintf</span>(</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"  + Species:           R-squared = %.3f (%+.1f pts)</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>    r2_species, (r2_species <span class="sc">-</span> r2_multiple) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Residual standard error:"</span>,</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">sigma</span>(simple_model), <span class="dv">0</span>), <span class="st">"-&gt;"</span>,</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">sigma</span>(species_model), <span class="dv">0</span>), <span class="st">"grams</span><span class="sc">\n</span><span class="st">"</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Model Progression:
-   Simple (Part 1):    R-squared = 0.762
-   Multiple predictors: R-squared = 0.816 (+5.4%)
-   + Species:           R-squared = 0.863 (+4.7%)
+   Simple (Part 1):     R-squared = 0.762
+   Multiple predictors: R-squared = 0.764 (+0.2 pts)
+   + Species:           R-squared = 0.849 (+8.6 pts)
  
- RMSE Reduction: 393 -&gt; 315 grams</code></pre>
+ Residual standard error: 393 -&gt; 315 grams</code></pre>
 </div>
 </div>
-<p>The progression from 0.762 to 0.863 represents a meaningful improvement. Each step (adding morphometric predictors, then species identity) contributed a distinct and interpretable gain.</p>
+<p>The progression from 0.762 to 0.849 represents a meaningful improvement, but it is not evenly distributed across the two steps. Adding the bill measurements contributed almost nothing; adding species identity contributed essentially all of the gain.</p>
 </section>
 <section id="practical-predictions" class="level2">
 <h2 class="anchored" data-anchor-id="practical-predictions">Practical Predictions</h2>
@@ -741,10 +765,10 @@ Figure&nbsp;1: Predicted vs actual body mass from the species model, colour-code
 <span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
 <span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-diagnostics" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of residuals versus predicted values showing a roughly symmetric cloud of points centred on zero, with no visible fan shape or curvature.">
+<div id="fig-diagnostics" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of residuals versus predicted values showing a roughly symmetric cloud of points centered on zero, with no visible fan shape or curvature.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-diagnostics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="index_files/figure-html/fig-diagnostics-1.png" class="img-fluid figure-img" alt="Scatter plot of residuals versus predicted values showing a roughly symmetric cloud of points centred on zero, with no visible fan shape or curvature." width="672">
+<img src="index_files/figure-html/fig-diagnostics-1.png" class="img-fluid figure-img" alt="Scatter plot of residuals versus predicted values showing a roughly symmetric cloud of points centered on zero, with no visible fan shape or curvature." width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-diagnostics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Residuals versus predicted values for the species model. The absence of systematic patterns suggests that the linear specification is adequate.
@@ -777,7 +801,7 @@ Figure&nbsp;2: Residuals versus predicted values for the species model. The abse
 <h3 class="anchored" data-anchor-id="conceptual-understanding">Conceptual Understanding</h3>
 <ul>
 <li>Species identity contributed the single largest gain in predictive performance, demonstrating that biological context often matters more than additional continuous measurements.</li>
-<li>The R-squared progression (0.762 to 0.816 to 0.863) provides a concrete example of how multiple regression decomposes variance across predictors.</li>
+<li>The R-squared progression (0.762 to 0.764 to 0.849) provides a concrete example of how multiple regression decomposes variance across predictors.</li>
 <li>Partial effects differ from marginal effects when predictors are correlated, making it essential to interpret coefficients within the full model context.</li>
 <li>Gentoo penguins are approximately 1,400 grams heavier than Adelie penguins after adjusting for morphometrics, reflecting fundamental ecological and evolutionary differences.</li>
 </ul>
@@ -826,10 +850,10 @@ Figure&nbsp;2: Residuals versus predicted values for the species model. The abse
 </section>
 <section id="wrapping-up" class="level1">
 <h1>Wrapping Up</h1>
-<p>This analysis demonstrated that thoughtful predictor selection and biological context can improve a baseline model substantially. Starting from a simple regression with R-squared of 0.762, we achieved 0.863 by combining morphometric measurements with species identity.</p>
+<p>This analysis demonstrated that thoughtful predictor selection and biological context can improve a baseline model substantially. Starting from a simple regression with R-squared of 0.762, we achieved 0.849 by combining morphometric measurements with species identity, with species supplying virtually all of that gain.</p>
 <p>The central insight is that species differences persist and strengthen after controlling for morphometrics. This is not merely a statistical artifact but a reflection of genuine biological variation: Gentoo, Chinstrap, and Adelie penguins occupy different ecological niches and have evolved distinct body plans.</p>
 <p>For practitioners approaching similar biological datasets, the lesson is clear: always consider categorical grouping variables early in the modeling process. The variance they explain is often substantial and, more importantly, scientifically interpretable.</p>
-<p>In conclusion, four points merit emphasis. First, adding bill length and bill depth to the model improved R-squared from 0.762 to 0.816, a gain of 5.4 percentage points attributable solely to the additional morphometric information. Second, species identity lifted R-squared further to 0.863, adding 4.7 percentage points and confirming that biological grouping variables carry substantial predictive content. Third, RMSE decreased from approximately 394 to 300 grams across the model progression, demonstrating that the improvements translate directly into more accurate individual predictions. Fourth, all VIF values remained below 5, confirming that multicollinearity is manageable and that the coefficient estimates are stable.</p>
+<p>In conclusion, four points merit emphasis. First, adding bill length and bill depth to the model moved R-squared only from 0.762 to 0.764, a gain of about 0.2 percentage points: more measurements of the same kind added almost no information. Second, species identity lifted R-squared to 0.849, adding roughly 8.6 percentage points and confirming that biological grouping variables carry substantial predictive content. Third, the residual standard error decreased from approximately 393 to 315 grams across the model progression, demonstrating that the improvements translate directly into more accurate individual predictions. Fourth, all VIF values remained below 5, confirming that multicollinearity is manageable and that the coefficient estimates are stable.</p>
 </section>
 <section id="see-also" class="level1">
 <h1>See Also</h1>
@@ -857,13 +881,13 @@ Figure&nbsp;2: Residuals versus predicted values for the species model. The abse
 <h1>Reproducibility</h1>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.1 (2026-06-24)
-Platform: aarch64-apple-darwin25.4.0
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
 Running under: macOS Tahoe 26.6.2
 
 Matrix products: default
-BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
-LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -883,16 +907,16 @@ other attached packages:
 [16] palmerpenguins_0.1.1
 
 loaded via a namespace (and not attached):
- [1] gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.1     tidyselect_1.2.1  
- [5] parallel_4.6.1     scales_1.4.0       yaml_2.3.12        fastmap_1.2.0     
+ [1] gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.0     tidyselect_1.2.1  
+ [5] parallel_4.6.0     scales_1.4.0       yaml_2.3.12        fastmap_1.2.0     
  [9] R6_2.6.1           labeling_0.4.3     generics_0.1.4     Formula_1.2-5     
 [13] backports_1.5.1    htmlwidgets_1.6.4  pillar_1.11.1      RColorBrewer_1.1-3
-[17] tzdb_0.5.0         rlang_1.3.0        stringi_1.8.9      xfun_0.58         
+[17] tzdb_0.5.0         rlang_1.2.0        stringi_1.8.7      xfun_0.62         
 [21] S7_0.2.2           otel_0.2.0         timechange_0.4.0   cli_3.6.6         
-[25] withr_3.0.3        magrittr_2.0.5     digest_0.6.39      grid_4.6.1        
+[25] withr_3.0.2        magrittr_2.0.5     digest_0.6.39      grid_4.6.0        
 [29] hms_1.1.4          lifecycle_1.0.5    vctrs_0.7.3        evaluate_1.0.5    
-[33] glue_1.8.1         farver_2.1.2       stats4_4.6.1       abind_1.4-8       
-[37] rmarkdown_2.31     tools_4.6.1        pkgconfig_2.0.3    htmltools_0.5.9   </code></pre>
+[33] glue_1.8.1         farver_2.1.2       stats4_4.6.0       abind_1.4-8       
+[37] rmarkdown_2.31     tools_4.6.0        pkgconfig_2.0.3    htmltools_0.5.9   </code></pre>
 </div>
 </div>
 <p><strong>Analysis pipeline:</strong></p>

@@ -246,6 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#a-share-that-listened-only-to-itself" id="toc-a-share-that-listened-only-to-itself" class="nav-link" data-scroll-target="#a-share-that-listened-only-to-itself">15. A share that listened only to itself</a></li>
   <li><a href="#making-a-full-backup-affordable" id="toc-making-a-full-backup-affordable" class="nav-link" data-scroll-target="#making-a-full-backup-affordable">16. Making a full backup affordable</a></li>
   <li><a href="#one-login-for-git" id="toc-one-login-for-git" class="nav-link" data-scroll-target="#one-login-for-git">17. One login for git</a></li>
+  <li><a href="#a-host-added-later-and-a-firewall-that-was-off" id="toc-a-host-added-later-and-a-firewall-that-was-off" class="nav-link" data-scroll-target="#a-host-added-later-and-a-firewall-that-was-off">18. A host added later, and a firewall that was off</a></li>
   </ul></li>
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
   <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
@@ -307,6 +308,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!--
 AUTHOR NOTES
 - Part 8 (final) of the security series: the audit narrative.
@@ -501,6 +515,13 @@ Note
 <p><strong>Checked:</strong> how each repository authenticates to the code host.</p>
 <p><strong>Broke:</strong> nothing, yet, but the mix was a liability: most project repositories used SSH keys while the dotfiles repository used the <code>gh</code> tool’s login.</p>
 <p><strong>Changed:</strong> project repositories moved to HTTPS remotes authenticated through the <code>gh</code> credential helper, whose token sits in the Keychain. A script rewrote only remotes pointing at the code host (over a hundred on the primary workstation) and confirmed along the way that no confidential, local-only repository had acquired such a remote. Two consequences were worth knowing in advance: the token needs the <code>workflow</code> scope before it can push changes to automated workflow files, and a command run over a plain SSH session into a Mac cannot reach the Keychain login, even though scheduled jobs in the logged-in session can. The same pass caught a blog post folder still pointing at the template repository it was copied from; it now has its own.</p>
+</section>
+<section id="a-host-added-later-and-a-firewall-that-was-off" class="level2">
+<h2 class="anchored" data-anchor-id="a-host-added-later-and-a-firewall-that-was-off">18. A host added later, and a firewall that was off</h2>
+<p><strong>Changed situation:</strong> the Linux laptop became a second host for offloaded simulations: an always-on role, with sleep disabled and the lid closed, reachable from the whole home network.</p>
+<p><strong>Checked:</strong> its firewall, for the first time. The audit of this machine in finding 5 used the same list as the Macs, and that list had no firewall item.</p>
+<p><strong>Broke:</strong> the firewall was installed but inactive, so SSH was open on every network interface, Wi-Fi included. As with finding 13, nothing had decided this: it was simply how a machine that had never been a server arrived.</p>
+<p><strong>Changed:</strong> the same default-deny policy as the home server: incoming connections denied by default, everything trusted on the Tailscale interface, SSH allowed only from the home network. Afterward each way in was checked to still work (a login over the home network, a login over Tailscale, the simulation service, and the local-network name), because a firewall that locks the owner out is also a failure. The Macs’ firewalls were not part of this work: one was seen to be on, with stealth mode; the other two were not checked.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
@@ -536,6 +557,7 @@ Note
 <li><strong>The blast radius of a fix is not always one machine.</strong> OAuth revocations, shared scripts, and broad symlink rules act on everything that uses the same mechanism. Know which kind of fix is in hand before applying it.</li>
 <li><strong>Rebuilding a machine from bare metal is the cheapest audit available,</strong> because a fresh machine has no accumulated exceptions hiding real gaps.</li>
 <li><strong>Write it down.</strong> Every finding went into the fleet’s internal reference the day it was fixed, which is why the second week’s failures were diagnosed in minutes rather than hours.</li>
+<li><strong>A machine’s role can change after its audit, and the audit does not follow.</strong> The laptop passed the list as a workstation; becoming a server added exposure the list never asked about, twice (findings 13 and 18). Re-run the relevant checks whenever a machine gains a job.</li>
 </ul>
 </section>
 <section id="limitations" class="level2">
@@ -555,6 +577,7 @@ Note
 <li>A scheduled restore test, so that “backed up” means “restored at least once.”</li>
 <li>Secret scanning on every commit to the dotfiles repository.</li>
 <li>A second exercise of the reinstall runbook, to find the parts that were specific to the first machine by accident.</li>
+<li>A firewall item in the audit list for every machine, with the check to run on the Macs as well as on the Linux hosts.</li>
 </ol>
 </section>
 </section>
@@ -594,7 +617,7 @@ Note
 </section>
 <section id="reproducibility" class="level1">
 <h1>Reproducibility</h1>
-<p>This post contains no executable analysis. The commands shown are the checks and the lock line used on the fleet during the audit. Environment at the time of writing: macOS 26.6 on the three Macs, Linux Mint 22.3 on the Linux laptop and Linux Mint on the home server, Borg 1.4.5, rclone 1.75, flock 0.4.0 (Homebrew). Exact command output, host names beyond the machine names, and addresses are omitted deliberately.</p>
+<p>This post contains no executable analysis. The commands shown are the checks and the lock line used on the fleet during the audit. Environment at the time of writing: macOS 26.6 on the three Macs, Linux Mint 22.3 on the Linux laptop and Linux Mint on the home server, Borg 1.4.5, rclone 1.75, flock 0.4.0 (Homebrew). Finding 18 was checked on 2026-10-11 against the running laptop (firewall state before and after, and each way in afterwards). Exact command output, host names beyond the machine names, and addresses are omitted deliberately.</p>
 <hr>
 </section>
 <section id="lets-connect" class="level1">

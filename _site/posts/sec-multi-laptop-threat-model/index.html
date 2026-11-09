@@ -309,6 +309,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR NOTES
 
@@ -362,6 +375,11 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <section id="the-fleet" class="level1">
 <h1>The Fleet</h1>
 <table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Name</th>
@@ -387,17 +405,17 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 </tr>
 <tr class="even">
 <td>mercury</td>
-<td>home server (repurposed 2016 MacBook Pro)</td>
+<td>home server (repurposed 2016 MacBook Pro); also a simulation host</td>
 <td>Linux Mint</td>
 </tr>
 <tr class="odd">
 <td>zeus</td>
-<td>Linux laptop (ThinkPad)</td>
+<td>Linux laptop (ThinkPad); also a second, faster simulation host</td>
 <td>Linux Mint 22</td>
 </tr>
 </tbody>
 </table>
-<p>All five machines encrypt their disks at rest: FileVault on the Macs, LUKS on the two Linux machines. Machines reach each other by their Tailscale addresses, which stay fixed when the home router hands out new LAN addresses; the LAN itself is used only for the Time Machine share on the home server. The home server runs a default-deny firewall. It holds the nightly Borg repositories for the other four machines and the Time Machine share for athena, and it backs up its own files to a repository on julia.</p>
+<p>All five machines encrypt their disks at rest: FileVault on the Macs, LUKS on the two Linux machines. Machines reach each other by their Tailscale addresses, which stay fixed when the home router hands out new LAN addresses. The LAN is used for the Time Machine share on the home server and, by default on two of the Macs, for the simulation service (with a Tailscale form of each alias for use away from home). Both Linux machines run a default-deny firewall: the home server’s has run since late September, and the laptop’s was found switched off on 2026-10-11 and turned on then. The home server holds the nightly Borg repositories for the other four machines and the Time Machine share for athena, and it backs up its own files to a repository on julia.</p>
 </section>
 <section id="what-is-a-threat-model" class="level1">
 <h1>What Is a Threat Model?</h1>
@@ -551,8 +569,9 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 </section>
 <section id="c5.-ssh-keys-one-per-relationship" class="level2">
 <h2 class="anchored" data-anchor-id="c5.-ssh-keys-one-per-relationship">C5. SSH Keys, One per Relationship</h2>
-<p>The fleet uses a separate SSH key pair for each relationship rather than one key per person or per machine: a key for each git host, a key for interactive logins between machines, and one key per machine for its nightly backup connection. Losing or exposing one key then affects one relationship.</p>
+<p>The fleet uses a separate SSH key pair for each relationship rather than one key per person or per machine: a key for each git host, a key for interactive logins between machines, one key per machine for its nightly backup connection, and one key per client machine for the simulation service. Losing or exposing one key then affects one relationship.</p>
 <p>The backup keys show the pattern at its strongest. On the home server, each backup key is pinned in <code>authorized_keys</code> to a forced command that permits only an append-only Borg session against that machine’s own repository. A leaked backup key can add data to one repository; it cannot open a shell, read other machines’ backups, or delete anything. Because SSH offers every key named in the user’s config file, the backup script uses a separate config file of its own so that only the restricted key is presented. The details are in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>.</p>
+<p>The same pattern covers a second service. A client machine that submits simulation jobs to a server has its own key, pinned to a forced command that runs a short gate script. The gate splits the original command into words without any shell and permits exactly two things: the one service program, and a git push into one folder. A leaked key of this kind cannot open a shell, copy files or forward a port. It can still submit jobs, which run code in a rootless container, so it is narrower than a login key, not harmless. Restricting the key also moved the security boundary into the service program, which had been written for a trusted caller and had to be hardened against hostile input; that story is in <a href="../zc-offload-simulations-home-server/">Offloading R Simulations to a Home Server</a>. A restricted key is only as safe as the service behind it.</p>
 <p>Two settings apply to every key entry: <code>IdentitiesOnly yes</code>, so that SSH offers only the key named for that host, and a comment on each public key naming the machine and the relationship, so that a list of authorized keys can be audited by eye.</p>
 </section>
 <section id="c6.-git-hosting-over-https" class="level2">
@@ -623,13 +642,17 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Authorized SSH keys on every machine: each comment names a</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    machine and a relationship; no unknown entries</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.ssh/authorized_keys <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{ print $NF }'</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 9. Keys and OAuth apps on each hosting account: review in the</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#    provider's settings pages; remove anything not recognized</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 10. The gh login is in the Keychain, not a plain file, and its</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     scopes are what you expect</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#    Restricted entries (backup, simulation) start with 'restrict' and</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#    a command= that names a program that exists; list them, and check</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#    that no machine has an unrestricted key it no longer needs</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">'^(restrict|command=)'</span> ~/.ssh/authorized_keys <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c1-110</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 9. Keys and OAuth apps on each hosting account: review in the</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#    provider's settings pages; remove anything not recognized</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 10. The gh login is in the Keychain, not a plain file, and its</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#     scopes are what you expect</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="ex">gh</span> auth status</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Dotfiles and drift (C4, C6, C9)</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 11. Nothing sensitive staged or tracked in the dotfiles repository</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> <span class="at">-C</span> ~/dotfiles status <span class="at">--short</span></span>
@@ -824,7 +847,7 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <li><code>analysis/configs/security-audit.sh</code>: a runnable macOS subset of an earlier version of the checklist; the checklist in this post is the current reference.</li>
 <li><code>analysis/configs/gpg-agent.conf</code>: a reference agent configuration with <code>pinentry-mac</code> and short cache lifetimes.</li>
 </ul>
-<p>Items 1, 3, 13, and 14 were run as written on julia (macOS), and items 1 and 15 on zeus (Linux), on 2026-10-01. The remaining items are the commands used during the first audit, collected here; they have not yet been run end to end as a single pass in this exact form. Item 9 is a manual review of provider settings pages, and item 17 needs the repository variables described in the backup post.</p>
+<p>Items 1, 3, 13, and 14 were run as written on julia (macOS), and items 1 and 15 on zeus (Linux), on 2026-10-01. The authorized-keys listing in item 8 was run on the home server and on zeus on 2026-10-12, and showed the restricted backup and simulation entries; the <code>grep</code> line added to item 8 was not run in exactly that form. The remaining items are the commands used during the first audit, collected here; they have not yet been run end to end as a single pass in this exact form. Item 9 is a manual review of provider settings pages, and item 17 needs the repository variables described in the backup post.</p>
 <hr>
 </section>
 <section id="lets-connect" class="level1">

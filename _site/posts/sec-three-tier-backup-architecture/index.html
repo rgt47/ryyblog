@@ -314,6 +314,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!--
 AUTHOR NOTES
   Post 5 of the security series. Owns: the backup architecture (Borg,
@@ -494,7 +507,7 @@ Host mercury
 </section>
 <section id="what-is-included" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-included">What is included</h2>
-<p>The include list names directories explicitly rather than archiving the whole home directory: the project tree (<code>~/prj</code>), documents (<code>~/docs</code>), the dotfiles repository, and the secrets that exist nowhere else: <code>.gnupg</code>, <code>.password-store</code>, <code>.aws</code>, <code>.Renviron</code>, and <code>.env</code> files. The Linux laptop archives its whole home directory with excludes. Caches, package libraries (<code>renv/library</code>, <code>node_modules</code>, virtual environments), and build artifacts are excluded everywhere.</p>
+<p>The include list names directories explicitly rather than archiving the whole home directory: the project tree (<code>~/prj</code>), documents (<code>~/docs</code>), the dotfiles repository, and the secrets that exist nowhere else: <code>.gnupg</code>, <code>.password-store</code>, <code>.aws</code>, <code>.Renviron</code>, and <code>.env</code> files. The Linux laptop archives its whole home directory with excludes. Caches, package libraries (<code>renv/library</code>, <code>node_modules</code>, virtual environments), and build artifacts are excluded everywhere. So is the scratch folder (<code>~/compute</code>) that the two simulation hosts use for job runs: everything in it can be regenerated from a commit and the project’s data, and finished results are fetched back to the workstation that submitted the job, where the ordinary include list covers them. See <a href="../zc-offload-simulations-home-server/">Offloading R Simulations to a Home Server</a>.</p>
 <p>Including <code>.gnupg</code> and <code>.password-store</code> may look redundant, since the same key and vault exist on several machines and the vault has its own git history. The reason is that replication is not backup: an accidental deletion in the vault propagates to every machine at the next sync. A dated Borg archive is the copy that predates the mistake.</p>
 </section>
 <section id="scheduling" class="level2">

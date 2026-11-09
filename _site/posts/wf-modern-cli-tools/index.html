@@ -308,6 +308,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -387,7 +400,7 @@ CONTACT & METADATA
 <ul>
 <li>The <code>grep</code> reflex of <code>grep -r</code> plus a shell-quoted glob pattern produces matches inside <code>node_modules/</code>, <code>.git/</code>, build directories, and binary files in roughly equal measure. The signal-to-noise ratio degrades to the point where the output is more frustrating than absent.</li>
 <li>The <code>find</code> syntax (<code>find . -name '*.R' -not -path './renv/*'</code>) is hard to remember between sessions and hard to read in a script. The cost of forgetting the syntax is a context switch to read the man page; the cost of remembering it imperfectly is silent inclusion or exclusion of files the user did not intend.</li>
-<li>The <code>cd</code> reflex (<code>cd ~/Dropbox/prj/03-name/...</code>) is re-typed dozens of times per day across the same set of project roots. Tab completion helps but does not learn.</li>
+<li>The <code>cd</code> reflex (<code>cd ~/prj/03-name/...</code>) is re-typed dozens of times per day across the same set of project roots. Tab completion helps but does not learn.</li>
 <li><code>git diff</code> in a terminal that does not paginate syntax-highlighted output is the operation the author most often defers to RStudio for, despite the rest of their workflow being terminal-native. The friction is small per invocation and large in aggregate.</li>
 <li>The construct already includes <code>j</code> (autojump) for fuzzy directory navigation. The autojump implementation (Python, single user-level database, occasional startup-time slowness on large <code>cdpath</code> sets) has been superseded by <code>zoxide</code> (Rust, multi-user-aware, faster startup), and the migration preserves the <code>j</code> muscle memory.</li>
 </ul>
@@ -426,8 +439,8 @@ CONTACT & METADATA
 <p>The configuration assumes:</p>
 <ul>
 <li><strong>Operating system:</strong> macOS 13+ with Homebrew, or Debian-derived Linux with <code>apt</code> and access to the project’s GitHub releases for the few cases where the distribution package lags upstream.</li>
-<li><strong>Shell:</strong> zsh 5.0 or later (post 01 prerequisite). The configuration block below is zsh-specific; bash users will need to translate the function syntax.</li>
-<li><strong>Existing construct setup:</strong> the dotfiles repository (post 24) and the zsh setup (post 01) should already be in place. The configuration here is a single block added to <code>.zshrc</code>; the canonical place for it is just below the existing FZF configuration.</li>
+<li><strong>Shell:</strong> zsh 5.0 or later, as configured in <a href="../wf-unix-workspace-config/">Unix Command-Line Workspace Setup</a>. The configuration block below is zsh-specific; bash users will need to translate the function syntax.</li>
+<li><strong>Existing construct setup:</strong> the dotfiles repository (<a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a>) and the zsh setup (<a href="../wf-unix-workspace-config/">Unix Command-Line Workspace Setup</a>) should already be in place. This post is written to be read after both, and the ordering matters: the configuration below is appended to a <code>.zshrc</code> that the dotfiles repository is expected to be tracking already. A reader who installs these tools first will paste the block into an unversioned file and lose it on the next machine. The configuration here is a single block added to <code>.zshrc</code>; the canonical place for it is just below the existing FZF configuration.</li>
 <li><strong>Time investment:</strong> approximately 30 minutes for installation, 15 minutes for configuration, and a further 15 minutes for the autojump-to-zoxide database migration if applicable. The total is under an hour for users starting from the construct’s existing zsh setup.</li>
 </ul>
 </section>
@@ -466,9 +479,9 @@ CONTACT & METADATA
 </section>
 <section id="configuration" class="level1">
 <h1>Configuration</h1>
-<p>The full <code>.zshrc</code> block to activate the family follows. It is intended to live just below the existing FZF block in <code>~/Dropbox/dotfiles/zshrc</code> (the construct’s canonical dotfile location, post 24).</p>
+<p>The full <code>.zshrc</code> block to activate the family follows. It is intended to live just below the existing FZF block in <code>~/dotfiles/zshrc</code>, the construct’s canonical dotfile location per <a href="../wf-multi-laptop-dotfiles-bootstrap/">Multi-Laptop macOS Bootstrap</a>. Note that the dotfiles repository lives outside any cloud-synced directory; earlier versions of the construct kept it under <code>~/Dropbox/</code>, and that path should not be used for new setups.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode zsh code-with-copy"><code class="sourceCode zsh"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Modern CLI Replacements (post 53)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Modern CLI Replacements</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ============================================================</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># zoxide: replaces cd's frequency table; '--cmd j' aliases the</span></span>
@@ -615,7 +628,7 @@ CONTACT & METADATA
 </tr>
 <tr class="even">
 <td>Jump to known directory</td>
-<td><code>cd ~/Dropbox/prj/...</code></td>
+<td><code>cd ~/prj/...</code></td>
 <td><code>j keyword</code></td>
 <td>Frecency-based, fuzzy</td>
 </tr>
@@ -667,7 +680,7 @@ CONTACT & METADATA
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">brew</span> uninstall ripgrep fd bat eza zoxide git-delta lazygit fzf</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove the .zshrc block: delete or comment out the</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 'Modern CLI Replacements (post 53)' section.</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 'Modern CLI Replacements' section.</span></span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove delta from ~/.gitconfig: delete the [core], [delta],</span></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># [merge], [diff], [interactive] sections (or revert the</span></span>
@@ -695,7 +708,7 @@ CONTACT & METADATA
 <ul>
 <li><strong>A Shell-layer extension is exactly that, an extension.</strong> None of the tools above replaces the layer; each adds an alternative under a new name and an optional alias under the historical name. This is the cleanest pattern for any layer-extension work in the construct: keep the historical tool reachable, add the modern tool alongside, let the user choose per invocation.</li>
 <li><strong>Sensible defaults are the bulk of the value, not raw speed.</strong> Of the eight tools, only <code>ripgrep</code> and <code>fd</code> show meaningfully better wall-clock performance on small inputs. The other six are roughly comparable in speed to their historical predecessors and earn their place through colorization, git awareness, syntax highlighting, and <code>.gitignore</code> respect. Speed matters on large inputs but is not the primary reason to adopt.</li>
-<li><strong>Frecency-based directory navigation pays the largest per-keystroke dividend.</strong> The substitution from <code>cd ~/Dropbox/prj/03-name/...</code> to <code>j 03</code> saves a measurable fraction of a working day across hundreds of invocations. None of the other substitutions has the same per-keystroke ratio.</li>
+<li><strong>Frecency-based directory navigation pays the largest per-keystroke dividend.</strong> The substitution from <code>cd ~/prj/03-name/...</code> to <code>j 03</code> saves a measurable fraction of a working day across hundreds of invocations. None of the other substitutions has the same per-keystroke ratio.</li>
 <li><strong>Polyglot shell-script modules earn their keep on the Linux side.</strong> The macOS path is uniformly <code>brew install</code>; the Debian path is a mix of <code>apt install</code>, project release downloads, and personal <code>~/.local/bin</code> symlinks. The construct’s shell-scripts row absorbs this complexity by version-controlling the install recipe rather than re-deriving it on each new machine.</li>
 </ul>
 </section>
@@ -735,7 +748,7 @@ CONTACT & METADATA
 <li><strong>A second pass for <code>procs</code>, <code>dust</code>, and <code>bottom</code>.</strong> The <code>ps</code> / <code>du</code> / <code>top</code> triumvirate has Rust replacements that follow the same pattern. They are not load-bearing for the construct but are pleasant to have; a follow-up post could document them as a Tier-A optional addition.</li>
 <li><strong>A Nerd Font setup post.</strong> The icon-rendering prerequisite for <code>eza --icons</code> is a small but persistent blocker; a one-page post documenting font selection, installation, and terminal configuration would close the gap.</li>
 <li><strong><code>lazygit</code> configuration walkthrough.</strong> The default <code>lazygit</code> is fine; the configurable bits (delta as diff viewer, custom command bar shortcuts, alternate keybindings for <code>vim</code>-style users) would warrant a companion post if the reader spends substantial time in the TUI.</li>
-<li><strong>A <code>mise</code>-managed installation path.</strong> <code>mise</code> (covered in post 54) can pin the versions of these binaries for per-project reproducibility. The version-pinning approach is overkill for personal use but is the right layer for team-scale installations where bug reports tracing to subtle eza / delta version differences between collaborators are common.</li>
+<li><strong>A <code>mise</code>-managed installation path.</strong> <code>mise</code>, a polyglot runtime version manager, can pin the versions of these binaries for per-project reproducibility. The version-pinning approach is overkill for personal use but is the right layer for team-scale installations where bug reports tracing to subtle eza / delta version differences between collaborators are common.</li>
 <li><strong>A Linux-side install script in <code>~/bin/</code>.</strong> The Debian recipe in this post should be promoted to a first-class shell script in the construct’s shell-scripts row. The script accepts a list of tool names and installs them via <code>apt</code>, <code>~/.local/bin</code> symlink, or upstream release as appropriate.</li>
 </ol>
 </section>

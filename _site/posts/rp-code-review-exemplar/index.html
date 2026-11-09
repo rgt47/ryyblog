@@ -310,6 +310,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -760,13 +773,13 @@ License: GPL (&gt;= 3) + file LICENSE</code></pre>
 <p><strong>Session information:</strong></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.1 (2026-06-24)
-Platform: aarch64-apple-darwin25.4.0
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
 Running under: macOS Tahoe 26.6.2
 
 Matrix products: default
-BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
-LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -778,10 +791,10 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 loaded via a namespace (and not attached):
- [1] htmlwidgets_1.6.4 compiler_4.6.1    fastmap_1.2.0     cli_3.6.6        
- [5] tools_4.6.1       htmltools_0.5.9   parallel_4.6.1    otel_0.2.0       
+ [1] htmlwidgets_1.6.4 compiler_4.6.0    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.0       htmltools_0.5.9   parallel_4.6.0    otel_0.2.0       
  [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
-[13] xfun_0.58         digest_0.6.39     rlang_1.3.0       evaluate_1.0.5   </code></pre>
+[13] xfun_0.62         digest_0.6.39     rlang_1.2.0       evaluate_1.0.5   </code></pre>
 </div>
 </div>
 <hr>
@@ -813,7 +826,7 @@ PRE-PUBLISH QA CHECKLIST — verify each item BEFORE setting draft: false
     [x] Zero emoji anywhere
     [x] Zero em dashes
     [x] Single quotes preferred over double quotes in prose
-    [x] Epistemic disclosure present: coverage/verdict figures flagged as
+    [x] Confidence disclosure present: coverage/verdict figures flagged as
         carried over from source, not independently re-verified
 
 [ ] Cross-references

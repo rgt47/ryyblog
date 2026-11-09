@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-04-24">
-<meta name="description" content="I did not really appreciate how much structural decision-making goes into a textbook until I tried to draft two at once, both under the ‘in the Age of AI’ framing.">
+<meta name="description" content="A textbook demands more structural decision-making than it appears to, and drafting two at once makes every one of those decisions explicit, both under the ‘in the Age of AI’ framing.">
 
 <title>Building a statistical computing textbook in the Age of AI – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Building a statistical computing textbook in the Age of AI – focusonr">
-<meta property="og:description" content="I did not really appreciate how much structural decision-making goes into a textbook until I tried to draft two at once, both under the ‘in the Age of AI’ framing.">
+<meta property="og:description" content="A textbook demands more structural decision-making than it appears to, and drafting two at once makes every one of those decisions explicit, both under the ‘in the Age of AI’ framing.">
 <meta property="og:image" content="https://focusonr.org/posts/pub-statistical-computing-textbook/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="800">
 <meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="Building a statistical computing textbook in the Age of AI – focusonr">
-<meta name="twitter:description" content="I did not really appreciate how much structural decision-making goes into a textbook until I tried to draft two at once, both under the ‘in the Age of AI’ framing.">
+<meta name="twitter:description" content="A textbook demands more structural decision-making than it appears to, and drafting two at once makes every one of those decisions explicit, both under the ‘in the Age of AI’ framing.">
 <meta name="twitter:image" content="https://focusonr.org/posts/pub-statistical-computing-textbook/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really appreciate how much structural decision-making goes into a textbook until I tried to draft two at once, both under the ‘in the Age of AI’ framing.
+    A textbook demands more structural decision-making than it appears to, and drafting two at once makes every one of those decisions explicit, both under the ‘in the Age of AI’ framing.
   </div>
 </div>
 
@@ -304,6 +304,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 HERO IMAGE
 ============================================================================ -->
@@ -316,7 +329,7 @@ HERO IMAGE
 <p><em>A textbook’s subtitle is a commitment. ‘In the Age of AI’ commits the author to explaining where the human-LLM division of labor actually falls for each topic.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really appreciate how much structural decision-making goes into a textbook until I tried to draft two of them at once. A methods volume (‘Statistical Computing in the Age of AI’) and a workflow companion (‘Biostatistics Practicum’) were both overdue, and I wanted them to share enough scaffolding that a student could move between them without reorienting.</p>
+<p>A textbook demands more structural decision-making than it appears to, and drafting two of them at once makes every one of those decisions explicit. A methods volume (‘Statistical Computing in the Age of AI’) and a workflow companion (‘Biostatistics Practicum’) were both overdue, and I wanted them to share enough scaffolding that a student could move between them without reorienting.</p>
 <p>The turning point came when I stopped treating ‘in the Age of AI’ as a subtitle and started treating it as a structural obligation. Three short prose sections of ‘Prompts to try’ at the end of each chapter was decoration. What the subtitle required was an explicit front-loaded treatment of what the human statistician contributes, paired with an end-of-chapter verification workflow that exercises those contributions.</p>
 <p>We walk through the decisions that produced the two books’ current state: chapter template, visual design, bibliography growth, and the specific AI-collaboration pattern. The post is a retrospective on one working session, not a finished tutorial. Readers drafting a domain-specific textbook can probably save themselves some of the back-tracking documented here.</p>
 <p>More formally, we document here the convergence of the Knowledge Management and LLM-Augmented Editing concerns of the Workflow Construct described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>. Authoring a textbook is the largest-scale knowledge-management task most academics will undertake; doing so ‘in the age of AI’ surfaces specifically how the LLM-augmented editing layer interacts with the file-system, document, and bibliographic layers below it. The retrospective documented here is one working session worth of evidence on how those layers compose under sustained use.</p>
@@ -690,8 +703,9 @@ PRE-PUBLISH QA CHECKLIST
 <li><a href="../pub-multi-language-quarto/">Multi-Language Quarto Documents on macOS</a></li>
 <li><a href="../pub-r-script-to-rmd/">Rapid Conversion of Draft R Scripts to Formal Rmd</a></li>
 <li><strong>Building a Statistical Computing Textbook</strong> (this post)</li>
-<li><a href="../pub-obs-r-screencasts/">Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks</a></li>
+<li><a href="../pub-open-textbook-guidebook/">What Makes an Open Textbook Work: A Guidebook for New Authors</a></li>
 <li><a href="../pub-hosting-quarto-books-netlify/">Hosting a Quarto Book Series on Netlify</a></li>
+<li><a href="../pub-obs-r-screencasts/">Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks</a></li>
 <li><a href="../pub-ai-course-policy-survey/">A Review and Proposal for Policy Regarding Generative AI Use in Graduate Biostatistics Courses</a></li>
 </ol>
 

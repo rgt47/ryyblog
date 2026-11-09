@@ -303,6 +303,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -401,7 +414,7 @@ CONTACT & METADATA
 <p>This post assumes:</p>
 <ul>
 <li><strong>zzcollab</strong> is installed and a compendium has been initialized with <code>zzc analysis</code> or equivalent.</li>
-<li>The compendium contains a <code>tools/stage-render.R</code> file (present in all compendiums created with zzcollab 0.4+).</li>
+<li>The compendium contains a <code>tools/stage-render.R</code> file. Test for it directly with <code>ls tools/stage-render.R</code> rather than inferring it from a version number. A compendium scaffolded by a zzcollab that predates the hook will not have it, and the nearest equivalent in current templates is <code>tools/stamp-render.R</code>, which is not a drop-in substitute.</li>
 <li>The <code>report.Rmd</code> uses <code>bookdown::pdf_document2</code> or <code>pdf_document</code> as its output format.</li>
 <li><strong>LaTeX packages</strong> <code>lineno</code>, <code>setspace</code>, and <code>booktabs</code> are available in the container’s TeX distribution (they are included in TeX Live 2023+, which ships in the zzcollab Docker image).</li>
 <li><strong>R packages:</strong> <code>rmarkdown</code>, <code>bookdown</code>, and <code>knitr</code> are in the compendium’s <code>renv.lock</code>.</li>
@@ -474,8 +487,8 @@ CONTACT & METADATA
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>---</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>*Rendered on 2026-08-28 at 19:49 PDT.*  </span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>*Source: `~/prj/ryyblog/posts/zc-manuscript-report-elements/index.rmarkdown`*</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>*Rendered on 2026-11-09 at 12:19 PST.*  </span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>*Source: `/Users/zenn/prj/web/ryyblog/posts/zc-manuscript-report-elements/index.rmarkdown`*</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>(In practice, name the chunk <code>footer</code> as shown; the label is renamed here only to avoid a knitr duplicate-label error within this post’s own render.)</p>
 <p><code>\vfill</code> pushes the footer to the bottom of the last page, regardless of how much content precedes it. The substitution pattern handles both direct Dropbox paths and the <code>Library/CloudStorage/Dropbox</code> mount point used on macOS. The result is a line such as:</p>
 <pre><code>Rendered on 2026-05-25 at 14:30 PDT.
@@ -489,7 +502,7 @@ Source: ~/prj/res/01-myproject/myproject/analysis/report/01-paper/report.Rmd</co
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="pp">---</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"Manuscript Title"</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">author</span><span class="kw">:</span><span class="at"> </span><span class="st">"Author Name, Ph.D.</span><span class="sc">\\</span><span class="st">thanks{Institution; ORCID: 0000-0000-0000-0000}"</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">date</span><span class="kw">:</span><span class="at"> </span><span class="st">'2026-08-28'</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">date</span><span class="kw">:</span><span class="at"> </span><span class="st">'2026-11-09'</span></span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">output</span><span class="kw">:</span></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="at">  bookdown:</span><span class="fu">:pdf_document2</span><span class="kw">:</span></span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">toc</span><span class="kw">:</span><span class="at"> </span><span class="ch">true</span></span>
@@ -520,8 +533,8 @@ Source: ~/prj/res/01-myproject/myproject/analysis/report/01-paper/report.Rmd</co
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>---</span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>*Rendered on 2026-08-28 at 19:49 PDT.*  </span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>*Source: `~/prj/ryyblog/posts/zc-manuscript-report-elements/index.rmarkdown`*</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>*Rendered on 2026-11-09 at 12:19 PST.*  </span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>*Source: `/Users/zenn/prj/web/ryyblog/posts/zc-manuscript-report-elements/index.rmarkdown`*</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The full generic checklist is at <code>docs/zzc-rmd-format-checklist.md</code>.</p>
 </section>
 <section id="daily-workflow" class="level1">
@@ -694,8 +707,8 @@ Source: ~/prj/res/01-myproject/myproject/analysis/report/01-paper/report.Rmd</co
 <li><code>docs/zzc-rmd-format-checklist.md</code>: generic checklist for all seven elements, suitable for pasting into a new compendium README or adding to a project wiki.</li>
 </ul>
 <hr>
-<p><em>Rendered on 2026-08-28 at 19:49 PDT.</em><br>
-<em>Source: <code>~/prj/ryyblog/posts/zc-manuscript-report-elements/index.rmarkdown</code></em></p>
+<p><em>Rendered on 2026-11-09 at 12:19 PST.</em><br>
+<em>Source: <code>/Users/zenn/prj/web/ryyblog/posts/zc-manuscript-report-elements/index.rmarkdown</code></em></p>
 <hr>
 </section>
 <section id="lets-connect" class="level1">
@@ -769,6 +782,7 @@ PRE-PUBLISH QA CHECKLIST: verify each item BEFORE setting draft: false
 <li><strong>Post 06: Seven Required Elements for a zzc Manuscript report.Rmd</strong> (this post)</li>
 <li>Post 07: <a href="../zc-tiered-ci-strategy/">A tiered CI strategy for zzcollab research compendia</a></li>
 <li>Post 08: <a href="../zc-github-actions-workflows/">GitHub Actions workflows for zzcollab research compendia</a></li>
+<li>Post 09: <a href="../zc-offload-simulations-home-server/">Offloading R Simulations to a Home Server</a></li>
 </ol>
 
 

@@ -306,6 +306,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -315,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Structured workflows turn scattered research notes into a searchable knowledge base.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how to maintain a consistent research log until I started losing track of what I had accomplished across ten concurrent projects. The problem was not motivation; it was friction. Opening a text editor, remembering the right file, formatting the entry, and committing the changes felt like too many steps for something that should take sixty seconds.</p>
+<p>Maintaining a consistent research log is harder than it sounds, and I started losing track of what I had accomplished across ten concurrent projects. The problem was not motivation; it was friction. Opening a text editor, remembering the right file, formatting the entry, and committing the changes felt like too many steps for something that should take sixty seconds.</p>
 <p>The first version of this idea was sketched out but never actually built. It was a three-script pipeline: dictate into ChatGPT’s web interface, copy the summary to the clipboard, and run a script to append it to a single tagged log file. What I actually ended up building and using every day is different in almost every respect. It is one script, <code>tn</code>, and it talks to Google’s Gemini API directly through <code>curl</code>, with no browser and no clipboard hop in the middle.</p>
 <p>This post documents <code>tn</code> as it exists on disk today: what it stores, how the pieces fit together, and where its rough edges are. Some of those rough edges are worth calling out explicitly. They are the kind of thing that is easy to miss when a script has grown past its original design in small increments.</p>
 <p>More formally, this documents the file-system layer of the Workflow Construct described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>. The convention that all research projects live under <code>~/prj/NN-name/</code> and are synced continuously by Dropbox is the substrate <code>tn</code> depends on. Its notes directory, <code>~/prj/research_update</code>, is itself a Dropbox-synced path, even though (as covered below) it is not a Git repository.</p>

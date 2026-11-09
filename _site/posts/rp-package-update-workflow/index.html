@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-02-11">
-<meta name="description" content="I did not really understand the full lifecycle of modifying an R package until I had to push a feature branch through CI/CD and watch it either pass or fail on three operating systems. This post walks through the entire process.">
+<meta name="description" content="The full lifecycle of modifying an R package becomes visible only when a feature branch goes through CI/CD and either passes or fails on three operating systems. This post walks through the entire process.">
 
 <title>Updating an R Package: A Complete Development Workflow – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Updating an R Package: A Complete Development Workflow – focusonr">
-<meta property="og:description" content="I did not really understand the full lifecycle of modifying an R package until I had to push a feature branch through CI/CD and watch it either pass or fail on three operating systems. This post walks through the entire process.">
+<meta property="og:description" content="The full lifecycle of modifying an R package becomes visible only when a feature branch goes through CI/CD and either passes or fails on three operating systems. This post walks through the entire process.">
 <meta property="og:image" content="https://focusonr.org/posts/rp-package-update-workflow/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="800">
 <meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="Updating an R Package: A Complete Development Workflow – focusonr">
-<meta name="twitter:description" content="I did not really understand the full lifecycle of modifying an R package until I had to push a feature branch through CI/CD and watch it either pass or fail on three operating systems. This post walks through the entire process.">
+<meta name="twitter:description" content="The full lifecycle of modifying an R package becomes visible only when a feature branch goes through CI/CD and either passes or fails on three operating systems. This post walks through the entire process.">
 <meta name="twitter:image" content="https://focusonr.org/posts/rp-package-update-workflow/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really understand the full lifecycle of modifying an R package until I had to push a feature branch through CI/CD and watch it either pass or fail on three operating systems. This post walks through the entire process.
+    The full lifecycle of modifying an R package becomes visible only when a feature branch goes through CI/CD and either passes or fails on three operating systems. This post walks through the entire process.
   </div>
 </div>
 
@@ -318,6 +318,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -327,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Setting up a reproducible R package development workflow.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really understand how much discipline goes into modifying an R package until I tried to push a change to one of my own projects and watched CI fail on three platforms simultaneously. It turns out that editing an R file is the easy part; the surrounding workflow of branching, documenting, testing, building, and integrating with GitHub Actions is what separates a quick fix from a reliable contribution.</p>
+<p>Modifying an R package takes more discipline than it appears to. I pushed a change to one of my own projects and watched CI fail on three platforms simultaneously. Editing an R file is the easy part; the surrounding workflow of branching, documenting, testing, building, and integrating with GitHub Actions is what separates a quick fix from a reliable contribution.</p>
 <p>The scenario is straightforward: an existing R package is hosted on GitHub and a feature must be added, a bug fixed, or error handling improved. The change itself might be small, but the process of getting it safely merged involves a surprising number of steps.</p>
 <p>This post documents the complete workflow I learned while modifying my own package, <code>zzdataframe2graphic</code>. Every step from creating a feature branch to cleaning up after a merge is covered, with the goal of making the process repeatable for future changes.</p>
 <p>More formally, this post documents the R-packages layer of the Workflow Construct described in <a href="../../posts/15-wf-construct-overview-anchor/">post 15</a>, specifically the maintenance loop that keeps an existing package healthy across a working biostatistician’s many simultaneous projects. The construct’s R-packages layer holds a small set of author-maintained <code>zz*</code> packages; this post covers how to update one of them, not how to author a new package from scratch.</p>
@@ -727,13 +740,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.1 (2026-06-24)
-Platform: aarch64-apple-darwin25.4.0
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
 Running under: macOS Tahoe 26.6.2
 
 Matrix products: default
-BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
-LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -745,10 +758,10 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 loaded via a namespace (and not attached):
- [1] htmlwidgets_1.6.4 compiler_4.6.1    fastmap_1.2.0     cli_3.6.6        
- [5] tools_4.6.1       htmltools_0.5.9   parallel_4.6.1    otel_0.2.0       
+ [1] htmlwidgets_1.6.4 compiler_4.6.0    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.0       htmltools_0.5.9   parallel_4.6.0    otel_0.2.0       
  [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
-[13] xfun_0.58         digest_0.6.39     rlang_1.3.0       evaluate_1.0.5   </code></pre>
+[13] xfun_0.62         digest_0.6.39     rlang_1.2.0       evaluate_1.0.5   </code></pre>
 </div>
 </div>
 </section>

@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ronald G. Thomas">
+<meta name="dcterms.date" content="2026-09-07">
+<meta name="description" content="Open licensing reliably buys access and retention, and it buys no pedagogy at all. A survey of the efficacy studies, 954 reviewer assessments, and author retrospectives, assembled as practical guidance for anyone starting a free textbook.">
+
+<title>What Makes an Open Textbook Work: A Guidebook for New Authors – focusonr</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d1f979f567abd94e3c058709025db867.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Open+Sans:ital,wght@0,400;0,600;1,400&amp;family=Fira+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0fba9333d8.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+<!-- Custom meta tags for social sharing -->
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@rgt47">
+
+<!-- Add responsive features -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Add analytics if needed -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script> -->
+
+<!-- Add custom javascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove code tools button completely
+  const codeButton = document.querySelector('.code-tools-button');
+  if (codeButton) {
+    codeButton.remove();
+  }
+
+  // Smooth scrolling for in-page anchor links (skip listing category elements)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    if (anchor.closest('.quarto-listing-category')) return;
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+});
+</script>
+<meta name="quarto:status" content="draft">
+
+
+<meta property="og:title" content="What Makes an Open Textbook Work: A Guidebook for New Authors – focusonr">
+<meta property="og:description" content="Open licensing reliably buys access and retention, and it buys no pedagogy at all. A survey of the efficacy studies, 954 reviewer assessments, and author retrospectives, assembled as practical guidance for anyone starting a free textbook.">
+<meta property="og:image" content="https://focusonr.org/posts/pub-open-textbook-guidebook/media/images/hero.jpg">
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:title" content="What Makes an Open Textbook Work: A Guidebook for New Authors – focusonr">
+<meta name="twitter:description" content="Open licensing reliably buys access and retention, and it buys no pedagogy at all. A survey of the efficacy studies, 954 reviewer assessments, and author retrospectives, assembled as practical guidance for anyone starting a free textbook.">
+<meta name="twitter:image" content="https://focusonr.org/posts/pub-open-textbook-guidebook/media/images/hero.jpg">
+<meta name="twitter:creator" content="@rgt47">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">focusonr</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://rgtlab.org"> 
+<span class="menu-text">rgtlab.org</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/rgt47"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  </ul></li>
+  <li><a href="#what-the-evidence-actually-supports" id="toc-what-the-evidence-actually-supports" class="nav-link" data-scroll-target="#what-the-evidence-actually-supports">What the Evidence Actually Supports</a></li>
+  <li><a href="#how-open-textbooks-actually-fail" id="toc-how-open-textbooks-actually-fail" class="nav-link" data-scroll-target="#how-open-textbooks-actually-fail">How Open Textbooks Actually Fail</a></li>
+  <li><a href="#tips" id="toc-tips" class="nav-link" data-scroll-target="#tips">Tips</a></li>
+  <li><a href="#dos-and-donts" id="toc-dos-and-donts" class="nav-link" data-scroll-target="#dos-and-donts">Dos and Don’ts</a></li>
+  <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a>
+  <ul class="collapse">
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a></li>
+  </ul></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a>
+  <ul class="collapse">
+  <li><a href="#related-posts-in-this-cluster" id="toc-related-posts-in-this-cluster" class="nav-link" data-scroll-target="#related-posts-in-this-cluster">Related posts in this cluster</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">What Makes an Open Textbook Work: A Guidebook for New Authors</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">teaching</div>
+    <div class="quarto-category">open-education</div>
+    <div class="quarto-category">textbooks</div>
+    <div class="quarto-category">publishing</div>
+    <div class="quarto-category">pedagogy</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Open licensing reliably buys access and retention, and it buys no pedagogy at all. A survey of the efficacy studies, 954 reviewer assessments, and author retrospectives, assembled as practical guidance for anyone starting a free textbook.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta column-page-left">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ronald G. Thomas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 7, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
+<!-- ============================================================================
+AUTHOR PROVIDES — concrete inputs the blogger must supply
+
+YAML FRONT MATTER
+  [x] title, date, categories, description filled in
+  [ ] draft: false    — flip when ready
+
+IMAGES (4 total: hero + 3 ambiance, all in media/images/)
+  [ ] Hero image (80% width)
+  [ ] Ambiance image 1 — after Objectives
+  [ ] Ambiance image 2 — before the Tips section
+  [ ] Ambiance image 3 — before Lessons Learned
+  [ ] media/images/README.md — sources + attribution for every image
+
+STATUS
+  Every numeric claim below carries an inline link to its source.
+  Findings were gathered by web search on 2026-09-07. The reading-
+  compliance figures and the Hilton syntheses were read as secondary
+  summaries rather than primary articles; they are labeled as such in
+  the Reproducibility section. Re-verify before publication if more
+  than a few months have passed.
+============================================================================ -->
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+<p><em>An open license is a distribution decision, not a teaching decision: it determines who can open the book, and nothing at all about what happens after they do.</em></p>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>An open license buys something other than what prospective authors expect, as the meta-analysis that ought to be the first thing every open-textbook author sees makes plain. Clinton and Khan pooled 22 comparisons covering slightly over one hundred thousand students and found the difference in learning between open and commercial textbooks to be, for practical purposes, zero (Hedges’ g = 0.01, p = .87). In the same analysis, across 11 comparisons and roughly 78,000 students, course withdrawal was substantially lower under open texts (odds ratio 0.71, p = .005). The result is <a href="https://journals.sagepub.com/doi/10.1177/2332858419872212">published in <em>AERA Open</em></a>.</p>
+<p>The two findings together are the most useful thing in this literature, and they are usually reported one at a time by people with a position to defend. Read together they say something specific. Openness reliably buys access, and access buys retention. Openness buys no pedagogy whatsoever. A free book is not thereby a good book, and the license confers nothing on the prose.</p>
+<p>That is a liberating finding rather than a discouraging one, because it locates the work. If the license did the teaching, an author would have little left to decide. Since it does not, the ordinary craft questions return with full force: how long a chapter should be, where the worked examples go, whether the exercises have answers, whether a student can find anything in a 700-page PDF. This post is an attempt to answer those questions from evidence rather than from taste, drawing on the efficacy literature, on 954 reviewer assessments of open textbooks, and on retrospectives by authors who have actually maintained a free book for a decade.</p>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<ul>
+<li>I am drafting two open textbooks of my own, and I wanted to know whether the design decisions I had been making by instinct were supported by anything.</li>
+<li>The advocacy literature on open educational resources is heavily weighted toward cost and access. It is comparatively quiet on craft, which is the part an author actually controls.</li>
+<li>Reviewer data on open textbooks exists in bulk and is rarely read as what it is: a large, systematic account of how these books fail.</li>
+<li>New authors appear to repeat a small number of avoidable mistakes. A guidebook seemed more useful than another argument for adoption.</li>
+</ul>
+</section>
+<section id="objectives" class="level2">
+<h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
+<ol type="1">
+<li>Separate what open licensing demonstrably delivers from what it demonstrably does not.</li>
+<li>Extract, from reviewer and student data, the specific failure modes that recur across open textbooks.</li>
+<li>Convert those findings into tips and into a dos-and-don’ts list an author can apply while drafting.</li>
+<li>State plainly where the evidence is thin, so that a reader can discount the weaker recommendations appropriately.</li>
+</ol>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance1.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+</section>
+<section id="what-the-evidence-actually-supports" class="level1">
+<h1>What the Evidence Actually Supports</h1>
+<p>We begin with the claims that are safe to make, since a guidebook that overstates its evidence is a poor advertisement for scholarly habits.</p>
+<p><strong>Access effects are large and concentrated.</strong> In a Florida statewide survey, 64.2% of students reported not purchasing a required text because of cost, 42.8% reported taking fewer courses, and 35.6% attributed a poor grade to textbook cost. A <a href="https://www.flbog.edu/wp-content/uploads/2023/03/Student-Textbook-Survey-Infographic.pdf">2022 follow-up</a> still found 53% skipping a required purchase. This is the mechanism behind the withdrawal finding above. Students who could not previously obtain the book are the ones whose outcomes move.</p>
+<p><strong>The gains are unevenly distributed, and the honest version of the result says so.</strong> Colvard, Watson and Park studied 21,822 students across eight large introductory courses at the University of Georgia and reported in <a href="https://www.isetl.org/ijtlhe/pdf/IJTLHE3386.pdf"><em>IJTLHE</em></a> that mean course grade rose from 2.806 to 3.048 and the DFW rate fell from 10.87% to 8.19%. Among Pell recipients the DFW decline was 4.43 percentage points; among part-time students it was 10.14 points. The caveat that advocacy summaries tend to drop is that full-time students’ DFW rate actually rose slightly, from 6.28% to 7.38%, and that the design is observational and pre-post, confounded with time and instructor. The result is real and it is not a claim that open texts teach better.</p>
+<p><strong>Most students will not read the chapter.</strong> Reading-compliance research going back to the 1970s puts completion of a given day’s assigned reading at or below 30%, with students reading something like 37% of assigned pages. A chapter written on the assumption that it will be read straight through, in order, is designed for a minority of its audience.</p>
+<p><strong>Screens cost comprehension, mostly under time pressure.</strong> Delgado and colleagues’ meta-analysis in <em>Educational Research Review</em> found a reliable screen-inferiority effect that appears under time constraint and attenuates under free reading, together with greater overconfidence when reading on screen. The <a href="https://www.uv.es/lasalgon/papers/Delgado%202018%20dont%20throw%20away%20your%20printed%20books.pdf">full text is available</a>. The design implication is not to abandon digital delivery. It is that a digital-first book has to supply, deliberately, the metacognitive checks that a slower paper reading supplies for free.</p>
+<p><strong>Two study techniques dominate, and neither is the one your book is designed to support.</strong> Dunlosky and colleagues rated practice testing and distributed practice as high-utility, and highlighting and rereading as low-utility, in their <a href="https://gwern.net/doc/psychology/spaced-repetition/2013-dunlosky.pdf">review for <em>Psychological Science in the Public Interest</em></a>. The low-utility pair is what students actually do. An author who adds embedded retrieval questions with feedback is building the high-utility technique into the artifact. An author who writes a beautifully highlightable chapter is optimizing for the technique that does not work.</p>
+</section>
+<section id="how-open-textbooks-actually-fail" class="level1">
+<h1>How Open Textbooks Actually Fail</h1>
+<p>Belikov and McLure coded 954 reviews of 235 open textbooks from the Open Textbook Library, and their <a href="https://ijoer.scholasticahq.com/article/25066.xml">analysis in <em>IJOER</em></a> is the closest thing we have to a systematic failure inventory. The share of reviews rating each criterion positively:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Criterion</th>
+<th>Positive</th>
+<th>Partial</th>
+<th>Negative</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Interface</td>
+<td>83.7%</td>
+<td>10.8%</td>
+<td>1.5%</td>
+</tr>
+<tr class="even">
+<td>Consistency</td>
+<td>83.2%</td>
+<td>12.7%</td>
+<td>3.0%</td>
+</tr>
+<tr class="odd">
+<td>Grammar</td>
+<td>81.6%</td>
+<td>13.4%</td>
+<td>1.5%</td>
+</tr>
+<tr class="even">
+<td>Relevance and longevity</td>
+<td>81.2%</td>
+<td>14.0%</td>
+<td>2.5%</td>
+</tr>
+<tr class="odd">
+<td>Accuracy</td>
+<td>80.8%</td>
+<td>15.2%</td>
+<td>1.0%</td>
+</tr>
+<tr class="even">
+<td>Clarity</td>
+<td>80.4%</td>
+<td>15.6%</td>
+<td>3.6%</td>
+</tr>
+<tr class="odd">
+<td>Organization</td>
+<td>78.0%</td>
+<td>15.0%</td>
+<td>3.0%</td>
+</tr>
+<tr class="even">
+<td>Comprehensiveness</td>
+<td>73.0%</td>
+<td>22.1%</td>
+<td>2.1%</td>
+</tr>
+<tr class="odd">
+<td>Cultural relevance</td>
+<td>66.6%</td>
+<td>24.5%</td>
+<td>3.2%</td>
+</tr>
+<tr class="even">
+<td>Modularity</td>
+<td>62.5%</td>
+<td>26.4%</td>
+<td>2.2%</td>
+</tr>
+</tbody>
+</table>
+<p>Two things are worth noticing. The weakest criteria are modularity and cultural relevance, not accuracy. Open textbooks are not, in the main, wrong. They are hard to assign in pieces and they do not reflect the students reading them.</p>
+<p>The authors also name a structural trade-off that I have not seen stated so plainly anywhere else: ‘increased modularity results in decreased consistency’. Commercial textbooks buy voice consistency with a single author and substantial professional editing. Open books, often multi-authored and chapter-partitioned, pay for their modularity in tonal coherence. One reviewer’s complaint about a nine-author book is the whole problem in one sentence: each chapter was ‘tonally very different from the others’.</p>
+<p>The recurring specific complaints, quoted from those reviews, are mundane and almost entirely preventable:</p>
+<ul>
+<li>A 700-page PDF with ‘no table of contents and little in the PDF that allows for quick and easy browsing without intense scrolling’, and elsewhere ‘no index, glossary or table of contents’.</li>
+<li>‘The textbook contains only words’, with a lack of color, images, and charts that reviewers expected to cost student engagement.</li>
+<li>Coverage that ‘is a bit thin when it comes to examples’.</li>
+<li>Solutions to in-text practice problems that require scrolling to the end of the chapter.</li>
+<li>Reference lists trailing off around 2007, which reviewers read as a signal the book had been abandoned.</li>
+<li>Examples in which marginalized students ‘would not see themselves reflected much’.</li>
+</ul>
+<p>On the positive side, students in design studies liked embedded video distributed through the chapters rather than clustered at the end, consistent layout, a persistent sidebar table of contents, and a ‘manageable amount of information’ per chapter. Roughly 95% agreed open resources were easy to use and 78% found them more up to date than their print texts, though just under 20% still preferred a traditional textbook, and objections clustered on eyestrain and small screens.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance2.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="tips" class="level1">
+<h1>Tips</h1>
+<p>What follows is the operational part. Each tip is tied to something above, and I have tried to avoid recommending anything I could not connect to evidence or to a working author’s practice.</p>
+<p><strong>1. Write for a course, not for a field.</strong> Allen Downey’s <a href="https://greenteapress.com/wp/textbook-manifesto/">textbook manifesto</a> argues that conventional textbooks bloat toward a thousand pages by trying to serve several courses at once, and that a weekly fifty-page assignment already exceeds what students absorb. His target is roughly 140 pages for a semester course. A short book that matches one syllabus will be read; a comprehensive one will be consulted, at best.</p>
+<p><strong>2. Lead with the example, then the method.</strong> The OpenIntro authors describe their organizing principle as example first, method second: each chapter opens by naming the questions to come, and the methodology arrives as the way to answer them. Their production account is <a href="https://escholarship.org/content/qt6ms0x5nf/qt6ms0x5nf.pdf?t=mx6eg8">published in <em>TISE</em></a>. This directly addresses the ‘thin on examples’ complaint, and it matches the worked-example tradition in cognitive load research.</p>
+<p><strong>3. Put the answers where the student is.</strong> OpenIntro ships more than 550 exercises with solutions to nearly all in-text exercises in footnotes, on the stated principle that the student should be able to check the work immediately. Reviewers complained specifically about solutions parked at the chapter end. The distance between a problem and its answer is a design parameter, and shorter is better.</p>
+<p><strong>4. Build retrieval into the text.</strong> Given the Dunlosky findings, the highest-leverage addition is not more exposition but more questions with feedback. A short set of retrieval prompts per section does more measured good than another worked paragraph.</p>
+<p><strong>5. Design for the section, not the book.</strong> Modularity is the weakest criterion in the reviewer data and a first-class criterion in the review rubric, and the reading-compliance numbers say the unit of consumption is the section anyway. Every section should state its own prerequisites and be assignable on its own.</p>
+<p><strong>6. Name an editor, even if it is you wearing a second hat.</strong> OpenIntro assigned one author a dedicated internal-editor role. If modularity costs consistency, then consistency has to be somebody’s explicit job rather than an emergent property.</p>
+<p><strong>7. Ship more than one format.</strong> In an Indiana University e-textbook pilot, more than a quarter of participating students believed they would have learned more from paper. OpenIntro’s response was format pluralism: free PDF, free web version, and a print-on-demand paperback under ten dollars. Free web and paid print are not in tension. <em>Automate the Boring Stuff with Python</em> has sold <a href="https://automatetheboringstuff.com/3e/chapter0.html">over half a million copies</a> while remaining free to read online.</p>
+<p><strong>8. Make the figures reproducible artifacts.</strong> OpenIntro distributes a companion R package containing both the data sets and the functions that generate the book’s figures. A figure that can be regenerated is a figure that can be corrected, and a book whose code re-executes at render time cannot drift silently away from its own output.</p>
+<p><strong>9. Let readers file corrections.</strong> Yihui Xie has described the effect of accepting pull requests on a book repository as acquiring ‘outsourced careful human spell checkers’. An open book can fix a typo in the book itself rather than publishing an errata sheet that most students never read, which is a genuine structural advantage over print.</p>
+<p><strong>10. Teach from the draft, and treat failure as a book defect.</strong> Downey’s practice is to draft before teaching the course, publish immediately, and collect student notes on mistakes and rough spots through the semester. When comprehension fails across several students, he revises the book rather than blaming the cohort. This is the cheapest review process available to an academic author, and it runs every time the course does.</p>
+<p><strong>11. Solicit a formal review, because it is also marketing.</strong> Faculty report discoverability as a barrier for roughly half of them, and perceived quality is mediated by colleague recommendation and peer review rather than by intrinsic merit. The Open Textbook Library’s review program is explicitly dual-purpose: it addresses credibility and raises awareness in the same act. As OpenIntro put it, the marketing resources of a commercial publisher are ‘truly humbling’ to a volunteer project, so the free distribution channels have to be worked deliberately.</p>
+<p><strong>12. Choose CC BY unless you have a reason not to.</strong> Licenses carrying ND forbid derivative works and are therefore widely held not to qualify as open educational resources at all, since revision and remix are the distinguishing affordances. SA introduces compatibility conflicts when combining sources. Note also Downey’s observation that as copyright holder you retain the ability to grant different licenses to different parties later, so the public default does not foreclose your options.</p>
+</section>
+<section id="dos-and-donts" class="level1">
+<h1>Dos and Don’ts</h1>
+<p><strong>Do:</strong></p>
+<ul>
+<li>Do put a hyperlinked table of contents, an index, and a glossary in every format you ship, including the PDF.</li>
+<li>Do keep chapters to a length a student can finish in one sitting, and say at the top of each what it assumes.</li>
+<li>Do include figures. ‘The textbook contains only words’ is a review you can prevent entirely.</li>
+<li>Do write alt text for informative images, keep contrast at or above 4.5:1 for body text, use a real heading hierarchy, and caption any video. The <a href="https://www.w3.org/TR/WCAG21/">WCAG guidelines</a> are the reference, and accessibility is a criterion reviewers apply.</li>
+<li>Do date your examples deliberately and refresh them. Reviewers read a reference list that stops a decade ago as evidence of abandonment.</li>
+<li>Do diversify names, contexts, and photographs in examples. Cultural relevance is the second-weakest criterion in the reviewer data.</li>
+<li>Do publish your adopting courses and instructors if you have them. Social proof is doing the work that a publisher’s sales force would otherwise do.</li>
+<li>Do budget for maintenance before you publish, and be honest that the cost of producing an open textbook is routinely underestimated.</li>
+</ul>
+<p><strong>Don’t:</strong></p>
+<ul>
+<li>Don’t confuse the license with the pedagogy. The meta-analytic learning difference is zero; whatever teaching your book does, it does through its craft.</li>
+<li>Don’t write the comprehensive reference edition. It becomes, in Downey’s phrase, a doorstop with no personality.</li>
+<li>Don’t bury solutions at the back, and don’t ship exercises without answers at all.</li>
+<li>Don’t assume the book will be read linearly, or read completely.</li>
+<li>Don’t let a multi-author structure ship without an editing pass that imposes one voice. Tonal whiplash is the most-cited structural complaint.</li>
+<li>Don’t use CC BY-ND or CC BY-NC-ND if you want the book adopted and adapted.</li>
+<li>Don’t go digital-only. A meaningful minority of students want paper, and print-on-demand is nearly free to offer.</li>
+<li>Don’t add entertaining tangents for engagement. The seductive-details literature suggests they can reduce learning, and OpenIntro’s stated practice is to seek attention through interesting data and questions rather than through humor or gratuitous photographs.</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/ambiance3.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="things-to-watch-out-for" class="level1">
+<h1>Things to Watch Out For</h1>
+<ul>
+<li><strong>Staleness is read as abandonment.</strong> Books not actively maintained are quickly perceived as out of date, and perception alone drives de-adoption. The perception moves faster than the actual obsolescence.</li>
+<li><strong>The maintenance burden usually lands on an institution, not a person.</strong> Funding models in practice run through library grants, OER awards, and institutional budgets. An author with no institutional backing is the fragile case, and should plan the second edition’s funding before finishing the first.</li>
+<li><strong>Modularity and voice pull against each other.</strong> You cannot maximize both. Decide which one your book is optimizing for and pay the other cost knowingly.</li>
+<li><strong>Code examples rot.</strong> Executable formats such as Quarto and bookdown re-run code at render time, which converts silent rot into a loud build failure. I should note that I found tool documentation asserting this benefit but no author retrospective describing the failure and the recovery, so treat the practice as sensible rather than as empirically established.</li>
+<li><strong>Reviewer criteria are public, so write to them.</strong> The Open Textbook Library <a href="https://open.umn.edu/opentextbooks/reviews/rubric">rubric</a> lists comprehensiveness, accuracy, relevance and longevity, clarity, consistency, modularity, organization, interface, grammar, and cultural relevance. There is no reason to be surprised by any of them.</li>
+<li><strong>Free changes adoption economics in your favor, quietly.</strong> Because the book costs nothing, an instructor can assign three chapters without having to justify a purchase. Partial adoption is frictionless in a way it never is for a hundred-dollar text, which argues again for writing modular sections.</li>
+</ul>
+</section>
+<section id="lessons-learned" class="level1">
+<h1>Lessons Learned</h1>
+<p><strong>Technical.</strong> The single most actionable finding in the whole literature is the Dunlosky ranking, because it says the thing an author adds last, namely practice questions with feedback, is worth more than the thing an author polishes first, namely the exposition. I had assumed the exercises were the scaffolding and the chapters were the work. The evidence suggests the reverse.</p>
+<p><strong>Process.</strong> Downey’s insistence that a free book is ‘a fundamentally different product’ rather than a conventional book with a different license is the framing I found most useful. Free books turn readers into editors, translators, and collaborators, and he reports getting translations he never planned and, memorably, learning Python by reading a port of his own Java book. That is not a possibility a commercial contract makes available.</p>
+<p><strong>Philosophical.</strong> The zero effect on learning ought to be published more prominently by open-education advocates than it is, because it is the finding that makes the field’s work legible. Openness solves a distribution problem completely and a teaching problem not at all. Every author who takes the second problem seriously is doing something the license cannot do for them.</p>
+</section>
+<section id="limitations" class="level1">
+<h1>Limitations</h1>
+<p>The efficacy literature is largely observational, and the strongest individual result cited here is a pre-post comparison confounded with time and instructor. A 2023 meta-analysis reports the literature as genuinely divided, including negative results, and I was unable to retrieve its effect estimate.</p>
+<p>The reviewer data comes from educators reviewing on students’ behalf, not from students. I attempted to gather direct student voice from discussion forums and was unable to: Reddit blocked the crawler, so the student perspective here arrives filtered through perception studies and reviewer commentary. That is a real gap, and the tips that lean on ‘what students want’ should be read with it in mind.</p>
+<p>The learning-science citations for the worked-example effect, the testing effect, Mayer’s multimedia principles, and seductive details are drawn from background knowledge rather than verified against primary sources in this session. They are well established, but I have not personally checked them here and say so rather than implying otherwise.</p>
+<p>Finally, this is a synthesis by someone who has not yet finished an open textbook. The recommendations are drawn from other people’s evidence and other people’s retrospectives. Ask me again in two years.</p>
+</section>
+<section id="wrapping-up" class="level1">
+<h1>Wrapping Up</h1>
+<section id="what-did-we-learn" class="level2">
+<h2 class="anchored" data-anchor-id="what-did-we-learn">What Did We Learn?</h2>
+<p>In conclusion, four points are worth emphasizing. First, open licensing delivers access and retention and delivers no measurable learning advantage, which locates the author’s real work in craft rather than in distribution. Second, the failure modes of open textbooks are known, are documented at scale, and are mostly dull: missing tables of contents, absent figures, thin examples, buried solutions, stale references, and multi-author tonal drift. Third, the highest-leverage additions an author can make are structural rather than expository, namely modular sections, embedded retrieval practice with immediate feedback, and format pluralism that includes paper. Fourth, the parts of the job that publishers used to perform, editing for one voice, manufacturing credibility, and marketing, do not disappear when the publisher does; they become the author’s, and they are the parts most often left undone.</p>
+</section>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<ul>
+<li><a href="../pub-statistical-computing-textbook/">Building a Statistical Computing Textbook in the Age of AI</a></li>
+<li><a href="../pub-hosting-quarto-books-netlify/">Hosting a Quarto Book Series on Netlify</a></li>
+<li><a href="https://journals.sagepub.com/doi/10.1177/2332858419872212">Clinton and Khan (2019), open textbook meta-analysis</a></li>
+<li><a href="https://www.isetl.org/ijtlhe/pdf/IJTLHE3386.pdf">Colvard, Watson and Park (2018)</a></li>
+<li><a href="https://ijoer.scholasticahq.com/article/25066.xml">Belikov and McLure (2020), qualitative analysis of open textbook reviews</a></li>
+<li><a href="https://greenteapress.com/wp/textbook-manifesto/">Downey, Textbook Manifesto</a></li>
+<li><a href="https://sites.google.com/site/allendowney/home/projects/publishing-free-books">Downey, Publishing Free Books</a></li>
+<li><a href="https://escholarship.org/content/qt6ms0x5nf/qt6ms0x5nf.pdf?t=mx6eg8">OpenIntro Statistics: an open-source textbook</a></li>
+<li><a href="https://open.umn.edu/opentextbooks/reviews/rubric">Open Textbook Library review rubric</a></li>
+<li><a href="https://gwern.net/doc/psychology/spaced-repetition/2013-dunlosky.pdf">Dunlosky et al.&nbsp;(2013)</a></li>
+</ul>
+</section>
+<section id="reproducibility" class="level1">
+<h1>Reproducibility</h1>
+<p><strong>Sources.</strong> Every numeric claim carries an inline link. The Clinton and Khan effect sizes, the Colvard et al.&nbsp;figures, the Belikov and McLure review percentages, the Open Textbook Library rubric, the Dunlosky ratings, and the OpenIntro and Downey production accounts were read from the linked sources. The reading-compliance figures, the Hilton syntheses, the Florida survey percentages, and the Indiana e-textbook pilot figure were taken from secondary summaries rather than primary articles, and should be re-checked before being quoted onward. The learning-science citations named in the Limitations section were not verified in this session.</p>
+<p><strong>AI involvement in this post:</strong> the literature search was conducted by AI research agents, and drafting was AI-assisted. Source selection, the framing of the zero-effect finding as the organizing argument, and the editorial judgment throughout are the author’s. Claims that could not be verified are labeled as such rather than smoothed over, which is the minimum a post recommending scholarly care should do.</p>
+<p><strong>Session information:</strong></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS Tahoe 26.6.2
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Los_Angeles
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] htmlwidgets_1.6.4 compiler_4.6.0    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.0       htmltools_0.5.9   parallel_4.6.0    otel_0.2.0       
+ [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
+[13] xfun_0.62         digest_0.6.39     rlang_1.2.0       evaluate_1.0.5   </code></pre>
+</div>
+</div>
+<hr>
+<p><em>Rendered on 2026-09-07 at 13:55 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/pub-open-textbook-guidebook/analysis/report/index.qmd</em></p>
+<hr>
+</section>
+<section id="lets-connect" class="level1">
+<h1>Let’s Connect</h1>
+<p>Corrections are welcome, particularly from anyone who has maintained an open textbook for longer than I have, which is nearly everyone who has maintained one at all.</p>
+<ul>
+<li><strong>GitHub</strong>: <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Email</strong>: <a href="https://rgtlab.org/contact">Contact form</a></li>
+</ul>
+<section id="related-posts-in-this-cluster" class="level2">
+<h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
+<p>This post is part of the <em>Quarto, R Markdown, and Publishing</em> series. Recommended reading order:</p>
+<ol type="1">
+<li><a href="../pub-multi-language-quarto/">Multi-Language Quarto Documents on macOS</a></li>
+<li><a href="../pub-r-script-to-rmd/">Rapid Conversion of Draft R Scripts to Formal Rmd</a></li>
+<li><a href="../pub-statistical-computing-textbook/">Building a Statistical Computing Textbook</a></li>
+<li><strong>What Makes an Open Textbook Work: A Guidebook for New Authors</strong> (this post)</li>
+<li><a href="../pub-hosting-quarto-books-netlify/">Hosting a Quarto Book Series on Netlify</a></li>
+<li><a href="../pub-obs-r-screencasts/">Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks</a></li>
+<li><a href="../pub-ai-course-policy-survey/">A Review and Proposal for Policy Regarding Generative AI Use in Graduate Biostatistics Courses</a></li>
+</ol>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/focusonr\.org");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Ronald G. Thomas.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47/ryyblog">
+      <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<!-- Fix category filtering. itemValues.categories is always a base64+URI-
+     encoded comma-joined blob and must be decoded before comparing. The
+     incoming `category` argument's encoding is NOT reliable: Quarto's own
+     native click path decodes it to plain text before calling
+     filterListingCategory, but other call sites (older cached scripts,
+     manual calls, other Quarto builds) pass the raw base64 data-category
+     value instead. A word like "docker" also happens to be valid-shaped
+     base64, so blindly re-decoding an already-plain-text argument silently
+     corrupts it rather than failing loudly. Match against both
+     interpretations instead of guessing which one applies. -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    function decodeCategory(value) {
+      try {
+        return decodeURIComponent(atob(value));
+      } catch (e) {
+        return value;
+      }
+    }
+
+    window.filterListingCategory = function(category) {
+      const listingIds = Object.keys(window['quarto-listings']);
+      for (const listingId of listingIds) {
+        const list = window['quarto-listings'][listingId];
+        if (list) {
+          if (category === '') {
+            list.filter();
+          } else {
+            const decodedTarget = decodeCategory(category);
+            list.filter(function (item) {
+              const itemValues = item.values();
+              if (itemValues.categories !== null && itemValues.categories !== undefined) {
+                const categories = decodeCategory(itemValues.categories)
+                  .split(",")
+                  .map(c => c.trim());
+                return categories.includes(category) || categories.includes(decodedTarget);
+              } else {
+                return false;
+              }
+            });
+          }
+        }
+      }
+    };
+  }, 500);
+});
+</script>
+
+<!-- PDF view/download button for blog posts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only add the button on post pages
+  if (window.location.pathname.includes('/posts/') && !window.location.pathname.endsWith('/posts/') && !window.location.pathname.endsWith('/posts/index.html')) {
+    var currentPath = window.location.pathname;
+    // Handle both /posts/name/ and /posts/name/index.html formats
+    var pdfPath;
+    if (currentPath.endsWith('/')) {
+      pdfPath = currentPath + 'index.pdf';
+    } else {
+      pdfPath = currentPath.replace('.html', '.pdf');
+    }
+
+    // Check if PDF exists first
+    fetch(pdfPath, { method: 'HEAD' })
+      .then(function(response) {
+        if (response.ok) {
+          // PDF exists, show download button
+          showDownloadButton(pdfPath);
+        }
+        // If PDF doesn't exist, don't show any button
+      })
+      .catch(function(error) {
+        // Error checking PDF, don't show any button
+      });
+  }
+});
+
+function showDownloadButton(pdfPath) {
+  var downloadBtn = document.createElement('div');
+  downloadBtn.className = 'pdf-download-button';
+
+  // Get file size if possible
+  fetch(pdfPath, { method: 'HEAD' })
+    .then(function(response) {
+      var size = response.headers.get('Content-Length');
+      var sizeText = '';
+
+      if (size) {
+        // Convert to MB or KB
+        var sizeInMB = size / (1024 * 1024);
+        if (sizeInMB >= 1) {
+          sizeText = ' (' + sizeInMB.toFixed(1) + ' MB)';
+        } else {
+          sizeText = ' (' + (size / 1024).toFixed(0) + ' KB)';
+        }
+      }
+
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' + sizeText +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    })
+    .catch(function() {
+      // Basic fallback if we can't get file size
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    });
+
+  // Find where to insert the button (right after the title block)
+  var titleBlock = document.querySelector('.quarto-title-meta');
+  if (titleBlock) {
+    titleBlock.after(downloadBtn);
+  }
+}
+
+
+</script>
+
+<style>
+.pdf-download-button {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
+
+
+
+
+</body></html>

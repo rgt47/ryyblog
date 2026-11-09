@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-06">
-<meta name="description" content="I did not realize how much my CI was lying to me until I added a single explicit failure check and watched five ‘passing’ projects turn honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.">
+<meta name="description" content="My CI was lying to me: a single explicit failure check turned five ‘passing’ projects honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.">
 
 <title>A tiered CI strategy for zzcollab research compendia – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="A tiered CI strategy for zzcollab research compendia – focusonr">
-<meta property="og:description" content="I did not realize how much my CI was lying to me until I added a single explicit failure check and watched five ‘passing’ projects turn honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.">
+<meta property="og:description" content="My CI was lying to me: a single explicit failure check turned five ‘passing’ projects honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.">
 <meta property="og:image" content="https://focusonr.org/posts/zc-tiered-ci-strategy/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="893">
 <meta property="og:image:width" content="1600">
 <meta name="twitter:title" content="A tiered CI strategy for zzcollab research compendia – focusonr">
-<meta name="twitter:description" content="I did not realize how much my CI was lying to me until I added a single explicit failure check and watched five ‘passing’ projects turn honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.">
+<meta name="twitter:description" content="My CI was lying to me: a single explicit failure check turned five ‘passing’ projects honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.">
 <meta name="twitter:image" content="https://focusonr.org/posts/zc-tiered-ci-strategy/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not realize how much my CI was lying to me until I added a single explicit failure check and watched five ‘passing’ projects turn honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.
+    My CI was lying to me: a single explicit failure check turned five ‘passing’ projects honestly red. A workflow-style migration guide for zzcollab projects across four workspace types.
   </div>
 </div>
 
@@ -303,6 +303,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -320,7 +333,7 @@ YAML FRONT MATTER (lines 1-20)
   [x] draft: false    — flip when ready
 
 NARRATIVE INPUTS
-  [x] Hook sentence   — 'I didn't know how to configure [tool] until [trigger]'
+  [x] Hook sentence   — states the substantive finding up front
   [x] Pain point      — the specific friction the tool removes
   [x] Motivations     — exactly 4-5 bullets (workflow gap, frustration, curiosity, learning)
   [x] Objectives      — exactly 4 numbered, verifiable end states
@@ -390,7 +403,7 @@ HERO IMAGE
 </div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not realize how much my CI was lying to me until I added a single explicit failure check and watched five ‘passing’ projects turn honestly red. The framework’s default workflow for the zzcollab ecosystem (a Docker-plus-renv pattern) had been showing green checkmarks across the projects I cared about. I had been trusting those checkmarks the way one trusts the brake light on a car. The revelation was that some of the brake lights were on green because the bulb was burnt out, not because anything had been verified.</p>
+<p>My CI had been lying to me, and a single explicit failure check turned five ‘passing’ projects honestly red. The framework’s default workflow for the zzcollab ecosystem (a Docker-plus-renv pattern) had been showing green checkmarks across the projects I cared about. I had been trusting those checkmarks the way one trusts the brake light on a car. Some of the brake lights were on green because the bulb was burnt out, not because anything had been verified.</p>
 <p>The discovery happened almost by accident. I was migrating one research compendium to a tighter CI pattern (<code>r-lib/actions/setup-renv@v2</code> plus an explicit <code>quit(status = 1)</code> when <code>renv::status()</code> reports inconsistency) and the first run failed. Reading the log I saw a table titled <code>The following package(s) are in an inconsistent state:</code> listing dozens of packages installed and used by source code but never recorded in the lockfile. The previous CI had not been catching this; the new check did. When I extended the migration to four more repositories the same shape of finding appeared in three of them, plus two distinct categories of project-side regression that had been similarly invisible.</p>
 <p>This post walks through the migration: a tiered CI model with one template per zzcollab workspace type, an explicit synchronization gate for lockfiles, and a strategy for getting the framework out of the business of reporting fictional health. The companion <a href="../docs/ci-strategy-tiered-model.pdf">white paper</a> (mirrored in the zzcollab repository) records the analytic detail; this post is the procedural distillation.</p>
 </section>
@@ -840,6 +853,7 @@ top of this file. If anything below is unchecked, the post is not ready.
 <li>Post 06: <a href="../zc-manuscript-report-elements/">Seven Required Elements for a zzc Manuscript report.Rmd</a></li>
 <li><strong>Post 07: A tiered CI strategy for zzcollab research compendia</strong> (this post)</li>
 <li>Post 08: <a href="../zc-github-actions-workflows/">GitHub Actions workflows for zzcollab research compendia</a></li>
+<li>Post 09: <a href="../zc-offload-simulations-home-server/">Offloading R Simulations to a Home Server</a></li>
 </ol>
 
 

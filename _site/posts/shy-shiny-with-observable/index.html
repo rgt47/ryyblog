@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-12-01">
-<meta name="description" content="I did not really know how difficult it would be to combine Observable JS and Shiny in one Quarto document until every data-loading approach I tried failed except fetching from a public URL.">
+<meta name="description" content="Combining Observable JS and Shiny in one Quarto document is harder than it looks: every data-loading approach I tried failed except fetching from a public URL.">
 
 <title>Combining Observable JS and Shiny in a Single Quarto Document – focusonr</title>
 <style>
@@ -159,13 +159,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Combining Observable JS and Shiny in a Single Quarto Document – focusonr">
-<meta property="og:description" content="I did not really know how difficult it would be to combine Observable JS and Shiny in one Quarto document until every data-loading approach I tried failed except fetching from a public URL.">
+<meta property="og:description" content="Combining Observable JS and Shiny in one Quarto document is harder than it looks: every data-loading approach I tried failed except fetching from a public URL.">
 <meta property="og:image" content="https://focusonr.org/posts/shy-shiny-with-observable/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="800">
 <meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="Combining Observable JS and Shiny in a Single Quarto Document – focusonr">
-<meta name="twitter:description" content="I did not really know how difficult it would be to combine Observable JS and Shiny in one Quarto document until every data-loading approach I tried failed except fetching from a public URL.">
+<meta name="twitter:description" content="Combining Observable JS and Shiny in one Quarto document is harder than it looks: every data-loading approach I tried failed except fetching from a public URL.">
 <meta name="twitter:image" content="https://focusonr.org/posts/shy-shiny-with-observable/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how difficult it would be to combine Observable JS and Shiny in one Quarto document until every data-loading approach I tried failed except fetching from a public URL.
+    Combining Observable JS and Shiny in one Quarto document is harder than it looks: every data-loading approach I tried failed except fetching from a public URL.
   </div>
 </div>
 
@@ -314,6 +314,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -323,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Combining two reactive frameworks in one document is harder than it looks.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how difficult it would be to combine Observable JS and Shiny in a single Quarto document until I tried to create a side-by-side comparison. Like many statisticians, I assumed that since Quarto supports both frameworks, mixing them would be straightforward. Thirty minutes of setup turned into several hours of debugging.</p>
+<p>Combining Observable JS and Shiny in a single Quarto document is considerably harder than it looks, as a side-by-side comparison quickly demonstrates. Like many statisticians, I assumed that since Quarto supports both frameworks, mixing them would be straightforward. Thirty minutes of setup turned into several hours of debugging.</p>
 <p>The core difficulty is that Observable JS and Shiny use fundamentally different execution models. Observable runs entirely in the browser; Shiny requires a server process. When <code>server: shiny</code> is added to a Quarto document, the rendering context changes in ways that break standard Observable data-loading patterns.</p>
 <p>We document here the journey from naive optimism to a working solution. Every data-loading approach tried failed: <code>FileAttachment</code>, <code>ojs_define</code>, and local <code>d3.csv</code>. Fetching from a public URL was ultimately found to bypass the conflict entirely.</p>
 <section id="motivations" class="level2">

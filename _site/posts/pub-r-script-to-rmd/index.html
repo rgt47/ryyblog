@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-01">
-<meta name="description" content="I did not really know how to quickly convert a working R script into a presentable report until I discovered knitr::spin() and a few supporting workflows that changed how I share analytical results.">
+<meta name="description" content="Converting a working R script into a presentable report quickly is a job for knitr::spin() and a few supporting workflows that changed how I share analytical results.">
 
 <title>Rapid Conversion of Draft R Scripts to Formal Rmd Reports – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Rapid Conversion of Draft R Scripts to Formal Rmd Reports – focusonr">
-<meta property="og:description" content="I did not really know how to quickly convert a working R script into a presentable report until I discovered knitr::spin() and a few supporting workflows that changed how I share analytical results.">
+<meta property="og:description" content="Converting a working R script into a presentable report quickly is a job for knitr::spin() and a few supporting workflows that changed how I share analytical results.">
 <meta property="og:image" content="https://focusonr.org/posts/pub-r-script-to-rmd/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="800">
 <meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="Rapid Conversion of Draft R Scripts to Formal Rmd Reports – focusonr">
-<meta name="twitter:description" content="I did not really know how to quickly convert a working R script into a presentable report until I discovered knitr::spin() and a few supporting workflows that changed how I share analytical results.">
+<meta name="twitter:description" content="Converting a working R script into a presentable report quickly is a job for knitr::spin() and a few supporting workflows that changed how I share analytical results.">
 <meta name="twitter:image" content="https://focusonr.org/posts/pub-r-script-to-rmd/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how to quickly convert a working R script into a presentable report until I discovered knitr::spin() and a few supporting workflows that changed how I share analytical results.
+    Converting a working R script into a presentable report quickly is a job for knitr::spin() and a few supporting workflows that changed how I share analytical results.
   </div>
 </div>
 
@@ -316,6 +316,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.png" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -324,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how to quickly convert a working R script into a presentable report until I ran into a situation where a collaborator needed results the same afternoon. The analysis was complete, the code was tested, but the output was a tangled mix of console printouts and saved PNG files scattered across a directory. Assembling those fragments into a coherent document took longer than the analysis itself.</p>
+<p>Converting a working R script into a presentable report became urgent when a collaborator needed results the same afternoon. The analysis was complete, the code was tested, but the output was a tangled mix of console printouts and saved PNG files scattered across a directory. Assembling those fragments into a coherent document took longer than the analysis itself.</p>
 <p>Three things many R developers are often reluctant to tackle: code documentation, testing, and report preparation. Of these, report preparation tends to be the most urgent. When a supervisor or reviewer asks for results, they rarely want a raw R script. They want tables, figures, narrative context, and a document they can read without opening RStudio.</p>
 <p>We walk through several approaches to bridging the gap between a working R script and a finished R Markdown report. The goal is practical: reduce the friction between “my code works” and “here is a document someone can read.”</p>
 <p>More formally, this post documents the script-to-document promotion path in the Document layer of the Workflow Construct described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>. The Document layer holds the artifact a reader sees, a rendered HTML or PDF report. The script-to-document promotion is the operation that lifts a working R script onto that layer without rewriting the analysis. This is the most frequent project-tier transition for an applied biostatistician and is the specific concern the post addresses.</p>
@@ -832,8 +845,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <li><a href="../pub-multi-language-quarto/">Multi-Language Quarto Documents on macOS</a></li>
 <li><strong>Rapid Conversion of Draft R Scripts to Formal Rmd</strong> (this post)</li>
 <li><a href="../pub-statistical-computing-textbook/">Building a Statistical Computing Textbook</a></li>
-<li><a href="../pub-obs-r-screencasts/">Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks</a></li>
+<li><a href="../pub-open-textbook-guidebook/">What Makes an Open Textbook Work: A Guidebook for New Authors</a></li>
 <li><a href="../pub-hosting-quarto-books-netlify/">Hosting a Quarto Book Series on Netlify</a></li>
+<li><a href="../pub-obs-r-screencasts/">Producing R Coding Videos: OBS Screencasts and Narrated Slide Decks</a></li>
 <li><a href="../pub-ai-course-policy-survey/">A Review and Proposal for Policy Regarding Generative AI Use in Graduate Biostatistics Courses</a></li>
 </ol>
 

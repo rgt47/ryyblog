@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-02">
-<meta name="description" content="I did not really appreciate how much ceremony testthat carries until I rewrote a small package’s suite in tinytest and lost roughly two-thirds of the lines without losing any coverage.">
+<meta name="description" content="testthat carries a surprising amount of ceremony: rewriting a small package’s suite in tinytest lost roughly two-thirds of the lines without losing any coverage.">
 
 <title>From testthat to tinytest: Converting an R Package Test Suite – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="From testthat to tinytest: Converting an R Package Test Suite – focusonr">
-<meta property="og:description" content="I did not really appreciate how much ceremony testthat carries until I rewrote a small package’s suite in tinytest and lost roughly two-thirds of the lines without losing any coverage.">
+<meta property="og:description" content="testthat carries a surprising amount of ceremony: rewriting a small package’s suite in tinytest lost roughly two-thirds of the lines without losing any coverage.">
 <meta property="og:image" content="https://focusonr.org/posts/rp-testthat-to-tinytest/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="893">
 <meta property="og:image:width" content="1600">
 <meta name="twitter:title" content="From testthat to tinytest: Converting an R Package Test Suite – focusonr">
-<meta name="twitter:description" content="I did not really appreciate how much ceremony testthat carries until I rewrote a small package’s suite in tinytest and lost roughly two-thirds of the lines without losing any coverage.">
+<meta name="twitter:description" content="testthat carries a surprising amount of ceremony: rewriting a small package’s suite in tinytest lost roughly two-thirds of the lines without losing any coverage.">
 <meta name="twitter:image" content="https://focusonr.org/posts/rp-testthat-to-tinytest/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really appreciate how much ceremony testthat carries until I rewrote a small package’s suite in tinytest and lost roughly two-thirds of the lines without losing any coverage.
+    testthat carries a surprising amount of ceremony: rewriting a small package’s suite in tinytest lost roughly two-thirds of the lines without losing any coverage.
   </div>
 </div>
 
@@ -337,6 +337,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -354,7 +367,7 @@ YAML FRONT MATTER (lines 1-20)
   [x] draft: false    — flip when ready
 
 NARRATIVE INPUTS
-  [x] Hook sentence   — 'I didn't know how to configure [tool] until [trigger]'
+  [x] Hook sentence   — states the substantive finding up front
   [x] Pain point      — the specific friction the tool removes
   [x] Motivations     — exactly 4-5 bullets (workflow gap, frustration, curiosity, learning)
   [x] Objectives      — exactly 4 numbered, verifiable end states
@@ -408,7 +421,7 @@ HERO IMAGE
 <p><em>Same coverage, fewer lines: the appeal of tinytest is less about novelty and more about the absence of ceremony.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really appreciate how much ceremony <code>testthat</code> carries until I cracked open <code>inst/tinytest/</code> in a small package and saw a fourteen-line file doing the work of an eighty-line <code>test_that()</code> file in the package I had been maintaining. The expectations were the same. The fixtures were the same. What was missing was the nesting, the helper boilerplate, and roughly half of the imports.</p>
+<p><code>testthat</code> carries a surprising amount of ceremony. Cracking open <code>inst/tinytest/</code> in a small package showed a fourteen-line file doing the work of an eighty-line <code>test_that()</code> file in the package I had been maintaining. The expectations were the same. The fixtures were the same. What was missing was the nesting, the helper boilerplate, and roughly half of the imports.</p>
 <p>What I discovered, once I started porting the suite, was that <code>tinytest</code> is not ‘testthat lite’. It is a different shape. The unit of testing is the file, not the <code>test_that()</code> block. Tests are flat assertions evaluated in a script, not nested calls inside a closure. There is no <code>setup()</code> and no implicit fixture caching. Several <code>testthat</code> idioms (<code>expect_snapshot</code>, <code>local_edition</code>, <code>expect_message</code> with regex matching) have no direct equivalent and require either a different pattern or, in a few cases, a deliberate decision to drop the test.</p>
 <p>We walk through the conversion as a paired-example review. I cover layout differences, the mechanical mapping of <code>expect_*</code> calls, the handful of patterns that do not port cleanly, the CI implications, and a short list of cases where I concluded that staying on <code>testthat</code> was the right call. The companion deliverable, a side-by-side conversion recipe, lives at <code>docs/testthat-to-tinytest-recipe.qmd</code> in this post’s compendium.</p>
 <section id="pros-and-cons-at-a-glance" class="level2">

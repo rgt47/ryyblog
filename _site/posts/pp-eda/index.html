@@ -245,6 +245,9 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#checking-our-work-model-diagnostics" id="toc-checking-our-work-model-diagnostics" class="nav-link" data-scroll-target="#checking-our-work-model-diagnostics">Checking Our Work: Model Diagnostics</a>
   <ul class="collapse">
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  </ul></li>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
+  <ul class="collapse">
   <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a>
   <ul class="collapse">
   <li><a href="#conceptual-understanding" id="toc-conceptual-understanding" class="nav-link" data-scroll-target="#conceptual-understanding">Conceptual Understanding</a></li>
@@ -318,6 +321,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/penguin-hero.png" class="img-fluid figure-img" style="width:80.0%" alt="Photograph of penguins standing together on a rocky Antarctic shore, used as the hero image for this blog post about Palmer Penguins exploratory data analysis."></p>
@@ -335,7 +351,7 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><strong>Palmer Penguins Series</strong> – This is part 1 of 5: <a href="../../posts/08-palmerpenguinspart1/">Part 1</a> | <a href="../../posts/09-palmerpenguinspart2/">Part 2</a> | <a href="../../posts/10-palmerpenguinspart3/">Part 3</a> | <a href="../../posts/11-palmerpenguinspart4/">Part 4</a> | <a href="../../posts/12-palmerpenguinspart5/">Part 5</a></p>
+<p><strong>Palmer Penguins Series</strong> – This is part 1 of the five-part modeling sequence; see the end of the post for the wider Palmer Penguins arc. Part 1 | <a href="../../posts/pp-multiple-regression/">Part 2</a> | <a href="../../posts/pp-cross-validation/">Part 3</a> | <a href="../../posts/pp-diagnostics/">Part 4</a> | <a href="../../posts/pp-random-forest/">Part 5</a></p>
 </div>
 </div>
 <section id="introduction" class="level1">
@@ -356,7 +372,7 @@ Note
 </section>
 <section id="objectives" class="level2">
 <h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
-<p>By the end of this post, we will have:</p>
+<p>This post sets out to:</p>
 <ol type="1">
 <li>Conduct a structured exploratory data analysis on real ecological data, including summary statistics, distributions, and species-level comparisons.</li>
 <li>Compute and interpret a correlation matrix to identify the strongest univariate predictor of penguin body mass.</li>
@@ -374,22 +390,23 @@ Note
 </section>
 <section id="prerequisites-and-setup" class="level1">
 <h1>Prerequisites and Setup</h1>
-<p>To follow along with this analysis, one will need the following R packages:</p>
+<p>The analysis pipeline that produces the derived data and figures for this post uses the following packages:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(palmerpenguins)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrplot)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>))</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>penguin_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Adelie"</span> <span class="ot">=</span> <span class="st">"#FF6B6B"</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Chinstrap"</span> <span class="ot">=</span> <span class="st">"#9B59B6"</span>,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Gentoo"</span> <span class="ot">=</span> <span class="st">"#2E86AB"</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This document itself re-reads the pipeline’s saved output rather than re-fitting anything, so rendering it needs only:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">12</span>))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>penguin_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Adelie"</span> <span class="ot">=</span> <span class="st">"#FF6B6B"</span>,</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Chinstrap"</span> <span class="ot">=</span> <span class="st">"#9B59B6"</span>,</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Gentoo"</span> <span class="ot">=</span> <span class="st">"#2E86AB"</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Background note.</strong> This post assumes familiarity with basic R syntax and the tidyverse. No prior knowledge of regression modeling is required; the conceptual foundations are introduced below.</p>
 </section>
 <section id="what-is-exploratory-data-analysis" class="level1">
@@ -401,32 +418,33 @@ Note
 <h1>Getting Started: Meeting the Penguins</h1>
 <p>Let us begin by examining the basic characteristics of the dataset.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dataset_overview <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Characteristic"</span>, <span class="sc">~</span><span class="st">"Value"</span>,</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Total Observations"</span>,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(<span class="fu">nrow</span>(penguins_clean)),</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Variables"</span>, <span class="st">"9"</span>,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Species"</span>,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nlevels</span>(penguins_clean<span class="sc">$</span>species)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Islands"</span>,</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">nlevels</span>(penguins_clean<span class="sc">$</span>island)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Year Range"</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="fu">min</span>(penguins_clean<span class="sc">$</span>year),</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="st">"--"</span>,</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">max</span>(penguins_clean<span class="sc">$</span>year)</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  dataset_overview,</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">""</span>, <span class="st">""</span>),</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Palmer Penguins Dataset Characteristics"</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dataset_overview <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Characteristic"</span>, <span class="sc">~</span><span class="st">"Value"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Total Observations"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(<span class="fu">nrow</span>(penguins_clean)),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Variables"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(<span class="fu">ncol</span>(penguins_clean)),</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Species"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">n_distinct</span>(penguins_clean<span class="sc">$</span>species)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Islands"</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.character</span>(</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">n_distinct</span>(penguins_clean<span class="sc">$</span>island)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Year Range"</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">min</span>(penguins_clean<span class="sc">$</span>year),</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>      <span class="st">"--"</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      <span class="fu">max</span>(penguins_clean<span class="sc">$</span>year)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  dataset_overview,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">""</span>, <span class="st">""</span>),</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Palmer Penguins Dataset Characteristics"</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Palmer Penguins Dataset Characteristics</caption>
@@ -437,15 +455,15 @@ Note
 </tr>
 <tr class="even">
 <td style="text-align: left;">Variables</td>
-<td style="text-align: left;">9</td>
+<td style="text-align: left;">8</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Species</td>
-<td style="text-align: left;">0</td>
+<td style="text-align: left;">3</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Islands</td>
-<td style="text-align: left;">0</td>
+<td style="text-align: left;">3</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Year Range</td>
@@ -460,17 +478,17 @@ Note
 <h2 class="anchored" data-anchor-id="species-composition">Species Composition</h2>
 <p>The three species are not equally represented. Understanding the balance matters because unequal sample sizes can affect statistical power in species-level comparisons.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  species_summary,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Species Distribution and"</span>,</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Key Morphometrics"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Species"</span>, <span class="st">"N"</span>, <span class="st">"Body Mass (g)"</span>,</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Flipper Length (mm)"</span>, <span class="st">"% of Dataset"</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  species_summary,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Species Distribution and"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Key Morphometrics"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Species"</span>, <span class="st">"N"</span>, <span class="st">"Body Mass (g)"</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Flipper Length (mm)"</span>, <span class="st">"% of Dataset"</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Species Distribution and Key Morphometrics</caption>
@@ -511,12 +529,12 @@ Note
 </div>
 <p>Adelie penguins constitute the largest group (43.8%), followed by Gentoo (35.7%) and Chinstrap (20.4%). Gentoo penguins are notably heavier, with a mean body mass exceeding 5,000 g—roughly 1,400 g more than the other two species.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"figures/eda-overview.png"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(<span class="st">"figures/eda-overview.png"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-eda-overview" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two-panel figure. Left panel shows a bar chart of species counts: Adelie 146, Chinstrap 68, Gentoo 119. Right panel shows a scatter plot of flipper length versus body mass with positive trend lines for each species.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-eda-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="figures/eda-overview.png" class="img-fluid figure-img" alt="Two-panel figure. Left panel shows a bar chart of species counts: Adelie 146, Chinstrap 68, Gentoo 119. Right panel shows a scatter plot of flipper length versus body mass with positive trend lines for each species." width="1500">
+<img src="figures/eda-overview.png" class="img-fluid figure-img" alt="Two-panel figure. Left panel shows a bar chart of species counts: Adelie 146, Chinstrap 68, Gentoo 119. Right panel shows a scatter plot of flipper length versus body mass with positive trend lines for each species.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-eda-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;1: Species distribution and morphometric relationship overview. Left panel: sample sizes by species. Right panel: flipper length versus body mass with species-specific regression lines.
@@ -537,36 +555,36 @@ Figure&nbsp;1: Species distribution and morphometric relationship overview. Left
 <h2 class="anchored" data-anchor-id="species-specific-morphometrics">Species-Specific Morphometrics</h2>
 <p>A closer look at the per-species distributions reveals important nuances that a pooled analysis would obscure.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>morphometric_summary <span class="ot">&lt;-</span> penguins_clean <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(species) <span class="sc">|&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">body_mass_mean =</span> <span class="fu">round</span>(<span class="fu">mean</span>(body_mass_g), <span class="dv">0</span>),</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">body_mass_ci =</span> <span class="fu">round</span>(</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(body_mass_g) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">n</span>()), <span class="dv">1</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">flipper_length_mean =</span> <span class="fu">round</span>(</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mean</span>(flipper_length_mm), <span class="dv">1</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">flipper_length_ci =</span> <span class="fu">round</span>(</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(flipper_length_mm) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">n</span>()),</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      <span class="dv">1</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  morphometric_summary,</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Morphometric Statistics by Species"</span>,</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"(+/- 95% CI)"</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Species"</span>, <span class="st">"N"</span>, <span class="st">"Body Mass (g)"</span>,</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"+/- 95% CI"</span>,</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Flipper Length (mm)"</span>, <span class="st">"+/- 95% CI"</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>morphometric_summary <span class="ot">&lt;-</span> penguins_clean <span class="sc">|&gt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(species) <span class="sc">|&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="fu">n</span>(),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">body_mass_mean =</span> <span class="fu">round</span>(<span class="fu">mean</span>(body_mass_g), <span class="dv">0</span>),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">body_mass_ci =</span> <span class="fu">round</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(body_mass_g) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">n</span>()), <span class="dv">1</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">flipper_length_mean =</span> <span class="fu">round</span>(</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mean</span>(flipper_length_mm), <span class="dv">1</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">flipper_length_ci =</span> <span class="fu">round</span>(</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      <span class="fl">1.96</span> <span class="sc">*</span> <span class="fu">sd</span>(flipper_length_mm) <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="fu">n</span>()),</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      <span class="dv">1</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  morphometric_summary,</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Morphometric Statistics by Species"</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"(+/- 95% CI)"</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Species"</span>, <span class="st">"N"</span>, <span class="st">"Body Mass (g)"</span>,</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"+/- 95% CI"</span>,</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Flipper Length (mm)"</span>, <span class="st">"+/- 95% CI"</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Morphometric Statistics by Species (+/- 95% CI)</caption>
@@ -617,16 +635,16 @@ Figure&nbsp;1: Species distribution and morphometric relationship overview. Left
 </table>
 </div>
 </div>
-<p>The 95% confidence intervals for body mass confirm that Gentoo penguins (mean approximately 5,092 g) are statistically distinct from Adelie (3,706 g) and Chinstrap (3,733 g). By contrast, Adelie and Chinstrap body mass distributions overlap considerably.</p>
+<p>The interval around the Gentoo mean (approximately 5,092 g) is far removed from those for Adelie (3,706 g) and Chinstrap (3,733 g), whereas the Adelie and Chinstrap intervals overlap. Note that these intervals describe uncertainty about each species mean, not the spread of individual penguins, and comparing them by eye is a rough guide rather than a formal test; the underlying body mass distributions of Adelie and Chinstrap overlap more heavily still.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/species-comparison.png"</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/species-comparison.png"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-species-comparison" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Box plot comparing body mass across Adelie, Chinstrap, and Gentoo penguins. Gentoo median is approximately 5000 g; the other two species cluster near 3700 g.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-species-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="figures/species-comparison.png" class="img-fluid figure-img" alt="Box plot comparing body mass across Adelie, Chinstrap, and Gentoo penguins. Gentoo median is approximately 5000 g; the other two species cluster near 3700 g." width="1200">
+<img src="figures/species-comparison.png" class="img-fluid figure-img" alt="Box plot comparing body mass across Adelie, Chinstrap, and Gentoo penguins. Gentoo median is approximately 5000 g; the other two species cluster near 3700 g.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-species-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;2: Body mass distributions by species. Gentoo penguins are substantially heavier, while Adelie and Chinstrap distributions overlap.
@@ -640,42 +658,47 @@ Figure&nbsp;2: Body mass distributions by species. Gentoo penguins are substanti
 <h2 class="anchored" data-anchor-id="correlation-analysis">Correlation Analysis</h2>
 <p>Before fitting any model, we need to identify which morphometric variable is the strongest univariate predictor of body mass.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>numeric_vars <span class="ot">&lt;-</span> penguins_clean <span class="sc">|&gt;</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    bill_length_mm, bill_depth_mm,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    flipper_length_mm, body_mass_g</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>correlation_matrix <span class="ot">&lt;-</span> <span class="fu">cor</span>(numeric_vars)</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>body_mass_cors <span class="ot">&lt;-</span> correlation_matrix[</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"body_mass_g"</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>] <span class="sc">|&gt;</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sort</span>(<span class="at">decreasing =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>correlation_summary <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Variable"</span>,</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Correlation with Body Mass"</span>,</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Interpretation"</span>,</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Flipper Length"</span>,</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(body_mass_cors[<span class="st">"flipper_length_mm"</span>], <span class="dv">3</span>),</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Strongest predictor"</span>,</span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bill Length"</span>,</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(body_mass_cors[<span class="st">"bill_length_mm"</span>], <span class="dv">3</span>),</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Moderate positive"</span>,</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bill Depth"</span>,</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(body_mass_cors[<span class="st">"bill_depth_mm"</span>], <span class="dv">3</span>),</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Weak negative"</span></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  correlation_summary,</span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Morphometric Correlations"</span>,</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">"with Body Mass"</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>numeric_vars <span class="ot">&lt;-</span> penguins_clean <span class="sc">|&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    bill_length_mm, bill_depth_mm,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    flipper_length_mm, body_mass_g</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>correlation_matrix <span class="ot">&lt;-</span> <span class="fu">cor</span>(numeric_vars)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>body_mass_cors <span class="ot">&lt;-</span> correlation_matrix[</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"body_mass_g"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>] <span class="sc">|&gt;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sort</span>(<span class="at">decreasing =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>correlation_summary <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Variable"</span>,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Correlation with Body Mass"</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Interpretation"</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Flipper Length"</span>,</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(body_mass_cors[<span class="st">"flipper_length_mm"</span>], <span class="dv">3</span>),</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Strongest predictor"</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bill Length"</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(body_mass_cors[<span class="st">"bill_length_mm"</span>], <span class="dv">3</span>),</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Moderate positive"</span>,</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bill Depth"</span>,</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">round</span>(body_mass_cors[<span class="st">"bill_depth_mm"</span>], <span class="dv">3</span>),</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Moderate negative (pooled)"</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  correlation_summary,</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Morphometric Correlations"</span>,</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">"with Body Mass"</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Morphometric Correlations with Body Mass</caption>
+<colgroup>
+<col style="width: 21%">
+<col style="width: 39%">
+<col style="width: 39%">
+</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Variable</th>
@@ -697,7 +720,7 @@ Figure&nbsp;2: Body mass distributions by species. Gentoo penguins are substanti
 <tr class="odd">
 <td style="text-align: left;">Bill Depth</td>
 <td style="text-align: right;">-0.472</td>
-<td style="text-align: left;">Weak negative</td>
+<td style="text-align: left;">Moderate negative (pooled)</td>
 </tr>
 </tbody>
 </table>
@@ -705,14 +728,14 @@ Figure&nbsp;2: Body mass distributions by species. Gentoo penguins are substanti
 </div>
 <p>Flipper length dominates the correlation table with r = 0.873, well above bill length (r = 0.589) and bill depth (r = -0.472). The negative correlation between bill depth and body mass is a Simpson’s Paradox artifact: within each species, the relationship reverses direction. We will return to this point in Part 2.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/correlation-matrix.png"</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/correlation-matrix.png"</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div id="fig-correlation-matrix" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Upper triangular correlation matrix heatmap showing pairwise correlations among bill length, bill depth, flipper length, and body mass. The flipper length to body mass cell has the highest value at 0.87.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-correlation-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="figures/correlation-matrix.png" class="img-fluid figure-img" alt="Upper triangular correlation matrix heatmap showing pairwise correlations among bill length, bill depth, flipper length, and body mass. The flipper length to body mass cell has the highest value at 0.87." width="900">
+<img src="figures/correlation-matrix.png" class="img-fluid figure-img" alt="Upper triangular correlation matrix heatmap showing pairwise correlations among bill length, bill depth, flipper length, and body mass. The flipper length to body mass cell has the highest value at 0.87.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-correlation-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 Figure&nbsp;3: Correlation matrix of morphometric variables. Flipper length shows the strongest association with body mass (r = 0.87).
@@ -730,31 +753,37 @@ Figure&nbsp;3: Correlation matrix of morphometric variables. Flipper length show
 <h2 class="anchored" data-anchor-id="fitting-the-model">Fitting the Model</h2>
 <p>We fit an ordinary least squares regression of body mass on flipper length. The pre-computed coefficients and performance metrics are loaded from the analysis pipeline.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>intercept <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>estimate[<span class="dv">1</span>]</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>slope <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>estimate[<span class="dv">2</span>]</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>slope_ci_lower <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>conf.low[<span class="dv">2</span>]</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>slope_ci_upper <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>conf.high[<span class="dv">2</span>]</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>model_summary <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Metric"</span>, <span class="sc">~</span><span class="st">"Value"</span>, <span class="sc">~</span><span class="st">"Interpretation"</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"R-squared"</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.3f"</span>, model_metrics<span class="sc">$</span>r_squared),</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">"%.1f%% variance explained"</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>      model_metrics<span class="sc">$</span>r_squared <span class="sc">*</span> <span class="dv">100</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"RMSE"</span>,</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f g"</span>, model_metrics<span class="sc">$</span>rmse),</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Mean prediction error"</span>,</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">"F-statistic"</span>,</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f"</span>, model_metrics<span class="sc">$</span>f_statistic),</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"p &lt; 0.001 (highly significant)"</span></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>  model_summary,</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Simple Linear Model Performance"</span></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>intercept <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>estimate[<span class="dv">1</span>]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>slope <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>estimate[<span class="dv">2</span>]</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>slope_ci_lower <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>conf.low[<span class="dv">2</span>]</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>slope_ci_upper <span class="ot">&lt;-</span> model_coefficients<span class="sc">$</span>conf.high[<span class="dv">2</span>]</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>model_summary <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Metric"</span>, <span class="sc">~</span><span class="st">"Value"</span>, <span class="sc">~</span><span class="st">"Interpretation"</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"R-squared"</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.3f"</span>, model_metrics<span class="sc">$</span>r_squared),</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>      <span class="st">"%.1f%% variance explained"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>      model_metrics<span class="sc">$</span>r_squared <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"RMSE"</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f g"</span>, model_metrics<span class="sc">$</span>rmse),</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Typical prediction error"</span>,</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Residual Std. Error"</span>,</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f g"</span>, model_metrics<span class="sc">$</span>residual_se),</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Error scale adjusted for df"</span>,</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="st">"F-statistic"</span>,</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f"</span>, model_metrics<span class="sc">$</span>f_statistic),</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>      <span class="st">"p %s"</span>,</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>      <span class="fu">format.pval</span>(model_metrics<span class="sc">$</span>p_value, <span class="at">eps =</span> <span class="fl">0.001</span>)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  model_summary,</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Simple Linear Model Performance"</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Simple Linear Model Performance</caption>
@@ -773,13 +802,18 @@ Figure&nbsp;3: Correlation matrix of morphometric variables. Flipper length show
 </tr>
 <tr class="even">
 <td style="text-align: left;">RMSE</td>
-<td style="text-align: left;">393.3 g</td>
-<td style="text-align: left;">Mean prediction error</td>
+<td style="text-align: left;">392.2 g</td>
+<td style="text-align: left;">Typical prediction error</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;">Residual Std. Error</td>
+<td style="text-align: left;">393.3 g</td>
+<td style="text-align: left;">Error scale adjusted for df</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">F-statistic</td>
 <td style="text-align: left;">1060.3</td>
-<td style="text-align: left;">p &lt; 0.001 (highly significant)</td>
+<td style="text-align: left;">p &lt; 0.001</td>
 </tr>
 </tbody>
 </table>
@@ -796,23 +830,32 @@ Figure&nbsp;3: Correlation matrix of morphometric variables. Flipper length show
 <h2 class="anchored" data-anchor-id="making-predictions">Making Predictions</h2>
 <p>To illustrate the model in practical terms, here are predicted body masses for three representative flipper lengths:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>predictions_display <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Flipper Length (mm)"</span>,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Predicted Body Mass (g)"</span>,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"95% CI Lower"</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"95% CI Upper"</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="dv">180</span>, <span class="dv">3637</span>, <span class="dv">3589</span>, <span class="dv">3685</span>,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="dv">200</span>, <span class="dv">4749</span>, <span class="dv">4712</span>, <span class="dv">4786</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="dv">220</span>, <span class="dv">5860</span>, <span class="dv">5815</span>, <span class="dv">5905</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  predictions_display,</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Predicted Body Mass for"</span>,</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Example Flipper Lengths"</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>example_flippers <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">180</span>, <span class="dv">200</span>, <span class="dv">220</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>prediction_ci <span class="ot">&lt;-</span> <span class="fu">predict</span>(</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  simple_model,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">newdata =</span> <span class="fu">data.frame</span>(</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">flipper_length_mm =</span> example_flippers</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">interval =</span> <span class="st">"confidence"</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>predictions_display <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Flipper Length (mm)</span><span class="st">`</span> <span class="ot">=</span> example_flippers,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Predicted Body Mass (g)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    prediction_ci[, <span class="st">"fit"</span>], <span class="dv">0</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">95% CI Lower</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(prediction_ci[, <span class="st">"lwr"</span>], <span class="dv">0</span>),</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">95% CI Upper</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(prediction_ci[, <span class="st">"upr"</span>], <span class="dv">0</span>)</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  predictions_display,</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="fu">paste</span>(</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Predicted Body Mass for"</span>,</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Example Flipper Lengths"</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Predicted Body Mass for Example Flipper Lengths</caption>
@@ -833,39 +876,39 @@ Figure&nbsp;3: Correlation matrix of morphometric variables. Flipper length show
 <tbody>
 <tr class="odd">
 <td style="text-align: right;">180</td>
-<td style="text-align: right;">3637</td>
-<td style="text-align: right;">3589</td>
-<td style="text-align: right;">3685</td>
+<td style="text-align: right;">3155</td>
+<td style="text-align: right;">3079</td>
+<td style="text-align: right;">3232</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">200</td>
-<td style="text-align: right;">4749</td>
-<td style="text-align: right;">4712</td>
-<td style="text-align: right;">4786</td>
+<td style="text-align: right;">4159</td>
+<td style="text-align: right;">4116</td>
+<td style="text-align: right;">4201</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">220</td>
-<td style="text-align: right;">5860</td>
-<td style="text-align: right;">5815</td>
-<td style="text-align: right;">5905</td>
+<td style="text-align: right;">5162</td>
+<td style="text-align: right;">5090</td>
+<td style="text-align: right;">5233</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
-<p>A penguin with 200 mm flippers is predicted to weigh approximately 4,749 g, with a 95% confidence interval spanning only 74 g. The narrow intervals reflect the strong linear relationship, though they should be interpreted cautiously near the extremes of the observed flipper length range (172–231 mm).</p>
+<p>A penguin with 200 mm flippers is predicted to weigh approximately 4,159 g, with a 95% confidence interval spanning only 85 g. The narrow intervals reflect the strong linear relationship, though they should be interpreted cautiously near the extremes of the observed flipper length range (172–231 mm).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/simple-regression-model.png"</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/simple-regression-model.png"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-regression-model" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot with fitted regression line showing positive relationship between flipper length (170-230 mm) and body mass (2500-6500 g). Grey confidence band surrounds the line. Points are coloured by species, revealing Gentoo in the upper right and Adelie and Chinstrap in the lower left.">
+<div id="fig-regression-model" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot with fitted regression line showing positive relationship between flipper length (170-230 mm) and body mass (2500-6500 g). Gray confidence band surrounds the line. Points are colored by species, revealing Gentoo in the upper right and Adelie and Chinstrap in the lower left.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-regression-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="figures/simple-regression-model.png" class="img-fluid figure-img" alt="Scatter plot with fitted regression line showing positive relationship between flipper length (170-230 mm) and body mass (2500-6500 g). Grey confidence band surrounds the line. Points are coloured by species, revealing Gentoo in the upper right and Adelie and Chinstrap in the lower left." width="1200">
+<img src="figures/simple-regression-model.png" class="img-fluid figure-img" alt="Scatter plot with fitted regression line showing positive relationship between flipper length (170-230 mm) and body mass (2500-6500 g). Gray confidence band surrounds the line. Points are colored by species, revealing Gentoo in the upper right and Adelie and Chinstrap in the lower left.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-regression-model-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4: Simple linear regression of body mass on flipper length with 95% confidence band. Points are coloured by species.
+Figure&nbsp;4: Simple linear regression of body mass on flipper length with 95% confidence band. Points are colored by species.
 </figcaption>
 </figure>
 </div>
@@ -877,44 +920,44 @@ Figure&nbsp;4: Simple linear regression of body mass on flipper length with 95% 
 <h1>Checking Our Work: Model Diagnostics</h1>
 <p>A regression model is only as reliable as its assumptions. Before interpreting the results further, we must examine the residuals.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>outliers <span class="ot">&lt;-</span> model_predictions <span class="sc">|&gt;</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">abs</span>(standardized_residuals) <span class="sc">&gt;</span> <span class="fl">2.5</span>)</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>assumptions_check <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Assumption"</span>, <span class="sc">~</span><span class="st">"Result"</span>, <span class="sc">~</span><span class="st">"Status"</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Linearity"</span>,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Relationship appears approximately linear"</span>,</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Met"</span>,</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Independence"</span>,</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Observations are independent"</span>,</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Met"</span>,</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Normality"</span>,</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Residuals approximately normal"</span>,</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Reasonable"</span>,</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Homoscedasticity"</span>,</span>
-<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Variance constant across range"</span>,</span>
-<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Violated by species"</span>,</span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Outliers"</span>,</span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(</span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>      <span class="st">"%d observations &gt;2.5 SD"</span>, <span class="fu">nrow</span>(outliers)</span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Present"</span>,</span>
-<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Residual Std. Error"</span>,</span>
-<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f grams"</span>, model_metrics<span class="sc">$</span>rmse),</span>
-<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Acceptable"</span></span>
-<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  assumptions_check,</span>
-<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Model Diagnostic Summary"</span></span>
-<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>outliers <span class="ot">&lt;-</span> model_predictions <span class="sc">|&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">abs</span>(standardized_residuals) <span class="sc">&gt;</span> <span class="fl">2.5</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>assumptions_check <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Assumption"</span>, <span class="sc">~</span><span class="st">"Result"</span>, <span class="sc">~</span><span class="st">"Status"</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Linearity"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Relationship appears approximately linear"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Met"</span>,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Independence"</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Assumed from the sampling design; not testable here"</span>,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Assumed"</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Normality"</span>,</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Residuals approximately normal"</span>,</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Reasonable"</span>,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Homoscedasticity"</span>,</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Residual spread differs by species"</span>,</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Violated"</span>,</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Outliers"</span>,</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>      <span class="st">"%d observations &gt;2.5 SD"</span>, <span class="fu">nrow</span>(outliers)</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Present"</span>,</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Residual Std. Error"</span>,</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.1f grams"</span>, model_metrics<span class="sc">$</span>residual_se),</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Acceptable"</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>  assumptions_check,</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Model Diagnostic Summary"</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Model Diagnostic Summary</caption>
 <colgroup>
 <col style="width: 24%">
-<col style="width: 51%">
-<col style="width: 24%">
+<col style="width: 62%">
+<col style="width: 13%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -931,8 +974,8 @@ Figure&nbsp;4: Simple linear regression of body mass on flipper length with 95% 
 </tr>
 <tr class="even">
 <td style="text-align: left;">Independence</td>
-<td style="text-align: left;">Observations are independent</td>
-<td style="text-align: left;">Met</td>
+<td style="text-align: left;">Assumed from the sampling design; not testable here</td>
+<td style="text-align: left;">Assumed</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Normality</td>
@@ -941,8 +984,8 @@ Figure&nbsp;4: Simple linear regression of body mass on flipper length with 95% 
 </tr>
 <tr class="even">
 <td style="text-align: left;">Homoscedasticity</td>
-<td style="text-align: left;">Variance constant across range</td>
-<td style="text-align: left;">Violated by species</td>
+<td style="text-align: left;">Residual spread differs by species</td>
+<td style="text-align: left;">Violated</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Outliers</td>
@@ -958,19 +1001,19 @@ Figure&nbsp;4: Simple linear regression of body mass on flipper length with 95% 
 </table>
 </div>
 </div>
-<p>The most informative diagnostic is the residual plot below, which reveals distinct species-level clustering. Gentoo residuals tend to be positive (the model under-predicts their mass), while Adelie and Chinstrap residuals are more evenly distributed. This pattern is a clear signal that species membership carries information the model does not yet capture.</p>
+<p>The most informative diagnostic is the residual plot below. The species separate along the horizontal axis simply because their flipper lengths differ, which is expected and not itself a fault; what matters is the vertical offset. The mean residual is -216 g for Chinstrap, +44 g for Adelie, and +69 g for Gentoo: the model over-predicts Chinstrap mass by a clear margin while under-predicting the other two species more modestly. A model that ignores species therefore does not merely lose precision, it makes errors whose direction depends on which species the penguin belongs to. This is a clear signal that species membership carries information the model does not yet capture.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/model-diagnostics.png"</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">include_graphics</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"figures/model-diagnostics.png"</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="fig-diagnostics" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of standardised residuals versus predicted body mass. Points are coloured by species, showing that Gentoo, Adelie, and Chinstrap form distinct clusters rather than a random scatter, indicating model misspecification.">
+<div id="fig-diagnostics" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of standardized residuals versus predicted body mass, with dashed reference lines at plus and minus 2 standard deviations. Adelie and Chinstrap points are intermixed below about 4400 g predicted mass and Gentoo points lie above it, reflecting the species difference in flipper length. Chinstrap points are shifted downward relative to zero, showing that the model over-predicts that species.">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-diagnostics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="figures/model-diagnostics.png" class="img-fluid figure-img" alt="Scatter plot of standardised residuals versus predicted body mass. Points are coloured by species, showing that Gentoo, Adelie, and Chinstrap form distinct clusters rather than a random scatter, indicating model misspecification." width="1200">
+<img src="figures/model-diagnostics.png" class="img-fluid figure-img" alt="Scatter plot of standardized residuals versus predicted body mass, with dashed reference lines at plus and minus 2 standard deviations. Adelie and Chinstrap points are intermixed below about 4400 g predicted mass and Gentoo points lie above it, reflecting the species difference in flipper length. Chinstrap points are shifted downward relative to zero, showing that the model over-predicts that species.">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-diagnostics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;5: Standardised residuals versus predicted values, coloured by species. Species-level clustering indicates that the simple model omits an important predictor.
+Figure&nbsp;5: Standardized residuals versus predicted values, colored by species, with dashed lines at +/- 2 SD. Chinstrap residuals sit below zero more often than the other two species, the signature of an omitted categorical predictor.
 </figcaption>
 </figure>
 </div>
@@ -992,13 +1035,16 @@ Figure&nbsp;5: Standardised residuals versus predicted values, coloured by speci
 </figure>
 </div>
 </section>
+</section>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
 <section id="lessons-learned" class="level2">
 <h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
 <section id="conceptual-understanding" class="level3">
 <h3 class="anchored" data-anchor-id="conceptual-understanding">Conceptual Understanding</h3>
 <ul>
 <li>Flipper length alone explains 76.2% of body mass variance (R-squared = 0.762), confirming it as the strongest single predictor among the available morphometric variables.</li>
-<li>The species-level clustering in residuals demonstrates why biological context must inform statistical modeling; ignoring species produces a model that systematically under-predicts Gentoo mass and over-predicts for smaller species.</li>
+<li>The species-level clustering in residuals demonstrates why biological context must inform statistical modeling; ignoring species produces a model whose error has a species-dependent direction, over-predicting Chinstrap mass by roughly 200 g while under-predicting Adelie and Gentoo.</li>
 <li>Simpson’s Paradox appears in the bill depth correlation: negative when pooled, positive within species. This is a textbook example that arises naturally in the data.</li>
 <li>Confidence intervals around the slope ([47.1, 53.2] g/mm) are narrow, reflecting a well-estimated relationship despite the model’s structural limitations.</li>
 </ul>
@@ -1050,7 +1096,7 @@ Figure&nbsp;5: Standardised residuals versus predicted values, coloured by speci
 <p>This first post established the foundation for the Palmer Penguins analysis series. Starting with a thorough exploratory analysis, we identified flipper length as the dominant predictor of body mass and fitted a simple linear regression model that explains roughly three-quarters of the observed variation.</p>
 <p>The most instructive finding was not the model’s strength but its limitations. The species-level clustering in the residuals provided a clear, visual demonstration of why domain knowledge matters in statistical modeling. A high R-squared can coexist with systematic bias when an important categorical predictor is omitted.</p>
 <p>For those undertaking a similar analysis, we recommend the following sequence: explore the data thoroughly before fitting any model, and always examine residual plots even when summary metrics look favorable. Resist the temptation to interpret a single model in isolation.</p>
-<p>In conclusion, four points merit emphasis. First, flipper length is the strongest univariate predictor of body mass (r = 0.873, R-squared = 0.762), confirming that a single morphometric measurement carries substantial information about body condition. Second, the simple model has an RMSE of approximately 393 g, acceptable for broad field estimates but insufficient for precise individual predictions. Third, species-level residual clustering indicates that including species as a predictor will substantially improve the model, as confirmed in Part 2, where R-squared exceeds 0.860. Fourth, Simpson’s Paradox in the bill depth correlation underscores the importance of stratified analysis in ecological data and serves as a useful reminder that pooled associations can mislead.</p>
+<p>In conclusion, four points merit emphasis. First, flipper length is the strongest univariate predictor of body mass (r = 0.873, R-squared = 0.762), confirming that a single morphometric measurement carries substantial information about body condition. Second, the simple model has an RMSE of approximately 392 g, acceptable for broad field estimates but insufficient for precise individual predictions. Third, species-level residual clustering indicates that including species as a predictor will substantially improve the model, as confirmed in Part 2, where R-squared reaches 0.849. Fourth, Simpson’s Paradox in the bill depth correlation underscores the importance of stratified analysis in ecological data and serves as a useful reminder that pooled associations can mislead.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1061,7 +1107,7 @@ Figure&nbsp;5: Standardised residuals versus predicted values, coloured by speci
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>In Part 2, adding species information will improve the model’s R-squared from 0.762 to over 0.860—demonstrating why biological context matters in ecological modeling.</p>
+<p>In Part 2, adding species information will improve the model’s R-squared from 0.762 to 0.849—demonstrating why biological context matters in ecological modeling. Adding more morphometric measurements instead, without species, will turn out to achieve almost nothing.</p>
 </div>
 </div>
 </section>
@@ -1070,10 +1116,10 @@ Figure&nbsp;5: Standardised residuals versus predicted values, coloured by speci
 <section id="series-posts" class="level2">
 <h2 class="anchored" data-anchor-id="series-posts">Series Posts</h2>
 <ul>
-<li><a href="../palmerpenguinspart2/">Part 2: Multiple Regression and Species Effects</a>: Adding species as a predictor and fitting multiple regression.</li>
-<li><a href="../palmerpenguinspart3/">Part 3: Advanced Models and Cross-Validation</a>: Model comparison via cross-validation.</li>
-<li><a href="../palmerpenguinspart4/">Part 4: Model Diagnostics and Interpretation</a>: Comprehensive assumption checking.</li>
-<li><a href="../palmerpenguinspart5/">Part 5: Random Forest vs Linear Models</a>: Comparing parametric and non-parametric approaches.</li>
+<li><a href="../pp-multiple-regression/">Part 2: Multiple Regression and Species Effects</a>: Adding species as a predictor and fitting multiple regression.</li>
+<li><a href="../pp-cross-validation/">Part 3: Advanced Models and Cross-Validation</a>: Model comparison via cross-validation.</li>
+<li><a href="../pp-diagnostics/">Part 4: Model Diagnostics and Interpretation</a>: Comprehensive assumption checking.</li>
+<li><a href="../pp-random-forest/">Part 5: Random Forest vs Linear Models</a>: Comparing parametric and non-parametric approaches.</li>
 </ul>
 </section>
 <section id="key-resources" class="level2">
@@ -1097,49 +1143,52 @@ Figure&nbsp;5: Standardised residuals versus predicted values, coloured by speci
 <li><strong>02_fit_models.R</strong>: Fit simple linear regression, extract coefficients and diagnostics.</li>
 <li><strong>03_generate_figures.R</strong>: Generate publication-quality figures from analysis results.</li>
 </ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="op">&lt;</span>repository-url<span class="op">&gt;</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> posts/palmerpenguinspart1</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> docker-build</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> docker-post-render</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="ex">open</span> index.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Alternatively, run each script individually:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/scripts/01_prepare_data.R</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/scripts/02_fit_models.R</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/scripts/03_generate_figures.R</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render index.qmd</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The Makefile declares each script’s outputs as depending on the script and the prior stage’s outputs, so <code>make docker-render-qmd</code> re-runs only the stages that are stale (or all three, on a fresh clone) before rendering – it does not just re-render against whatever derived data and figures happen to already be committed:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="op">&lt;</span>repository-url<span class="op">&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> posts/pp-eda</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> docker-build</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> docker-render-qmd</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="ex">open</span> analysis/report/index.html</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>To run the pipeline (data, model, figures) without rendering – still only re-running stages that are stale:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> pipeline</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Or run each script individually (outside the container; requires a local R environment matching renv.lock):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/scripts/01_prepare_data.R</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/scripts/02_fit_models.R</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Rscript</span> analysis/scripts/03_generate_figures.R</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render analysis/report/index.qmd</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="environment-information" class="level2">
 <h2 class="anchored" data-anchor-id="environment-information">Environment Information</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>env_info <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Component"</span>, <span class="sc">~</span><span class="st">"Value"</span>,</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"R Version"</span>, R.version<span class="sc">$</span>version.string,</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Platform"</span>, R.version<span class="sc">$</span>platform,</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Analysis Date"</span>, <span class="fu">as.character</span>(<span class="fu">Sys.Date</span>())</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  env_info,</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">""</span>, <span class="st">""</span>),</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Analysis Environment"</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>env_info <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span><span class="st">"Component"</span>, <span class="sc">~</span><span class="st">"Value"</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"R Version"</span>, R.version<span class="sc">$</span>version.string,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Platform"</span>, R.version<span class="sc">$</span>platform,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Analysis Date"</span>, <span class="fu">as.character</span>(<span class="fu">Sys.Date</span>())</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  env_info,</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">""</span>, <span class="st">""</span>),</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">caption =</span> <span class="st">"Analysis Environment"</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Analysis Environment</caption>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">R Version</td>
-<td style="text-align: left;">R version 4.6.1 (2026-06-24)</td>
+<td style="text-align: left;">R version 4.6.0 (2026-04-24)</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Platform</td>
-<td style="text-align: left;">aarch64-apple-darwin25.4.0</td>
+<td style="text-align: left;">aarch64-apple-darwin23</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Analysis Date</td>
-<td style="text-align: left;">2026-08-28</td>
+<td style="text-align: left;">2026-11-09</td>
 </tr>
 </tbody>
 </table>

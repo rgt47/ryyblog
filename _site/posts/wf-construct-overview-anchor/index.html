@@ -320,6 +320,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -421,7 +434,7 @@ CONTACT & METADATA
 <h1>What is the Workflow Construct?</h1>
 <p>A workflow construct is the set of choices that, taken together, define how a single user does research-grade computing on a single machine. The choices span a hardware layer, an operating system, a file-system layout, a shell, an editor, a set of language toolchains, a containerization layer, a cloud or remote compute layer, and a backup strategy. Each layer is independent in principle: a user could swap macOS for Linux Mint without rewriting their R packages, or replace Vim with Neovim without changing their shell. In practice the layers interact (the editor plugins assume a shell, the shell scripts assume a file-system layout, the R packages assume a containerized dependency manifest), and the construct is the explicit record of which interactions have been resolved and which remain implicit.</p>
 <p>A useful analogy is the operating-system kernel and its userland. The kernel is invisible to most users most of the time, but its presence is what makes any of the userland tools work. Likewise the workflow construct is invisible to a researcher who never touches a new machine, but its presence is what makes a new machine reach productivity in hours rather than weeks.</p>
-<p>A concrete example: the construct documented below specifies that the user’s projects live in <code>~/prj/</code>, that the directory is synced via Dropbox and committed to GitHub, that R packages are installed inside a Docker container with a pinned <code>renv.lock</code>, and that the container is rebuilt from a <code>Dockerfile</code> checked into the same repository as the analysis. With those four facts, a new analyst can reproduce the entire compute environment by cloning the repository, running <code>make r</code>, and starting work; without them, the same task requires a sequence of guesses about which package versions matched which paper.</p>
+<p>A concrete example: the construct documented below specifies that the user’s projects live in <code>~/prj/</code>, that the directory is continuously synced and committed to GitHub, that R packages are installed inside a Docker container with a pinned <code>renv.lock</code>, and that the container is rebuilt from a <code>Dockerfile</code> checked into the same repository as the analysis. With those four facts, a new analyst can reproduce the entire compute environment by cloning the repository, running <code>make r</code>, and starting work; without them, the same task requires a sequence of guesses about which package versions matched which paper.</p>
 </section>
 <section id="theoretical-framing" class="level1">
 <h1>Theoretical Framing</h1>
@@ -497,8 +510,8 @@ CONTACT & METADATA
 </tr>
 <tr class="odd">
 <td>File system</td>
-<td><code>~/prj</code> synced via Dropbox; tracked in Git</td>
-<td>Single canonical project root; Dropbox handles continuous sync, Git handles intentional snapshots.</td>
+<td><code>~/prj</code> continuously synced; tracked in Git</td>
+<td>Single canonical project root; the sync layer handles continuous replication, Git handles intentional snapshots. The construct originally used Dropbox for this row; see the note below.</td>
 <td>20, 21, 24</td>
 </tr>
 <tr class="even">
@@ -776,7 +789,7 @@ CONTACT & METADATA
 <h1>Things to Watch Out For</h1>
 <p>Five gotchas have surfaced in the maintenance of this construct over the past several years. Each is small in isolation; in aggregation they are the leading causes of construct drift.</p>
 <ul>
-<li><p><strong>Dropbox is not a version-control system.</strong> The file-system row pairs Dropbox sync with Git tracking precisely because Dropbox provides continuous sync but no notion of an intentional snapshot. Relying on Dropbox alone leaves the user with no rollback target between an accidental deletion and the most recent typing event.</p></li>
+<li><p><strong>A cloud sync service is not a version-control system.</strong> The file-system row pairs continuous sync with Git tracking precisely because a sync service provides continuous replication but no notion of an intentional snapshot. Relying on sync alone leaves the user with no rollback target between an accidental deletion and the most recent typing event. The construct as originally documented used Dropbox for this row. That choice has since been revisited: <a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a> works through the replacement layer by layer, and readers building the construct now should treat the sync mechanism as an open decision rather than as Dropbox by default.</p></li>
 <li><p><strong><code>renv.lock</code> does not pin the system R version.</strong> A project that restored cleanly on R 4.4 may fail to compile a package on R 4.6 because the package’s source has incompatibilities with a newer R. The construct’s container layer addresses this by pinning R itself in the Dockerfile; outside of Docker, the language manager (<code>mise</code> or <code>asdf</code>) is the equivalent control.</p></li>
 <li><p><strong>zsh aliases do not expand inside scripts by default.</strong> A script that calls <code>ss</code> will fail with <code>command not found</code> even if <code>ss</code> is aliased in <code>.zshrc</code>. The fix is to use the underlying command in scripts and reserve aliases for interactive shells, or to invoke the script with <code>zsh -i</code> to load the interactive configuration (with the corresponding overhead).</p></li>
 <li><p><strong>GitHub Actions runs Linux by default; macOS and Windows runners are billed at higher rates.</strong> A construct that develops on macOS and tests on Linux benefits from this alignment; one that depends on macOS-specific tooling (a Homebrew cask, a Quartz graphics device) needs an explicit <code>runs-on: macos-latest</code> and a budget for the additional minute-rate.</p></li>

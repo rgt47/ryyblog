@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-09-01">
-<meta name="description" content="I didn’t expect building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers to teach me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.">
+<meta name="description" content="Building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers taught me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.">
 
 <title>A Voice-Driven Copyedit Pipeline for Quarto Blogs and Research Papers – focusonr</title>
 <style>
@@ -158,13 +158,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="A Voice-Driven Copyedit Pipeline for Quarto Blogs and Research Papers – focusonr">
-<meta property="og:description" content="I didn’t expect building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers to teach me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.">
+<meta property="og:description" content="Building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers taught me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.">
 <meta property="og:image" content="https://focusonr.org/posts/wf-voice-copyedit-pipeline/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="672">
 <meta property="og:image:width" content="1584">
 <meta name="twitter:title" content="A Voice-Driven Copyedit Pipeline for Quarto Blogs and Research Papers – focusonr">
-<meta name="twitter:description" content="I didn’t expect building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers to teach me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.">
+<meta name="twitter:description" content="Building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers taught me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.">
 <meta name="twitter:image" content="https://focusonr.org/posts/wf-voice-copyedit-pipeline/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I didn’t expect building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers to teach me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.
+    Building a voice dictation pipeline for copyediting 57 blog posts and 90 research papers taught me more about failure modes than about speech recognition. Design, real scripts, and a worked example run end to end for real, including every bug it took to get there.
   </div>
 </div>
 
@@ -346,6 +346,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.png" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -354,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I didn’t think dictating edits to 57 blog posts and 90 research-paper documents would end up teaching me more about failure modes than about speech recognition. I went in assuming the hard part would be Whisper accuracy. It wasn’t. The hard part was everything <em>around</em> the transcription: knowing when a recording silently fell short, knowing when an anchor was located correctly but quoted incompletely, knowing that <code>index.qmd</code> is secretly a symlink in every single post I own, and knowing that “quote… end quote” doesn’t always come back as the words “quote… end quote.”</p>
+<p>Dictating edits to 57 blog posts and 90 research-paper documents taught me more about failure modes than about speech recognition. I went in assuming the hard part would be Whisper accuracy. It wasn’t. The hard part was everything <em>around</em> the transcription: knowing when a recording silently fell short, knowing when an anchor was located correctly but quoted incompletely, knowing that <code>index.qmd</code> is secretly a symlink in every single post I own, and knowing that “quote… end quote” doesn’t always come back as the words “quote… end quote.”</p>
 <p>The problem I was solving is mundane and exhausting: render to PDF, print, annotate margins, open the source, find the passage, retype the edit. Repeated across a corpus large enough that no single sitting holds it in view. I replaced that loop with: read the rendered post, dictate edits aloud, machine transcription, a structured edit file, automated application, hunk-by-hunk diff review. The author retains full authorship throughout. No language model composes, rewrites, or suggests prose at any point. The machine performs three mechanical jobs: speech-to-text, resolving a spoken anchor to an exact location in the source, and applying a specified change. Every word that ends up in a post or paper is the author’s.</p>
 <p>This post documents the design, the real installed scripts, and a worked example run end to end for real, including three bugs found only by actually running it, and a live recording that failed three times before it succeeded once.</p>
 <section id="motivations" class="level2">

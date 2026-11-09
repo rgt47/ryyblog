@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-05-17">
-<meta name="description" content="I did not appreciate how fragile my development environment was until I tried to set up a second MacBook and discovered my entire shell configuration had no git history, no rollback, and no deployment mechanism.">
+<meta name="description" content="My development environment was more fragile than it looked: setting up a second MacBook revealed that my entire shell configuration had no git history, no rollback, and no deployment mechanism.">
 
 <title>Multi-Laptop macOS Bootstrap: Migrating Dotfiles to a Versioned Git Repository – focusonr</title>
 <style>
@@ -157,11 +157,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Multi-Laptop macOS Bootstrap: Migrating Dotfiles to a Versioned Git Repository – focusonr">
-<meta property="og:description" content="I did not appreciate how fragile my development environment was until I tried to set up a second MacBook and discovered my entire shell configuration had no git history, no rollback, and no deployment mechanism.">
+<meta property="og:description" content="My development environment was more fragile than it looked: setting up a second MacBook revealed that my entire shell configuration had no git history, no rollback, and no deployment mechanism.">
 <meta property="og:image" content="https://focusonr.org/posts/wf-multi-laptop-dotfiles-bootstrap/media/images/hero.jpg">
 <meta property="og:site_name" content="focusonr">
 <meta name="twitter:title" content="Multi-Laptop macOS Bootstrap: Migrating Dotfiles to a Versioned Git Repository – focusonr">
-<meta name="twitter:description" content="I did not appreciate how fragile my development environment was until I tried to set up a second MacBook and discovered my entire shell configuration had no git history, no rollback, and no deployment mechanism.">
+<meta name="twitter:description" content="My development environment was more fragile than it looked: setting up a second MacBook revealed that my entire shell configuration had no git history, no rollback, and no deployment mechanism.">
 <meta name="twitter:image" content="https://focusonr.org/posts/wf-multi-laptop-dotfiles-bootstrap/media/images/hero.jpg">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not appreciate how fragile my development environment was until I tried to set up a second MacBook and discovered my entire shell configuration had no git history, no rollback, and no deployment mechanism.
+    My development environment was more fragile than it looked: setting up a second MacBook revealed that my entire shell configuration had no git history, no rollback, and no deployment mechanism.
   </div>
 </div>
 
@@ -313,6 +313,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -330,7 +343,7 @@ YAML FRONT MATTER
   [x] draft: false    — flip when ready
 
 NARRATIVE INPUTS
-  [x] Hook sentence   — 'I did not appreciate X until Y'
+  [x] Hook sentence   — states the substantive finding up front
   [x] Pain point      — Dropbox-synced dotfiles with no git history
   [x] Motivations     — 5 bullets
   [x] Objectives      — 4 numbered, verifiable end states
@@ -433,7 +446,8 @@ analysis/configs/ and shown verbatim in the body.
 <li><strong>GitHub account:</strong> authenticated with <code>gh auth login</code> (the repository must be private; never use a public repository for dotfiles)</li>
 <li><strong>Time required:</strong> 3-4 hours for the initial migration; 30 minutes to bootstrap subsequent laptops</li>
 </ul>
-<p>This post assumes that any project content has already been migrated off Dropbox, and that shell configuration files now live in <code>~</code> as plain, unversioned dotfiles.</p>
+<p>This post assumes only that the shell configuration files themselves now live in <code>~</code> as plain, unversioned dotfiles, outside any cloud-synced directory. That is the starting state for almost every reader.</p>
+<p>The broader migration of <em>project content</em> off Dropbox is a larger undertaking covered separately in <a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a>, and it is not a prerequisite here. The dependency runs the other way: that post assumes the dotfiles repository built below already exists, so do this one first. An earlier version of this section stated the requirement in both directions at once, which left the two posts citing each other as prerequisites and neither of them first.</p>
 </section>
 <section id="audit-findings-three-blockers" class="level1">
 <h1>Audit Findings: Three Blockers</h1>

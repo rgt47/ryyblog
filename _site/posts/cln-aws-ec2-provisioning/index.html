@@ -317,6 +317,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <p><em>2026-05-17 17:08 PDT</em></p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -326,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Automating cloud infrastructure removes repetitive manual steps and frees attention for the work that matters.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how virtual servers worked until I had a Shiny app running locally and needed to share it with collaborators over the web. The app was finished, the code was clean, and everything worked on my laptop. ‘Works on my machine’ is not a deployment strategy.</p>
+<p>Sharing a locally running Shiny app with collaborators over the web requires a virtual server, and virtual servers were unfamiliar ground. The app was finished, the code was clean, and everything worked on my laptop. ‘Works on my machine’ is not a deployment strategy.</p>
 <p>The challenge had two parts: first, create and launch a virtual server in the cloud; second, configure that server to host the application securely. We cover the first part in full.</p>
 <p>There are two well-defined entry points to AWS EC2 provisioning: the interactive web console and the <code>aws</code> CLI. The console is a good way to understand what each component does; the CLI is a better choice once the same configuration has been launched more than twice. We document both paths. They reach the same terminal state (a running Ubuntu instance with a security group, key pair, Elastic IP, and Docker installed). The choice is a matter of how often one expects to repeat the operation.</p>
 <p>We cover Layer 11 (Cloud) of the workflow architecture described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>.</p>

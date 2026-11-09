@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-01-15">
-<meta name="description" content="I did not really understand how many layers of validation sit between a clinical trial data entry form and a reliable analysis dataset until I started mapping out EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.">
+<meta name="description" content="Several layers of validation sit between a clinical trial data entry form and a reliable analysis dataset. This post maps them out: EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.">
 
 <title>Clinical Trial Data Validation Across Languages and Tools – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Clinical Trial Data Validation Across Languages and Tools – focusonr">
-<meta property="og:description" content="I did not really understand how many layers of validation sit between a clinical trial data entry form and a reliable analysis dataset until I started mapping out EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.">
+<meta property="og:description" content="Several layers of validation sit between a clinical trial data entry form and a reliable analysis dataset. This post maps them out: EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.">
 <meta property="og:image" content="https://focusonr.org/posts/cln-multilang-trial-validation/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="560">
 <meta property="og:image:width" content="560">
 <meta name="twitter:title" content="Clinical Trial Data Validation Across Languages and Tools – focusonr">
-<meta name="twitter:description" content="I did not really understand how many layers of validation sit between a clinical trial data entry form and a reliable analysis dataset until I started mapping out EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.">
+<meta name="twitter:description" content="Several layers of validation sit between a clinical trial data entry form and a reliable analysis dataset. This post maps them out: EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.">
 <meta name="twitter:image" content="https://focusonr.org/posts/cln-multilang-trial-validation/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really understand how many layers of validation sit between a clinical trial data entry form and a reliable analysis dataset until I started mapping out EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.
+    Several layers of validation sit between a clinical trial data entry form and a reliable analysis dataset. This post maps them out: EDC edit checks, open-source tools, and the possibility of generating JavaScript validation from a simple spreadsheet processed by Lua.
   </div>
 </div>
 
@@ -330,6 +330,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -338,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really understand how much complexity hides behind the phrase “data validation” until I tried to map out the full landscape for a clinical trial database. What began as a question about edit checks in an EDC system quickly expanded into comparisons across proprietary platforms, open-source alternatives, and general-purpose languages. It ended with a surprisingly elegant pipeline that starts with a spreadsheet and ends with real-time browser validation powered by Lua-generated JavaScript.</p>
+<p>Considerable complexity hides behind the phrase ‘data validation’. Mapping out the full landscape for a clinical trial database begins as a question about edit checks in an EDC system and quickly expands into comparisons across proprietary platforms, open-source alternatives, and general-purpose languages. It ends with a surprisingly elegant pipeline that starts with a spreadsheet and ends with real-time browser validation powered by Lua-generated JavaScript.</p>
 <p>Clinical trial data validation is not a single technique. It is a layered system of temporal checks, cross-field logic, protocol adherence rules, dynamic thresholds, plausibility constraints, missing data pattern recognition, dictionary lookups, conditional queries, visit sequencing, and duplicate detection. Each of these layers can be implemented in different tools, and the choice of tool shapes the trade-offs between accessibility, flexibility, and performance.</p>
 <p>We walk through what each layer involves and compare the available tooling. We then build toward a novel pipeline where non-programmers define validation rules in a CSV file, Lua processes those rules into JavaScript functions, and a Shiny application loads the generated JavaScript for real-time form validation. The Lua pipeline is the most architecturally distinctive component and appears genuinely novel in the clinical data validation context.</p>
 <section id="motivations" class="level2">

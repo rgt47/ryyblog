@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-01-01">
-<meta name="description" content="I didn’t really know much about [topic] until I tried to [implement/understand] it myself. Here’s what I learned along the way.">
+<meta name="description" content="The scaffold used for every blog post in this series, with the authoring instructions left in place. Copy it to start a new post; the bracketed placeholders in the body mark what the author supplies.">
 
 <title>Constructing a reproducible blog post using zzcollab tools – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Constructing a reproducible blog post using zzcollab tools – focusonr">
-<meta property="og:description" content="I didn’t really know much about [topic] until I tried to [implement/understand] it myself. Here’s what I learned along the way.">
+<meta property="og:description" content="The scaffold used for every blog post in this series, with the authoring instructions left in place. Copy it to start a new post; the bracketed placeholders in the body mark what the author supplies.">
 <meta property="og:image" content="https://focusonr.org/posts/zc-blog-post-template/media/images/penguin-hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="1067">
 <meta property="og:image:width" content="1600">
 <meta name="twitter:title" content="Constructing a reproducible blog post using zzcollab tools – focusonr">
-<meta name="twitter:description" content="I didn’t really know much about [topic] until I tried to [implement/understand] it myself. Here’s what I learned along the way.">
+<meta name="twitter:description" content="The scaffold used for every blog post in this series, with the authoring instructions left in place. Copy it to start a new post; the bracketed placeholders in the body mark what the author supplies.">
 <meta name="twitter:image" content="https://focusonr.org/posts/zc-blog-post-template/media/images/penguin-hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I didn’t really know much about [topic] until I tried to [implement/understand] it myself. Here’s what I learned along the way.
+    The scaffold used for every blog post in this series, with the authoring instructions left in place. Copy it to start a new post; the bracketed placeholders in the body mark what the author supplies.
   </div>
 </div>
 
@@ -311,6 +311,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -328,7 +341,7 @@ YAML FRONT MATTER (lines 1-20)
   [ ] draft: false    — flip when ready
 
 NARRATIVE INPUTS
-  [ ] Hook sentence   — "I didn't know X until Y"
+  [ ] Hook sentence   — the substantive finding, stated directly
   [ ] Initial misconception you held
   [ ] What you actually discovered
   [ ] Problem context — why you needed this (1 paragraph)
@@ -454,21 +467,22 @@ INTRODUCTION SECTION
 <h1>Introduction</h1>
 <!-- TEMPLATE INSTRUCTION: INTRODUCTION - Ken Koon Wong Style
 
-Purpose: Hook with personal learning narrative
-Ken's approach:
-- "I didn't really know... until I learned"
-- Establishes author as learner, not expert
-- Creates immediate relatability
+Purpose: Open with the substantive finding, then the context
+Approach:
+- Lead with what is true, not with what the author did not know
+- Never open with a personal-revelation hook ('I never knew how...',
+  'I had no idea that...', 'It turns out that...')
+- Establishes author as learner through the narrative, not the opener
 - Conversational, humble tone
 
 Keep it SHORT - 2-3 paragraphs max. Save detailed explanations for later.
 
 EXAMPLE STRUCTURE:
-Paragraph 1: Your "I didn't know until..." hook
+Paragraph 1: The substantive finding, stated directly
 Paragraph 2: Brief context (the problem you faced)
 Paragraph 3: Transition to what you wanted to accomplish
 -->
-<p>I didn’t really know much about [topic] until I [encountered situation/tried to implement it/needed it for project]. Like many data scientists, I thought [initial misconception or assumption]. Turns out, [what you actually discovered].</p>
+<p>[Topic] is [the substantive finding], which became clear when I [encountered situation/tried to implement it/needed it for project]. Like many data scientists, I thought [initial misconception or assumption]. In fact, [what you actually discovered].</p>
 <p>[Brief context: Why did you need this? What problem were you trying to solve? Keep it personal and specific.]</p>
 <p>Here’s what I set out to understand:</p>
 <section id="motivations" class="level2">
@@ -664,7 +678,7 @@ DO: reference the pre-generated files and focus on interpretation
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="figures/eda-overview.png" class="img-fluid figure-img" alt="Two-panel figure: left shows histogram of MPG distribution ranging from ~10-35 mpg, right shows boxplots for 4, 6, and 8 cylinder vehicles" width="1500"></p>
+<p><img src="figures/eda-overview.png" class="img-fluid figure-img" alt="Two-panel figure: left shows histogram of MPG distribution ranging from ~10-35 mpg, right shows boxplots for 4, 6, and 8 cylinder vehicles"></p>
 <figcaption>Distribution of fuel efficiency across the dataset. Left: Histogram showing MPG distribution. Right: Boxplots of MPG by cylinder count reveal engines with more cylinders tend to have lower fuel efficiency.</figcaption>
 </figure>
 </div>
@@ -708,7 +722,7 @@ PURPOSE: Mental break, maintain engagement, visual balance
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="figures/correlation-plot.png" class="img-fluid figure-img" alt="Scatter plot with vehicle weight (x-axis, 1000-5500 lbs) vs MPG (y-axis, 10-35 mpg), colored by cylinder count (4/6/8 cyl), with fitted regression line" width="1200"></p>
+<p><img src="figures/correlation-plot.png" class="img-fluid figure-img" alt="Scatter plot with vehicle weight (x-axis, 1000-5500 lbs) vs MPG (y-axis, 10-35 mpg), colored by cylinder count (4/6/8 cyl), with fitted regression line"></p>
 <figcaption>Strong negative relationship between vehicle weight and fuel efficiency. Heavier cars consistently get worse mileage, regardless of cylinder count. The fitted regression line (dashed) shows the overall trend.</figcaption>
 </figure>
 </div>
@@ -768,7 +782,7 @@ AVOID:
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="figures/model-plot.png" class="img-fluid figure-img" alt="Scatter plot with fitted regression line and gray confidence band, showing negative relationship between weight and MPG" width="1200"></p>
+<p><img src="figures/model-plot.png" class="img-fluid figure-img" alt="Scatter plot with fitted regression line and gray confidence band, showing negative relationship between weight and MPG"></p>
 <figcaption>Linear regression fit showing the relationship between vehicle weight and fuel efficiency. The gray band represents the 95% confidence interval around the fitted line. The fit is quite good, explaining 75% of the variance in MPG.</figcaption>
 </figure>
 </div>
@@ -825,7 +839,7 @@ Display residual plots and outlier analysis.
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="figures/diagnostics-plot.png" class="img-fluid figure-img" alt="Scatter plot of standardized residuals (y-axis) vs predicted values (x-axis), with reference lines at -2, 0, +2" width="1200"></p>
+<p><img src="figures/diagnostics-plot.png" class="img-fluid figure-img" alt="Scatter plot of standardized residuals (y-axis) vs predicted values (x-axis), with reference lines at -2, 0, +2"></p>
 <figcaption>Residual diagnostic plot showing standardized residuals vs fitted values. The red dashed lines mark ±2 standard deviations. A good model should show residuals randomly scattered around zero with no patterns. We have a few potential outliers but overall the fit looks reasonable.</figcaption>
 </figure>
 </div>
@@ -1077,13 +1091,13 @@ are pre-generated - this post is just the narrative.
 <p><strong>Session Information:</strong></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.1 (2026-06-24)
-Platform: aarch64-apple-darwin25.4.0
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
 Running under: macOS Tahoe 26.6.2
 
 Matrix products: default
-BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
-LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -1095,11 +1109,10 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 loaded via a namespace (and not attached):
- [1] htmlwidgets_1.6.4 compiler_4.6.1    fastmap_1.2.0     cli_3.6.6        
- [5] tools_4.6.1       htmltools_0.5.9   parallel_4.6.1    otel_0.2.0       
+ [1] htmlwidgets_1.6.4 compiler_4.6.0    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.0       htmltools_0.5.9   parallel_4.6.0    otel_0.2.0       
  [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
-[13] xfun_0.58         digest_0.6.39     rlang_1.3.0       png_0.1-9        
-[17] evaluate_1.0.5   </code></pre>
+[13] xfun_0.62         digest_0.6.39     rlang_1.2.0       evaluate_1.0.5   </code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>thats all folks!</code></pre>
@@ -1196,6 +1209,7 @@ top of this file. If anything below is unchecked, the post is not ready.
 <li>Post 06: <a href="../zc-manuscript-report-elements/">Seven Required Elements for a zzc Manuscript report.Rmd</a></li>
 <li>Post 07: <a href="../zc-tiered-ci-strategy/">A tiered CI strategy for zzcollab research compendia</a></li>
 <li>Post 08: <a href="../zc-github-actions-workflows/">GitHub Actions workflows for zzcollab research compendia</a></li>
+<li>Post 09: <a href="../zc-offload-simulations-home-server/">Offloading R Simulations to a Home Server</a></li>
 </ol>
 
 

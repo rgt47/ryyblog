@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-05-15">
-<meta name="description" content="I did not really know how effective ChatGPT could be as a prototyping partner until I iteratively built a modular Shiny app for Palmer Penguin exploration in three prompts.">
+<meta name="description" content="ChatGPT is an effective prototyping partner: three prompts of iterative work produced a modular Shiny app for Palmer Penguin exploration.">
 
 <title>Prototyping a Shiny App with ChatGPT – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Prototyping a Shiny App with ChatGPT – focusonr">
-<meta property="og:description" content="I did not really know how effective ChatGPT could be as a prototyping partner until I iteratively built a modular Shiny app for Palmer Penguin exploration in three prompts.">
+<meta property="og:description" content="ChatGPT is an effective prototyping partner: three prompts of iterative work produced a modular Shiny app for Palmer Penguin exploration.">
 <meta property="og:image" content="https://focusonr.org/posts/shy-prototype-with-chatgpt/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="1067">
 <meta property="og:image:width" content="1600">
 <meta name="twitter:title" content="Prototyping a Shiny App with ChatGPT – focusonr">
-<meta name="twitter:description" content="I did not really know how effective ChatGPT could be as a prototyping partner until I iteratively built a modular Shiny app for Palmer Penguin exploration in three prompts.">
+<meta name="twitter:description" content="ChatGPT is an effective prototyping partner: three prompts of iterative work produced a modular Shiny app for Palmer Penguin exploration.">
 <meta name="twitter:image" content="https://focusonr.org/posts/shy-prototype-with-chatgpt/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how effective ChatGPT could be as a prototyping partner until I iteratively built a modular Shiny app for Palmer Penguin exploration in three prompts.
+    ChatGPT is an effective prototyping partner: three prompts of iterative work produced a modular Shiny app for Palmer Penguin exploration.
   </div>
 </div>
 
@@ -307,6 +307,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -316,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Iterative prototyping with conversational AI produces working Shiny applications faster than coding from scratch.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how effective ChatGPT could be as a prototyping partner until I sat down with a clear goal (build a modular Shiny app for Palmer Penguin data exploration) and tried to get there through iterative prompting. Three prompts and roughly twenty minutes later, I had a working application with boxplots, scatterplots, a correlation matrix, tooltips, and a modular architecture.</p>
+<p>ChatGPT is a more effective prototyping partner than I expected. I sat down with a clear goal (build a modular Shiny app for Palmer Penguin data exploration) and tried to get there through iterative prompting. Three prompts and roughly twenty minutes later, I had a working application with boxplots, scatterplots, a correlation matrix, tooltips, and a modular architecture.</p>
 <p>The key insight was not that ChatGPT writes perfect code on the first attempt (it does not), but that conversational iteration (starting broad and progressively adding specificity) mirrors how an experienced developer prototypes. Each prompt built on the previous output, refining the application in stages rather than attempting to specify everything upfront.</p>
 <p>This post presents the three prompts I used, the complete Shiny application code that resulted, and a discussion of the modular architecture that ChatGPT produced. The code is presented as-is, with annotation explaining each component.</p>
 <section id="motivations" class="level2">

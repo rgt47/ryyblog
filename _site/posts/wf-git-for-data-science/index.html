@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-02-11">
-<meta name="description" content="I did not really know how much time I was wasting without proper version control until a single overwritten script cost me three days of work.">
+<meta name="description" content="Working without proper version control wastes more time than it saves: a single overwritten script cost me three days of work.">
 
 <title>Setting Up Git for Data Science Workflows – focusonr</title>
 <style>
@@ -157,11 +157,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Setting Up Git for Data Science Workflows – focusonr">
-<meta property="og:description" content="I did not really know how much time I was wasting without proper version control until a single overwritten script cost me three days of work.">
+<meta property="og:description" content="Working without proper version control wastes more time than it saves: a single overwritten script cost me three days of work.">
 <meta property="og:image" content="https://focusonr.org/posts/wf-git-for-data-science/media/images/hero.jpg">
 <meta property="og:site_name" content="focusonr">
 <meta name="twitter:title" content="Setting Up Git for Data Science Workflows – focusonr">
-<meta name="twitter:description" content="I did not really know how much time I was wasting without proper version control until a single overwritten script cost me three days of work.">
+<meta name="twitter:description" content="Working without proper version control wastes more time than it saves: a single overwritten script cost me three days of work.">
 <meta name="twitter:image" content="https://focusonr.org/posts/wf-git-for-data-science/media/images/hero.jpg">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how much time I was wasting without proper version control until a single overwritten script cost me three days of work.
+    Working without proper version control wastes more time than it saves: a single overwritten script cost me three days of work.
   </div>
 </div>
 
@@ -305,6 +305,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
@@ -370,7 +383,7 @@ CONTACT & METADATA
 <p><em>Version control is the foundation of every reproducible research workflow.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how much damage a missing backup could cause until I accidentally overwrote three days of analysis work on an Alzheimer’s disease dataset. The file was gone, the changes were irreversible, and the only copy lived on a USB drive I had left at the office. That experience convinced me that version control was not optional for data science—it was essential.</p>
+<p>A missing backup can do more damage than it seems possible to lose. I accidentally overwrote three days of analysis work on an Alzheimer’s disease dataset. The file was gone, the changes were irreversible, and the only copy lived on a USB drive I had left at the office. That experience convinced me that version control was not optional for data science; it was essential.</p>
 <p>Git is the most widely adopted version control system in both software engineering and data science. It tracks every change to every file, allows branching and merging of parallel work, and provides a complete history of a project’s evolution. Combined with GitHub as a remote hosting service, Git enables collaboration, code review, and reproducibility at a level that manual file management simply cannot match.</p>
 <p>We document a path from “I’ll just save copies” to a reliable Git-based workflow. The post covers installation, basic commands, branching, collaboration, and the commit message practices that proved most valuable. This is written as a learner, not as an expert, and corrections or suggestions from readers who have found better approaches are welcome.</p>
 <p>More formally, we document the version-control concern that cuts across multiple layers of the Workflow Construct described in <a href="../../posts/15-wf-construct-overview-anchor/">post 15</a>. Git is not itself a layer; it is the mechanism by which the file-system layer’s snapshots, the dotfiles repository’s source of truth, the project compendium’s history, and the cloud layer’s deployments are all coordinated. This post documents Git’s configuration as the baseline that every other layer assumes.</p>

@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2026-06-11">
-<meta name="description" content="A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a fully reproducible data analysis compendium – in roughly the order a professor would assign them.">
+<meta name="description" content="A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a reviewed, published, reproducible analysis, organized as eight phases in roughly the order a professor would assign them.">
 
 <title>Getting Started in a Reproducible Biostatistics Lab: A Student Reading Guide – focusonr</title>
 <style>
@@ -122,11 +122,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Getting Started in a Reproducible Biostatistics Lab: A Student Reading Guide – focusonr">
-<meta property="og:description" content="A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a fully reproducible data analysis compendium – in roughly the order a professor would assign them.">
+<meta property="og:description" content="A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a reviewed, published, reproducible analysis, organized as eight phases in roughly the order a professor would assign them.">
 <meta property="og:image" content="https://focusonr.org/posts/zc-new-student-reading-guide/media/images/hero.jpg">
 <meta property="og:site_name" content="focusonr">
 <meta name="twitter:title" content="Getting Started in a Reproducible Biostatistics Lab: A Student Reading Guide – focusonr">
-<meta name="twitter:description" content="A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a fully reproducible data analysis compendium – in roughly the order a professor would assign them.">
+<meta name="twitter:description" content="A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a reviewed, published, reproducible analysis, organized as eight phases in roughly the order a professor would assign them.">
 <meta name="twitter:image" content="https://focusonr.org/posts/zc-new-student-reading-guide/media/images/hero.jpg">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -185,22 +185,44 @@ document.addEventListener('DOMContentLoaded', function() {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#revision-note" id="toc-revision-note" class="nav-link" data-scroll-target="#revision-note">Revision note</a></li>
+  </ul></li>
   <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
   <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
   <li><a href="#what-is-this-reading-sequence" id="toc-what-is-this-reading-sequence" class="nav-link" data-scroll-target="#what-is-this-reading-sequence">What is this reading sequence?</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#the-reading-sequence" id="toc-the-reading-sequence" class="nav-link" data-scroll-target="#the-reading-sequence">The Reading Sequence</a>
+  <li><a href="#phase-0-orientation" id="toc-phase-0-orientation" class="nav-link" data-scroll-target="#phase-0-orientation">Phase 0: Orientation</a>
   <ul class="collapse">
-  <li><a href="#post-1-a-workflow-construct-for-the-modern-data-scientist" id="toc-post-1-a-workflow-construct-for-the-modern-data-scientist" class="nav-link" data-scroll-target="#post-1-a-workflow-construct-for-the-modern-data-scientist">Post 1 – A Workflow Construct for the Modern Data Scientist</a></li>
-  <li><a href="#post-2-unix-command-line-workspace-setup-for-data-science-researchers" id="toc-post-2-unix-command-line-workspace-setup-for-data-science-researchers" class="nav-link" data-scroll-target="#post-2-unix-command-line-workspace-setup-for-data-science-researchers">Post 2 – Unix Command-Line Workspace Setup for Data Science Researchers</a></li>
-  <li><a href="#post-3-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a" id="toc-post-3-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a" class="nav-link" data-scroll-target="#post-3-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a">Post 3 – Multi-Laptop macOS Bootstrap: Migrating Dotfiles to a</a></li>
-  <li><a href="#post-4-setting-up-git-for-data-science-workflows" id="toc-post-4-setting-up-git-for-data-science-workflows" class="nav-link" data-scroll-target="#post-4-setting-up-git-for-data-science-workflows">Post 4 – Setting Up Git for Data Science Workflows</a></li>
-  <li><a href="#post-5-reproducible-blog-posts-with-zzcollab-a-quarto-workflow" id="toc-post-5-reproducible-blog-posts-with-zzcollab-a-quarto-workflow" class="nav-link" data-scroll-target="#post-5-reproducible-blog-posts-with-zzcollab-a-quarto-workflow">Post 5 – Reproducible Blog Posts with ZZCOLLAB: A Quarto Workflow</a></li>
-  <li><a href="#post-6-zzcollab-analysis-profile-walkthrough-a-55-item" id="toc-post-6-zzcollab-analysis-profile-walkthrough-a-55-item" class="nav-link" data-scroll-target="#post-6-zzcollab-analysis-profile-walkthrough-a-55-item">Post 6 – zzcollab Analysis Profile Walkthrough: A 55-Item</a></li>
-  <li><a href="#post-7-the-pipe-equivalence-myth-when-f-g-is-not" id="toc-post-7-the-pipe-equivalence-myth-when-f-g-is-not" class="nav-link" data-scroll-target="#post-7-the-pipe-equivalence-myth-when-f-g-is-not">Post 7 – The Pipe Equivalence Myth: When <code>f() |&gt; g()</code> Is Not</a></li>
-  <li><a href="#post-8-palmer-penguins-part-1-exploratory-data-analysis" id="toc-post-8-palmer-penguins-part-1-exploratory-data-analysis" class="nav-link" data-scroll-target="#post-8-palmer-penguins-part-1-exploratory-data-analysis">Post 8 – Palmer Penguins Part 1: Exploratory Data Analysis</a></li>
+  <li><a href="#post-1-a-workflow-construct-for-the-modern-data-scientist" id="toc-post-1-a-workflow-construct-for-the-modern-data-scientist" class="nav-link" data-scroll-target="#post-1-a-workflow-construct-for-the-modern-data-scientist">Post 1: A Workflow Construct for the Modern Data Scientist</a></li>
   </ul></li>
+  <li><a href="#phase-1-the-environment" id="toc-phase-1-the-environment" class="nav-link" data-scroll-target="#phase-1-the-environment">Phase 1: The environment</a>
+  <ul class="collapse">
+  <li><a href="#post-2-unix-command-line-workspace-setup-for-data-science-researchers" id="toc-post-2-unix-command-line-workspace-setup-for-data-science-researchers" class="nav-link" data-scroll-target="#post-2-unix-command-line-workspace-setup-for-data-science-researchers">Post 2: Unix Command-Line Workspace Setup for Data Science Researchers</a></li>
+  <li><a href="#post-3-refactoring-a-personal-toolbox-scripts-versus-shell-functions" id="toc-post-3-refactoring-a-personal-toolbox-scripts-versus-shell-functions" class="nav-link" data-scroll-target="#post-3-refactoring-a-personal-toolbox-scripts-versus-shell-functions">Post 3: Refactoring a Personal Toolbox: Scripts versus Shell Functions</a></li>
+  <li><a href="#post-4-setting-up-git-for-data-science-workflows" id="toc-post-4-setting-up-git-for-data-science-workflows" class="nav-link" data-scroll-target="#post-4-setting-up-git-for-data-science-workflows">Post 4: Setting Up Git for Data Science Workflows</a></li>
+  <li><a href="#post-5-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a-versioned-git-repository" id="toc-post-5-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a-versioned-git-repository" class="nav-link" data-scroll-target="#post-5-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a-versioned-git-repository">Post 5: Multi-Laptop macOS Bootstrap: Migrating Dotfiles to a Versioned Git Repository</a></li>
+  <li><a href="#post-6-modern-cli-replacements-for-the-shell-layer" id="toc-post-6-modern-cli-replacements-for-the-shell-layer" class="nav-link" data-scroll-target="#post-6-modern-cli-replacements-for-the-shell-layer">Post 6: Modern CLI Replacements for the Shell Layer</a></li>
+  <li><a href="#editor-elective" id="toc-editor-elective" class="nav-link" data-scroll-target="#editor-elective">Editor elective</a></li>
+  </ul></li>
+  <li><a href="#phase-2-credentials-and-durability" id="toc-phase-2-credentials-and-durability" class="nav-link" data-scroll-target="#phase-2-credentials-and-durability">Phase 2: Credentials and durability</a></li>
+  <li><a href="#phase-3-ground-rules-for-generative-ai" id="toc-phase-3-ground-rules-for-generative-ai" class="nav-link" data-scroll-target="#phase-3-ground-rules-for-generative-ai">Phase 3: Ground rules for generative AI</a></li>
+  <li><a href="#phase-4-the-compendium" id="toc-phase-4-the-compendium" class="nav-link" data-scroll-target="#phase-4-the-compendium">Phase 4: The compendium</a>
+  <ul class="collapse">
+  <li><a href="#post-7-reproducible-blog-posts-with-zzcollab-a-quarto-workflow" id="toc-post-7-reproducible-blog-posts-with-zzcollab-a-quarto-workflow" class="nav-link" data-scroll-target="#post-7-reproducible-blog-posts-with-zzcollab-a-quarto-workflow">Post 7: Reproducible Blog Posts with ZZCOLLAB: A Quarto Workflow</a></li>
+  <li><a href="#post-8-zzcollab-analysis-profile-walkthrough-a-55-item-step-by-step-guide" id="toc-post-8-zzcollab-analysis-profile-walkthrough-a-55-item-step-by-step-guide" class="nav-link" data-scroll-target="#post-8-zzcollab-analysis-profile-walkthrough-a-55-item-step-by-step-guide">Post 8: zzcollab Analysis Profile Walkthrough: A 55-Item Step-by-Step Guide</a></li>
+  </ul></li>
+  <li><a href="#phase-5-the-first-analysis" id="toc-phase-5-the-first-analysis" class="nav-link" data-scroll-target="#phase-5-the-first-analysis">Phase 5: The first analysis</a>
+  <ul class="collapse">
+  <li><a href="#post-9-the-pipe-equivalence-myth" id="toc-post-9-the-pipe-equivalence-myth" class="nav-link" data-scroll-target="#post-9-the-pipe-equivalence-myth">Post 9: The Pipe Equivalence Myth</a></li>
+  <li><a href="#post-10-palmer-penguins-part-1-exploratory-data-analysis-and-simple-regression" id="toc-post-10-palmer-penguins-part-1-exploratory-data-analysis-and-simple-regression" class="nav-link" data-scroll-target="#post-10-palmer-penguins-part-1-exploratory-data-analysis-and-simple-regression">Post 10: Palmer Penguins Part 1: Exploratory Data Analysis and Simple Regression</a></li>
+  <li><a href="#the-rest-of-the-palmer-penguins-arc" id="toc-the-rest-of-the-palmer-penguins-arc" class="nav-link" data-scroll-target="#the-rest-of-the-palmer-penguins-arc">The rest of the Palmer Penguins arc</a></li>
+  </ul></li>
+  <li><a href="#phase-6-quality-and-review" id="toc-phase-6-quality-and-review" class="nav-link" data-scroll-target="#phase-6-quality-and-review">Phase 6: Quality and review</a></li>
+  <li><a href="#phase-7-writing-and-dissemination" id="toc-phase-7-writing-and-dissemination" class="nav-link" data-scroll-target="#phase-7-writing-and-dissemination">Phase 7: Writing and dissemination</a></li>
+  <li><a href="#phase-8-scaling-the-compendium" id="toc-phase-8-scaling-the-compendium" class="nav-link" data-scroll-target="#phase-8-scaling-the-compendium">Phase 8: Scaling the compendium</a></li>
+  <li><a href="#electives-assigned-by-project-rather-than-by-week" id="toc-electives-assigned-by-project-rather-than-by-week" class="nav-link" data-scroll-target="#electives-assigned-by-project-rather-than-by-week">Electives, assigned by project rather than by week</a></li>
   <li><a href="#a-note-on-sequence-flexibility" id="toc-a-note-on-sequence-flexibility" class="nav-link" data-scroll-target="#a-note-on-sequence-flexibility">A Note on Sequence Flexibility</a></li>
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
   <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
@@ -234,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a fully reproducible data analysis compendium – in roughly the order a professor would assign them.
+    A new student arrives with a small dataset, a laptop, and enthusiasm. This post maps the sequence of posts in this blog that will take them from a bare command line to a reviewed, published, reproducible analysis, organized as eight phases in roughly the order a professor would assign them.
   </div>
 </div>
 
@@ -255,6 +277,12 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
   
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 11, 2026</p>
+    </div>
+  </div>
     
   </div>
   
@@ -263,6 +291,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
@@ -271,9 +312,14 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>A map drawn before the journey: knowing which signposts matter changes what you notice along the way.</em></p>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>Every year a new graduate student arrives in the lab with a small dataset – twelve columns, two or three hundred rows, no codebook, and a clear scientific question. The student wants to begin the analysis immediately. Before a single line of R code is written, however, there is a substantial amount of infrastructure to absorb. That infrastructure includes a command-line environment, a version-control habit, a reproducible project structure, and a shared toolchain that ensures the professor can run the same code two years later without debugging a broken environment.</p>
-<p>This post exists because that infrastructure is documented across a series of posts on this blog, and the reading order matters. A student who reads the R language posts before understanding why the lab uses Docker will not know what they are R-coding <em>for</em>. A student who dives into the analysis posts before setting up their shell environment will spend their first week debugging path problems.</p>
-<p>What follows is the professor’s recommended sequence: eight posts, with a one-paragraph rationale for each. The total reading time is roughly eight to twelve hours, spread across the first two weeks of the rotation. Code-along exercises within each post add two to four additional hours. By the end, a student will have a working lab environment, a first reproducible compendium, and a completed analysis of a small public dataset that mirrors the structure of the research data waiting for them.</p>
+<p>Every year a new graduate student arrives in the lab with a small dataset, twelve columns, two or three hundred rows, no codebook, and a clear scientific question. The student wants to begin the analysis immediately. Before a single line of R code is written, however, there is a substantial amount of infrastructure to absorb. That infrastructure includes a command-line environment, a version-control habit, a credential store, a reproducible project structure, and a shared toolchain that ensures the professor can run the same code two years later without debugging a broken environment.</p>
+<p>This post exists because that infrastructure is documented across a series of posts on this blog, and the reading order matters. A student who reads the R language posts before understanding why the lab uses Docker will not know what they are R-coding <em>for</em>. A student who dives into the analysis posts before setting up their shell environment will spend their first week debugging path problems. A student who reaches an AWS instance before setting up <code>pass</code> will put a credential in a shell history file.</p>
+<p>What follows is the professor’s recommended sequence, organized as eight phases spanning the first academic term. Phases 0 through 5 are the required core: roughly twenty hours of reading and code-along work that ends with a reviewed analysis in a containerized compendium. Phases 6 through 8 are assigned as the student’s own project demands them.</p>
+<section id="revision-note" class="level3">
+<h3 class="anchored" data-anchor-id="revision-note">Revision note</h3>
+<p>This guide was first published on 2026-06-11 as an eight-post sequence that ended at exploratory data analysis. The 2026-09-11 revision keeps that core intact and extends it in three directions that the original omitted: a credentials and backup phase before students touch real data or cloud infrastructure, an explicit position on generative-AI use before students draft anything, and a testing, review, and dissemination phase after the first analysis is complete. Students who worked through the original eight posts have not wasted effort; they have completed most of Phases 0 through 5 and should begin at Phase 2.</p>
+<p>The same revision included a consistency pass in which every post named below was read against its own stated prerequisites. That pass changed the order of Phase 1, promoted one post from optional to required in Phase 2, split Phase 6 into an analysis track and a package track, and corrected several descriptions that did not match the posts they described. Where two posts genuinely contradict each other, the contradiction is now named in the phase that contains it rather than left for the student to trip over.</p>
+</section>
 </section>
 <section id="motivations" class="level2">
 <h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
@@ -281,6 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <li>New students consistently underestimate the cost of environment fragility; a principled introduction prevents the most common first-year productivity loss.</li>
 <li>The lab’s toolchain (Docker, renv, zzcollab, Quarto) has a learning curve that is much shallower with a map than without one.</li>
 <li>An explicit reading sequence sets consistent expectations across students and rotations, regardless of prior computational background.</li>
+<li>Credential hygiene and AI-use expectations are cheaper to establish on day one than to retrofit after a student has built six months of habits.</li>
 </ul>
 </section>
 <section id="objectives" class="level2">
@@ -288,159 +335,307 @@ document.addEventListener('DOMContentLoaded', function() {
 <ul>
 <li>Provide an annotated, sequenced reading list that a student can work through independently.</li>
 <li>Explain <em>why</em> each post belongs at its position in the sequence rather than earlier or later.</li>
-<li>Set honest expectations about what a student will and will not be able to do after completing each post.</li>
+<li>Set honest expectations about what a student will and will not be able to do after completing each phase.</li>
+<li>State a verifiable deliverable for each phase so that both the student and the professor can tell when the phase is finished.</li>
 </ul>
 <p><img src="media/images/ambiance1.jpg" class="img-fluid" style="height:3.5in"></p>
 </section>
 <section id="what-is-this-reading-sequence" class="level2">
 <h2 class="anchored" data-anchor-id="what-is-this-reading-sequence">What is this reading sequence?</h2>
-<p>The eight posts below span three clusters of this blog: the <em>Workflow Construct</em> cluster (environment setup), the <em>zzcollab Compendia</em> cluster (reproducible project structure), and the <em>Palmer Penguins Arc</em> (applied data analysis). The sequence is deliberately cross-cluster because learning the environment without doing analysis, or doing analysis without a reproducible environment, produces an incomplete outcome in either direction.</p>
+<p>The sequence spans most of the clusters on this blog: the <em>Workflow Construct</em> cluster (environment setup), the <em>Security and Sync</em> cluster (credentials and backup), the <em>zzcollab Compendia</em> cluster (reproducible project structure), the <em>Palmer Penguins Arc</em> (applied data analysis), the <em>R Packages</em> cluster (testing and review), and the <em>Publishing</em> cluster (dissemination). The sequence is deliberately cross-cluster because learning the environment without doing analysis, or doing analysis without a reproducible environment, produces an incomplete outcome in either direction.</p>
 <p>Posts marked <strong>[no code required]</strong> can be read without a terminal open. Posts marked <strong>[code-along]</strong> contain exercises that the student should reproduce on their own machine before moving forward.</p>
+<p>Each phase closes with a <strong>deliverable</strong>: a concrete artifact the student can show the professor. A phase is not complete when the reading is done; it is complete when the deliverable exists.</p>
 </section>
 <section id="prerequisites" class="level2">
 <h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
 <p>The student is assumed to have:</p>
 <ul>
-<li>A macOS or Linux laptop with administrator access.</li>
-<li>An active GitHub account.</li>
+<li>A macOS 13+ laptop with administrator access. Several posts in Phases 1 and 2 are macOS-specific in their commands even where the architecture generalizes; Linux students should expect to translate, and the Linux Mint post in the electives covers the divergences.</li>
+<li>An active GitHub account. Phase 1 additionally requires the GitHub CLI authenticated through <code>gh auth login</code>, which Post 4 installs.</li>
+<li>A second machine, virtual machine, or fresh user account. Three phase deliverables are verified by reproducing something somewhere else, and a student with only one machine cannot complete them.</li>
 <li>No prior Docker experience is required.</li>
-<li>Familiarity with R at the level of BIOS 600 or equivalent is helpful but not strictly required for the first four posts.</li>
+<li>Familiarity with R at the level of BIOS 600 or equivalent is helpful but not strictly required before Phase 5.</li>
+</ul>
+<p>Accounts and hardware needed later, listed here so that students can request them before they are blocked:</p>
+<ul>
+<li>An external drive for the Time Machine tier in Phase 2.</li>
+<li>A Docker Hub account for the sharing post in Phase 8.</li>
+<li>An AWS account with IAM Identity Center for the cloud electives, which for institutional accounts requires coordinating with an administrator well in advance.</li>
+<li>An Anthropic API key for Phase 3.</li>
 </ul>
 </section>
-<section id="the-reading-sequence" class="level2">
-<h2 class="anchored" data-anchor-id="the-reading-sequence">The Reading Sequence</h2>
+<section id="phase-0-orientation" class="level2">
+<h2 class="anchored" data-anchor-id="phase-0-orientation">Phase 0: Orientation</h2>
+<p><em>Day one. Read only, no terminal required.</em></p>
 <section id="post-1-a-workflow-construct-for-the-modern-data-scientist" class="level3">
-<h3 class="anchored" data-anchor-id="post-1-a-workflow-construct-for-the-modern-data-scientist">Post 1 – A Workflow Construct for the Modern Data Scientist</h3>
+<h3 class="anchored" data-anchor-id="post-1-a-workflow-construct-for-the-modern-data-scientist">Post 1: A Workflow Construct for the Modern Data Scientist</h3>
 <p><strong>Cluster:</strong> Workflow Construct | <strong>Link:</strong> <a href="../wf-construct-overview-anchor/">wf-construct-overview-anchor</a></p>
-<p><strong>Read this first because</strong> it provides the conceptual map for everything that follows. The post documents the nine layers of the lab’s computational stack – hardware, operating system, file system, shell, editor, scripts, applications, cloud, and backup – and explains why each layer is treated as a first-class reproducibility concern. A student who skips this post and goes directly to the R tutorials will eventually hit a problem that requires understanding the layer below R. At that point they will not know where to look.</p>
+<p><strong>Read this first because</strong> it provides the conceptual map for everything that follows. The post documents the layers of the lab’s computational stack (hardware, operating system, file-system layout, shell, editor, language toolchains, containerization, cloud or remote compute, and backup) and explains why each layer is treated as a first-class reproducibility concern. A student who skips this post and goes directly to the R tutorials will eventually hit a problem that requires understanding the layer below R. At that point they will not know where to look.</p>
+<p><strong>A warning about this post’s own prerequisites.</strong> The post opens by assuming git fluency through <code>rebase</code>, comfort writing shell scripts, and awareness of how Docker layers and <code>renv.lock</code> interact. A new student has none of that on day one, and this guide assigns the post anyway. That is deliberate: it is assigned here as a map, not as an instruction set, and a student who understands a third of it has gotten what Phase 0 is for. Re-read it at the end of Phase 4, when every one of its stated prerequisites has been met. The second reading is the one that pays.</p>
 <p><strong>What the student will be able to do after reading:</strong> articulate why reproducibility requires more than pinned package versions, and name the layer of the stack where any given configuration problem originates.</p>
 <p><strong>Estimated reading time:</strong> 30 minutes. <strong>[no code required]</strong></p>
+<p><strong>Phase 0 deliverable:</strong> none. This phase is orientation.</p>
 <hr>
 </section>
+</section>
+<section id="phase-1-the-environment" class="level2">
+<h2 class="anchored" data-anchor-id="phase-1-the-environment">Phase 1: The environment</h2>
+<p><em>Weeks 1 to 2. The steepest climb in the sequence, placed first so that the discomfort is behind the student before the reproducibility infrastructure adds cognitive load.</em></p>
 <section id="post-2-unix-command-line-workspace-setup-for-data-science-researchers" class="level3">
-<h3 class="anchored" data-anchor-id="post-2-unix-command-line-workspace-setup-for-data-science-researchers">Post 2 – Unix Command-Line Workspace Setup for Data Science Researchers</h3>
+<h3 class="anchored" data-anchor-id="post-2-unix-command-line-workspace-setup-for-data-science-researchers">Post 2: Unix Command-Line Workspace Setup for Data Science Researchers</h3>
 <p><strong>Cluster:</strong> Workflow Construct | <strong>Link:</strong> <a href="../wf-unix-workspace-config/">wf-unix-workspace-config</a></p>
-<p><strong>Read this second because</strong> the remaining posts assume fluency with the terminal. The post builds the terminal layer, the shell layer, and the dotfiles repository that keeps a research machine consistent. Students who use RStudio exclusively and have never opened a terminal will find this post the steepest climb in the sequence. It is deliberately placed early so the discomfort is behind them before the reproducibility infrastructure adds cognitive load.</p>
+<p><strong>Read this second because</strong> the remaining posts assume fluency with the terminal. The post builds the terminal layer, the shell layer, and the dotfiles repository that keeps a research machine consistent. Students who use RStudio exclusively and have never opened a terminal will find this post the hardest in the sequence.</p>
 <p><strong>What the student will be able to do after reading:</strong> open a terminal, navigate the file system, install a package manager, and configure a shell prompt.</p>
 <p><strong>Estimated reading time:</strong> 45 minutes. <strong>[code-along]</strong></p>
 <hr>
 </section>
-<section id="post-3-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a" class="level3">
-<h3 class="anchored" data-anchor-id="post-3-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a">Post 3 – Multi-Laptop macOS Bootstrap: Migrating Dotfiles to a</h3>
-<p>Versioned Git Repository</p>
-<p><strong>Cluster:</strong> Workflow Construct | <strong>Link:</strong> <a href="../wf-multi-laptop-dotfiles-bootstrap/">wf-multi-laptop-dotfiles-bootstrap</a></p>
-<p><strong>Read this third because</strong> the lab expects configuration to be version-controlled from day one. This post explains how to move shell configuration files into a git repository so that rebuilding a machine (or adding a second one) is a two-command operation rather than a week of re-configuration. Students who have never used git will find a gentle first encounter here; the patterns introduced are used in every subsequent post.</p>
-<p><strong>What the student will be able to do after reading:</strong> create a dotfiles repository, commit their shell configuration, and understand the difference between a symlink and a copy.</p>
-<p><strong>Estimated reading time:</strong> 45 minutes. <strong>[code-along]</strong></p>
+<section id="post-3-refactoring-a-personal-toolbox-scripts-versus-shell-functions" class="level3">
+<h3 class="anchored" data-anchor-id="post-3-refactoring-a-personal-toolbox-scripts-versus-shell-functions">Post 3: Refactoring a Personal Toolbox: Scripts versus Shell Functions</h3>
+<p><strong>Cluster:</strong> Shell and Git | <strong>Link:</strong> <a href="../sh-scripts-vs-functions/">sh-scripts-vs-functions</a></p>
+<p><strong>Read this third because</strong> the student is about to begin accumulating helpers, and the rule for where a helper belongs is much cheaper to learn before the accumulation than after. The rule is short: a shell function only when shell state must change, a versioned script otherwise. Applying it from the start keeps the dotfiles repository in Post 5 small and every helper testable with shellcheck. This is the only post in Phase 1 that states no prerequisites of its own, which makes it a safe place to put a student who is still catching up on Post 2.</p>
+<p><strong>What the student will be able to do after reading:</strong> decide correctly where a new helper belongs, and write a script that passes shellcheck.</p>
+<p><strong>Estimated reading time:</strong> 30 minutes. <strong>[code-along]</strong></p>
 <hr>
 </section>
 <section id="post-4-setting-up-git-for-data-science-workflows" class="level3">
-<h3 class="anchored" data-anchor-id="post-4-setting-up-git-for-data-science-workflows">Post 4 – Setting Up Git for Data Science Workflows</h3>
-<p><strong>Cluster:</strong> Workflow Construct | <strong>Link:</strong> <a href="../wf-git-for-data-science/">wf-git-for-data-science</a> <em>(Note: this post is currently in draft; the professor will share the pre-publication PDF directly.)</em></p>
-<p><strong>Read this fourth because</strong> version control is the single most impactful habit a student can build in their first month. The post covers the configuration decisions that matter specifically for data science work. These include ignoring large data files, committing analysis scripts separately from rendered outputs, and writing commit messages that explain why a change was made rather than what was changed. The Palmer Penguins analysis in Post 8 will produce several dozen commits; this post establishes what those commits should look like.</p>
-<p><strong>What the student will be able to do after reading:</strong> configure git for data science, commit code with informative messages, and understand when <em>not</em> to commit a file.</p>
+<h3 class="anchored" data-anchor-id="post-4-setting-up-git-for-data-science-workflows">Post 4: Setting Up Git for Data Science Workflows</h3>
+<p><strong>Cluster:</strong> Workflow Construct | <strong>Link:</strong> <a href="../wf-git-for-data-science/">wf-git-for-data-science</a></p>
+<p><strong>Read this fourth because</strong> version control is the single most impactful habit a student can build in their first month, and because Post 5 cannot start without it. The post covers the configuration decisions that matter specifically for data science work: ignoring large data files, committing analysis scripts separately from rendered outputs, and writing commit messages that explain why a change was made rather than what was changed. It also installs the GitHub CLI and walks through <code>gh auth login</code>, which Post 5 lists among its own prerequisites. The Palmer Penguins analysis in Phase 5 will produce several dozen commits; this post establishes what those commits should look like.</p>
+<p><strong>What the student will be able to do after reading:</strong> configure git for data science, authenticate <code>gh</code> against GitHub, commit code with informative messages, and understand when <em>not</em> to commit a file.</p>
 <p><strong>Estimated reading time:</strong> 40 minutes. <strong>[code-along]</strong></p>
 <hr>
 </section>
-<section id="post-5-reproducible-blog-posts-with-zzcollab-a-quarto-workflow" class="level3">
-<h3 class="anchored" data-anchor-id="post-5-reproducible-blog-posts-with-zzcollab-a-quarto-workflow">Post 5 – Reproducible Blog Posts with ZZCOLLAB: A Quarto Workflow</h3>
+<section id="post-5-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a-versioned-git-repository" class="level3">
+<h3 class="anchored" data-anchor-id="post-5-multi-laptop-macos-bootstrap-migrating-dotfiles-to-a-versioned-git-repository">Post 5: Multi-Laptop macOS Bootstrap: Migrating Dotfiles to a Versioned Git Repository</h3>
+<p><strong>Cluster:</strong> Workflow Construct | <strong>Link:</strong> <a href="../wf-multi-laptop-dotfiles-bootstrap/">wf-multi-laptop-dotfiles-bootstrap</a></p>
+<p><strong>Read this fifth because</strong> the lab expects configuration to be version-controlled from day one. This post explains how to move shell configuration files into a git repository so that rebuilding a machine (or adding a second one) is a two-command operation rather than a week of re-configuration. It expects an authenticated <code>gh</code> from Post 4, and it expects the repository to be private; dotfiles repositories are a well-documented source of leaked credentials, and the post is firm on this point.</p>
+<p><strong>A note on one stated prerequisite.</strong> The post opens by assuming that project content has already been migrated off Dropbox, which is Phase 2 material. Read that assumption narrowly: what Post 5 actually needs is that the <em>dotfiles themselves</em> live in <code>~</code> as plain files outside any cloud-synced directory, which is true for almost every incoming student. The broader project-content migration is correctly deferred to Phase 2.</p>
+<p><strong>What the student will be able to do after reading:</strong> create a private dotfiles repository, commit their shell configuration, and understand the difference between a symlink and a copy.</p>
+<p><strong>Estimated reading time:</strong> 45 minutes, with 3 to 4 hours for the migration itself. <strong>[code-along]</strong></p>
+<hr>
+</section>
+<section id="post-6-modern-cli-replacements-for-the-shell-layer" class="level3">
+<h3 class="anchored" data-anchor-id="post-6-modern-cli-replacements-for-the-shell-layer">Post 6: Modern CLI Replacements for the Shell Layer</h3>
+<p><strong>Cluster:</strong> Workflow Construct | <strong>Link:</strong> <a href="../wf-modern-cli-tools/">wf-modern-cli-tools</a></p>
+<p><strong>Read this sixth, and not earlier,</strong> because the post states plainly that the dotfiles repository and the zsh setup must already be in place: its payload is a configuration block added to <code>.zshrc</code>, and the canonical location for that block is beneath the FZF configuration installed in Post 2. A student who reads it before Post 5 will paste the block into an unversioned file and lose it on the next machine.</p>
+<p>The eight utilities it installs (ripgrep, fd, bat, eza, zoxide, delta, lazygit, fzf) appear in commands throughout the later posts, and a student who has not installed them will read those commands as typos. The post also establishes the substitution habit: every tool is introduced alongside the classic command it replaces, so the student retains a fallback on machines where only the classics exist.</p>
+<p><strong>What the student will be able to do after reading:</strong> search a codebase with ripgrep, navigate with zoxide, and read a git diff through delta.</p>
+<p><strong>Estimated reading time:</strong> 40 minutes. <strong>[code-along]</strong></p>
+<hr>
+</section>
+<section id="editor-elective" class="level3">
+<h3 class="anchored" data-anchor-id="editor-elective">Editor elective</h3>
+<p>Students who intend to leave RStudio should add <a href="../wf-neovim-data-science-ide/">wf-neovim-data-science-ide</a> and <a href="../rp-zzvim-r-introduction/">rp-zzvim-r-introduction</a> here. A student who is productive in RStudio should stay there through the core phases and revisit this decision after Phase 5. Switching editors and learning Docker in the same week is a predictable way to lose a month.</p>
+<p>Calling this elective has one consequence worth naming: the Phase 3 post on LLM-augmented editing lists the editor setup among its own prerequisites, because the pattern it documents reviews diffs in an editor buffer. RStudio students can follow that post using RStudio’s own diff viewer, but they should expect the keystrokes to differ from the ones on the page.</p>
+<p><strong>Phase 1 deliverable:</strong> a private <code>~/dotfiles</code> git repository with a working <code>install.sh</code>, pushed to GitHub through an authenticated <code>gh</code>, that reproduces the student’s shell configuration on a second machine or a fresh user account. The reproduction is the deliverable, not the push.</p>
+<hr>
+</section>
+</section>
+<section id="phase-2-credentials-and-durability" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-credentials-and-durability">Phase 2: Credentials and durability</h2>
+<p><em>Week 3, before the student touches real data or any cloud resource.</em></p>
+<p>This phase did not appear in the original version of this guide, and its absence was the most consequential gap. Phases 4 onward put students in contact with GitHub tokens, container registries, and in some projects AWS and clinical data. Credential habits formed in that context are formed under deadline pressure, which is the wrong time to form them.</p>
+<p>Read in this order:</p>
+<ul>
+<li><a href="../sec-pass-password-manager/">sec-pass-password-manager</a>: installs <code>pass</code>, the GPG-backed Unix password store, and establishes the key-generation and backup habits the rest of the phase assumes. <strong>[code-along]</strong></li>
+<li><a href="../sec-aws-and-pass-secrets/">sec-aws-and-pass-secrets</a>: the secret-injection patterns that keep API keys and tokens out of dotfiles, shell history, and the working tree, plus the AWS IAM Identity Center workflow that replaces plaintext credentials. <strong>[code-along]</strong></li>
+<li><a href="../sec-dropbox-to-portable-sync/">sec-dropbox-to-portable-sync</a>: splits project content into code, data, and reconstructable caches, and picks a sync mechanism for each. An earlier version of this guide listed this post as optional. That was wrong: the threat-model post below states outright that it requires the three-layer sync architecture to be in place, and without it the controls have nothing to attach to. <strong>[code-along]</strong></li>
+<li><a href="../sec-three-tier-backup-architecture/">sec-three-tier-backup-architecture</a>: automated git pushes, cloud sync, and Time Machine, plus the bulk GitHub archival procedure. <strong>[code-along]</strong></li>
+<li><a href="../sec-multi-laptop-threat-model/">sec-multi-laptop-threat-model</a>: asks what all of the preceding infrastructure is actually worth if the threat model is wrong. Read it last, not first, so that the controls being evaluated are ones the student has actually built. <strong>[no code required]</strong></li>
+</ul>
+<p><strong>Two contradictions to expect, and how to resolve them.</strong> These four posts were written independently and do not fully agree.</p>
+<p>First, the dotfiles post in Phase 1 and the sync-migration post here each name the other as a prerequisite. Resolve the circle in the order this guide gives: dotfiles first, project content second. The sync post’s own Layer 1 section assumes the dotfiles work is already done, which settles the direction.</p>
+<p>Second, the backup post lists a cloud sync service, naming Dropbox among the options, as the third tier of its architecture, while the sync-migration post is an argument for leaving Dropbox. These are less opposed than they look. The backup post wants an off-site copy of a modest set of files; the migration post objects to Dropbox as the <em>primary</em> store for project content and append-only history. A student can satisfy both by keeping a cloud tier for backup only. Students should raise this with the professor rather than resolving it silently, since the lab’s position on which service fills that tier has changed since the backup post was written.</p>
+<p><strong>Estimated time:</strong> 6 to 8 hours of reading and configuration. The sync migration adds roughly a day of inventory and decision work if the student arrives with an existing cloud-bound workflow, and close to none if they do not.</p>
+<p><strong>Phase 2 deliverable:</strong> a populated <code>pass</code> store with the GPG private key and revocation certificate backed up off the laptop, no plaintext credential anywhere in the dotfiles repository from Phase 1, and a backup the student has verified by restoring from it. The verification is the deliverable; an unrestored backup is a hypothesis.</p>
+<hr>
+</section>
+<section id="phase-3-ground-rules-for-generative-ai" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-ground-rules-for-generative-ai">Phase 3: Ground rules for generative AI</h2>
+<p><em>Week 3, concurrent with Phase 2.</em></p>
+<p>The review methodology posts in Phases 6 and 7 presuppose that drafting is AI-assisted, and each of them opens by asking for the conversation log or prompts used during drafting. A student who has not been keeping those logs since the beginning cannot complete any of those reviews later. That single fact is why this phase sits here rather than at the end.</p>
+<ul>
+<li><a href="../pub-ai-course-policy-survey/">pub-ai-course-policy-survey</a>: a review of how peer graduate biostatistics and statistical computing courses handle generative AI, from outright bans to required use, followed by a policy proposal for PHB 228 at UCSD. Read for the reasoning, and note what it is: a proposal written for a <em>course</em>, not a statement of lab policy. The lab adopts its central expectation, that a statistician who cannot explain a line of generated code cannot defend it, and students should ask the professor directly for the rest rather than inferring lab practice from a syllabus. <strong>[no code required]</strong></li>
+<li><a href="../wf-claude-code-in-shell/">wf-claude-code-in-shell</a>: the integration pattern the lab actually uses, with the per-project <code>CLAUDE.md</code> convention as the load-bearing artifact. It needs an Anthropic API key stored in <code>pass</code>, which is why Phase 2 comes first, and it assumes the editor setup from the Phase 1 elective. It also cites an internal <code>zzgit</code> helper that has no published post on this blog; ask the professor for it rather than searching. <strong>[code-along]</strong></li>
+</ul>
+<p><strong>Estimated time:</strong> 1.5 hours of reading, plus roughly 15 minutes per project for <code>CLAUDE.md</code> authoring thereafter.</p>
+<p><strong>Phase 3 deliverable:</strong> a <code>CLAUDE.md</code> in the student’s dotfiles repository or first project, a one-paragraph written statement of what the student will and will not delegate, and a decided place where drafting conversation logs are retained. The logs are not optional housekeeping; three separate review methodologies in Phases 6 and 7 require them as an input. The statement is revisited at the Phase 6 review, where it is tested against what the student actually did.</p>
+<hr>
+</section>
+<section id="phase-4-the-compendium" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-the-compendium">Phase 4: The compendium</h2>
+<p><em>Weeks 4 to 5. The capstone of the setup half of the sequence.</em></p>
+<section id="post-7-reproducible-blog-posts-with-zzcollab-a-quarto-workflow" class="level3">
+<h3 class="anchored" data-anchor-id="post-7-reproducible-blog-posts-with-zzcollab-a-quarto-workflow">Post 7: Reproducible Blog Posts with ZZCOLLAB: A Quarto Workflow</h3>
 <p><strong>Cluster:</strong> zzcollab Compendia | <strong>Link:</strong> <a href="../zc-quarto-compendium-intro/">zc-quarto-compendium-intro</a></p>
-<p><strong>Read this fifth because</strong> it introduces the <code>zzcollab</code> framework that the lab uses for every analysis project. The post explains the Five Pillars of reproducibility (Dockerfile, renv.lock, .Rprofile, source code, research data) and shows how a single <code>zzc analysis</code> command scaffolds a project that satisfies all five. Students who have completed Posts 1 through 4 will recognize every tool introduced here; the new element is understanding how they fit together in a single project directory.</p>
+<p><strong>Read this now because</strong> it introduces the <code>zzcollab</code> framework that the lab uses for every analysis project. The post explains the Five Pillars of reproducibility (Dockerfile, renv.lock, .Rprofile, source code, research data) and shows how a single <code>zzc analysis</code> command scaffolds a project that satisfies all five. Students who have completed Phases 0 through 3 will recognize every tool introduced here; the new element is understanding how they fit together in a single project directory.</p>
 <p><strong>What the student will be able to do after reading:</strong> explain the Five Pillars, run <code>zzc analysis</code> to create a compendium, and understand what the generated Dockerfile is doing.</p>
 <p><strong>Estimated reading time:</strong> 50 minutes. <strong>[code-along]</strong></p>
 <hr>
 </section>
-<section id="post-6-zzcollab-analysis-profile-walkthrough-a-55-item" class="level3">
-<h3 class="anchored" data-anchor-id="post-6-zzcollab-analysis-profile-walkthrough-a-55-item">Post 6 – zzcollab Analysis Profile Walkthrough: A 55-Item</h3>
-<p>Step-by-Step Guide</p>
+<section id="post-8-zzcollab-analysis-profile-walkthrough-a-55-item-step-by-step-guide" class="level3">
+<h3 class="anchored" data-anchor-id="post-8-zzcollab-analysis-profile-walkthrough-a-55-item-step-by-step-guide">Post 8: zzcollab Analysis Profile Walkthrough: A 55-Item Step-by-Step Guide</h3>
 <p><strong>Cluster:</strong> zzcollab Compendia / penguins-arc | <strong>Link:</strong> <a href="../zc-analysis-profile-walkthrough/">zc-analysis-profile-walkthrough</a></p>
-<p><strong>Read this sixth because</strong> it is the most detailed practical guide the lab has produced. The 55-item checklist walks through every command, every R snippet, and every file the student will need to produce when setting up a real analysis project. The walkthrough uses a small Palmer Penguins dummy dataset identical in structure to the datasets students bring from the clinic. Completing this post is the capstone of the environment-setup phase; after it, the student has a running Docker container with a verified R environment, a working renv snapshot, and a Quarto report that renders to PDF inside the container.</p>
+<p><strong>Read this now because</strong> it is the most detailed practical guide the lab has produced. The 55-item checklist walks through every command, every R snippet, and every file the student will need to produce when setting up a real analysis project. The walkthrough uses a small Palmer Penguins dummy dataset identical in structure to the datasets students bring from the clinic. After it, the student has a running Docker container with a verified R environment, a working renv snapshot, and a Quarto report that renders to PDF inside the container.</p>
 <p><strong>What the student will be able to do after reading:</strong> build a Docker image from a generated Dockerfile, enter the container, install R packages, snapshot with renv, and render a Quarto report.</p>
 <p><strong>Estimated reading time:</strong> 90 minutes. <strong>[code-along, intensive]</strong></p>
+<p><strong>Phase 4 deliverable:</strong> a compendium the student can rebuild from scratch, in a fresh clone, in under ten minutes. The professor should watch this happen once. A container that runs is not evidence; a container that rebuilds is.</p>
 <hr>
 <p><img src="media/images/ambiance2.jpg" class="img-fluid" style="height:3.5in"></p>
 </section>
-<section id="post-7-the-pipe-equivalence-myth-when-f-g-is-not" class="level3">
-<h3 class="anchored" data-anchor-id="post-7-the-pipe-equivalence-myth-when-f-g-is-not">Post 7 – The Pipe Equivalence Myth: When <code>f() |&gt; g()</code> Is Not</h3>
-<p>the Same as <code>g(f())</code></p>
+</section>
+<section id="phase-5-the-first-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-the-first-analysis">Phase 5: The first analysis</h2>
+<p><em>Weeks 6 to 8. Performed inside the compendium built in Phase 4, not in a new directory.</em></p>
+<section id="post-9-the-pipe-equivalence-myth" class="level3">
+<h3 class="anchored" data-anchor-id="post-9-the-pipe-equivalence-myth">Post 9: The Pipe Equivalence Myth</h3>
 <p><strong>Cluster:</strong> R Language | <strong>Link:</strong> <a href="../rl-pipe-equivalence-myth/">rl-pipe-equivalence-myth</a></p>
-<p><strong>Read this seventh because</strong> the analysis in Post 8 relies on idiomatic tidyverse pipe chains, and a subtle but important R semantic is easy to misapply. This post demonstrates precisely when piped and nested function calls are <em>not</em> interchangeable, using a worked example drawn from expression-capturing wrappers. Students without deep R experience will find this post eye- opening; students with prior R experience will find it clarifies something they may have accepted on faith. Either way, it prevents a class of silent bugs that appear in clinical data workflows.</p>
+<p><strong>Read this now because</strong> the analysis in Post 10 relies on idiomatic tidyverse pipe chains, and a subtle but important R semantic is easy to misapply. This post demonstrates precisely when piped and nested function calls are <em>not</em> interchangeable, using a worked example drawn from expression-capturing wrappers. Students without deep R experience will find this post eye-opening; students with prior R experience will find it clarifies something they may have accepted on faith. Either way, it prevents a class of silent bugs that appear in clinical data workflows.</p>
 <p><strong>What the student will be able to do after reading:</strong> predict when pipe-rewriting a nested call changes behavior, and write a minimal reproducible example to test the boundary.</p>
 <p><strong>Estimated reading time:</strong> 30 minutes. <strong>[no code required, but code-along is valuable]</strong></p>
 <hr>
 </section>
-<section id="post-8-palmer-penguins-part-1-exploratory-data-analysis" class="level3">
-<h3 class="anchored" data-anchor-id="post-8-palmer-penguins-part-1-exploratory-data-analysis">Post 8 – Palmer Penguins Part 1: Exploratory Data Analysis</h3>
-<p>and Simple Regression</p>
+<section id="post-10-palmer-penguins-part-1-exploratory-data-analysis-and-simple-regression" class="level3">
+<h3 class="anchored" data-anchor-id="post-10-palmer-penguins-part-1-exploratory-data-analysis-and-simple-regression">Post 10: Palmer Penguins Part 1: Exploratory Data Analysis and Simple Regression</h3>
 <p><strong>Cluster:</strong> Palmer Penguins Arc | <strong>Link:</strong> <a href="../pp-eda/">pp-eda</a></p>
-<p><strong>Read this last because</strong> it applies all preceding infrastructure to a complete statistical analysis. The dataset (344 penguins, three species, seven morphological measurements) is intentionally small and public – the same scale as many clinical pilot studies. The post covers exploratory visualization, a simple linear regression of body mass on flipper length, residual diagnostics, and a species-stratified reanalysis that reveals the importance of biological confounders. The compendium structure from Post 6 is assumed throughout; the student should complete this analysis inside the Docker container they built in that post.</p>
+<p><strong>Read this now because</strong> it applies all preceding infrastructure to a complete statistical analysis. The dataset (333 complete observations across three species and three islands, nine variables of which four are morphometric) is intentionally small and public, the same scale as many clinical pilot studies. Note that the post works from complete cases; the raw <code>palmerpenguins</code> data has 344 rows, and the difference is the first data-cleaning decision a student meets. The post covers exploratory visualization, a simple linear regression of body mass on flipper length, residual diagnostics, and a species-stratified reanalysis that reveals the importance of biological confounders. The compendium structure from Post 8 is assumed throughout; the student should complete this analysis inside the Docker container they built in that post.</p>
 <p><strong>What the student will be able to do after reading:</strong> run a complete EDA-to-regression analysis inside a reproducible compendium, interpret residual plots, and recognize when a confounder materially changes a regression estimate.</p>
 <p><strong>Estimated reading time:</strong> 60 minutes. <strong>[code-along]</strong></p>
 <hr>
 </section>
+<section id="the-rest-of-the-palmer-penguins-arc" class="level3">
+<h3 class="anchored" data-anchor-id="the-rest-of-the-palmer-penguins-arc">The rest of the Palmer Penguins arc</h3>
+<p>The original version of this guide stopped at Post 10 and listed the remainder as optional further reading. That was too conservative. Confounding and residual diagnostics are immediately applicable to most clinical pilot datasets, and a student who stops at simple regression has not yet met the situation their own data will present. Continue in cluster order:</p>
+<ul>
+<li><a href="../pp-multiple-regression/">pp-multiple-regression</a>: R-squared moves 0.762, then 0.816, then 0.863 as predictors are added, with species identity supplying the final step. The confounding lesson.</li>
+<li><a href="../pp-cross-validation/">pp-cross-validation</a>: ten-fold cross-validation and comparison against a random forest.</li>
+<li><a href="../pp-diagnostics/">pp-diagnostics</a>: systematic checks on linearity, normality, and influence.</li>
+<li><a href="../pp-random-forest/">pp-random-forest</a>: the interpretability-versus-performance tradeoff, with a two percentage point margin as the occasion for it.</li>
+<li><a href="../pp-body-mass-prediction/">pp-body-mass-prediction</a>: Simpson’s paradox in the morphometric relationships.</li>
+<li><a href="../pp-grouped-plots-with-purrr/">pp-grouped-plots-with-purrr</a>: programmatic plot generation with <code>map2()</code> and <code>pmap()</code>.</li>
+</ul>
+<p>Pair <a href="../rl-dynamic-column-names/">rl-dynamic-column-names</a> with the final post; the two problems arise together.</p>
+<p><strong>Estimated time:</strong> 5 to 7 hours across the six posts.</p>
+<p><strong>Phase 5 deliverable:</strong> the student’s <em>own</em> dataset analyzed in their own compendium, following the structure of the penguins arc, rendered to PDF inside the container and pushed to GitHub.</p>
+<hr>
+</section>
+</section>
+<section id="phase-6-quality-and-review" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-quality-and-review">Phase 6: Quality and review</h2>
+<p><em>Weeks 9 to 12. Assigned once the student has code worth reviewing.</em></p>
+<p>An analysis that renders is not an analysis that is correct. This phase supplies the checks and the review vocabulary.</p>
+<p><strong>Read the split in this phase before starting it.</strong> The first two posts apply to every student. The next three were written about R <em>packages</em>, and a student whose Phase 5 work is an analysis compendium does not yet have the inputs those posts ask for: a <code>tests/testthat/</code> directory to convert, a package on GitHub with CI across three operating systems, or the <code>R CMD check</code> output and design documents the review methodology wants assembled on the desk before Phase 1 of the review. Students on a package track take all six in order. Students on an analysis track take the first two, then read the review methodology for its vocabulary and its ownership test while skipping its package-specific setup, and return to the rest when their project produces a package.</p>
+<ul>
+<li><a href="../rp-testing-data-analysis/">rp-testing-data-analysis</a>: applies software-engineering testing practice to a data analysis pipeline, using testthat and assertr. Read first; it motivates the rest. Note the framework mismatch with the post below: this one teaches the concepts in testthat, and the lab writes its suites in tinytest. The concepts transfer without modification.</li>
+<li><a href="../rp-testthat-to-tinytest/">rp-testthat-to-tinytest</a>: the lab’s test framework is tinytest. This post explains the conversion and, more usefully, what tinytest’s smaller surface does and does not cost. A student with no existing testthat suite should not manufacture one to convert; the post says plainly that greenfield work starts in tinytest directly, and such a student reads this for the assertion vocabulary and the <code>tests/tinytest.R</code> bootstrap convention.</li>
+<li><a href="../rp-package-update-workflow/">rp-package-update-workflow</a>: the full lifecycle of a change, from feature branch through CI on three operating systems. Assumes an existing package on GitHub. Package track only.</li>
+<li><a href="../rp-code-review-methodology/">rp-code-review-methodology</a>: the five review phases, plus the ownership test. Students should read the ownership test against the Phase 3 statement they wrote. Its prerequisite list asks for conversation logs from drafting, which is the Phase 3 deliverable coming due.</li>
+<li><a href="../rp-code-review-exemplar/">rp-code-review-exemplar</a>: the methodology applied end to end to the zzobj2fig package. Package track only, and best read immediately after the methodology rather than separately.</li>
+<li><a href="../rp-ai-package-review-checklist/">rp-ai-package-review-checklist</a>: the failure modes specific to AI-generated R code, and what the checklist caught across fifteen packages. <strong>Currently in draft, and the draft flags its own findings as needing re-verification. Request the pre-publication version from the professor and treat its numbers as provisional.</strong></li>
+</ul>
+<p><strong>Estimated time:</strong> 5 to 6 hours on the package track, 2 to 3 on the analysis track.</p>
+<p><strong>Phase 6 deliverable:</strong> a tinytest suite covering the Phase 5 analysis, at minimum the data-integrity checks after every join and transformation, and a written review of another student’s work using the five-phase methodology. Reviewing is learned by reviewing.</p>
+<hr>
+</section>
+<section id="phase-7-writing-and-dissemination" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-writing-and-dissemination">Phase 7: Writing and dissemination</h2>
+<p><em>Ongoing, assigned when the student has a result worth communicating.</em></p>
+<p>The production path, in order:</p>
+<ul>
+<li><a href="../pub-r-script-to-rmd/">pub-r-script-to-rmd</a>: <code>knitr::spin()</code> and the fastest route from a working script to a presentable report.</li>
+<li><a href="../zc-markdown-to-blog-workflow/">zc-markdown-to-blog-workflow</a>: the lab’s blog-post compendium conventions, covering initialization from scratch. This is the one to read.</li>
+<li><a href="../zc-blog-post-template/">zc-blog-post-template</a>: a scaffold, not an essay. It still carries its unfilled authoring instructions and placeholder prose in the body, which is what a template is supposed to look like. Copy it when starting a post; do not sit down to read it.</li>
+<li><a href="../zc-manuscript-report-elements/">zc-manuscript-report-elements</a>: the seven elements a manuscript <code>report.Rmd</code> must have. Missing one is easy and hard to diagnose later.</li>
+<li><a href="../pub-multi-language-quarto/">pub-multi-language-quarto</a> and <a href="../pub-hosting-quarto-books-netlify/">pub-hosting-quarto-books-netlify</a>: needed only for polyglot documents and for book-series hosting respectively.</li>
+</ul>
+<p>Then the review methodology matching the artifact:</p>
+<ul>
+<li><a href="../rp-blog-review-methodology/">rp-blog-review-methodology</a></li>
+<li><a href="../rp-paper-review-methodology/">rp-paper-review-methodology</a></li>
+<li><a href="../rp-book-review-methodology/">rp-book-review-methodology</a></li>
+</ul>
+<p><strong>Phase 7 deliverable:</strong> one published artifact, reviewed under the matching methodology, with the ownership test answered explicitly in writing.</p>
+<hr>
+</section>
+<section id="phase-8-scaling-the-compendium" class="level2">
+<h2 class="anchored" data-anchor-id="phase-8-scaling-the-compendium">Phase 8: Scaling the compendium</h2>
+<p><em>Assigned when the student’s project outgrows a single analysis.</em></p>
+<ul>
+<li><a href="../zc-analysis-initiation-checklist/">zc-analysis-initiation-checklist</a>: the 55 items that move a collaborator’s emailed CSV to an archival-ready compendium.</li>
+<li><a href="../zc-share-rmd-via-docker/">zc-share-rmd-via-docker</a>: sharing reports and Shiny applications without the recipient debugging package versions.</li>
+<li><a href="../zc-tiered-ci-strategy/">zc-tiered-ci-strategy</a>: how to stop CI from lying. Required before the student trusts a green badge.</li>
+<li><a href="../zc-github-actions-workflows/">zc-github-actions-workflows</a>: which workflow combination each workspace type actually needs.</li>
+</ul>
+<p><strong>Phase 8 deliverable:</strong> a project whose CI fails when it should. A student who has never seen their own CI turn red has not tested it.</p>
+<hr>
+</section>
+<section id="electives-assigned-by-project-rather-than-by-week" class="level2">
+<h2 class="anchored" data-anchor-id="electives-assigned-by-project-rather-than-by-week">Electives, assigned by project rather than by week</h2>
+<p><strong>Shiny projects:</strong> <a href="../shy-shiny-with-observable/">shy-shiny-with-observable</a>, <a href="../shy-prototype-with-chatgpt/">shy-prototype-with-chatgpt</a>, <a href="../cln-shiny-docker-caddy-hosting/">cln-shiny-docker-caddy-hosting</a>.</p>
+<p><strong>Clinical and cloud projects:</strong> <a href="../cln-multilang-trial-validation/">cln-multilang-trial-validation</a>, <a href="../cln-aws-ec2-provisioning/">cln-aws-ec2-provisioning</a>, <a href="../cln-zzedc-investigator-independence/">cln-zzedc-investigator-independence</a>. Phase 2 is a hard prerequisite for all three.</p>
+<p><strong>Habit and tooling:</strong> <a href="../sh-daily-research-log/">sh-daily-research-log</a>, <a href="../wf-pocket-terminal-ttyd-tailscale/">wf-pocket-terminal-ttyd-tailscale</a>, <a href="../wf-linux-mint-on-macbook/">wf-linux-mint-on-macbook</a>, <a href="../pub-obs-r-screencasts/">pub-obs-r-screencasts</a>, <a href="../rp-vim-r-repl-plugin/">rp-vim-r-repl-plugin</a>.</p>
 </section>
 <section id="a-note-on-sequence-flexibility" class="level2">
 <h2 class="anchored" data-anchor-id="a-note-on-sequence-flexibility">A Note on Sequence Flexibility</h2>
-<p>Posts 1 through 3 can be read in a single sitting before the student touches R at all. Posts 4 through 6 form a contiguous setup block that should not be split across more than three sessions; the commands build on each other and the student will benefit from working memory continuity. Post 7 can be moved forward to any point after Post 3 if the student has prior R experience and wants an early technical anchor. Post 8 should always come last.</p>
-<p>Students who arrive with a working Unix environment and prior git experience may skip Posts 2 and 3. Students who arrive with a working R environment and ggplot2 fluency may skim Post 7. No student should skip Post 5 or Post 6, regardless of prior experience.</p>
+<p>Phases 0 and 1 can be compressed into a single week by a student who arrives with a working Unix environment and prior git experience; such a student may skim Posts 2, 3, 4, and 6 and should still work Post 5 and complete the Phase 1 deliverable, which is the part that actually tests the claim. The ordering inside Phase 1 is not arbitrary and should be preserved even when skimming: Post 4 authenticates the <code>gh</code> that Post 5 needs, and Post 6 writes into the repository that Post 5 creates.</p>
+<p>Phase 2 is not skippable, regardless of prior experience. Neither are Posts 7 and 8. Phases 6 through 8 are ordered by when the student’s project needs them rather than by week, and a student whose project produces a package before it produces a manuscript should invert Phases 6 and 7.</p>
+<p>Post 9 can be moved forward to any point after Phase 1 if the student has prior R experience and wants an early technical anchor.</p>
 </section>
 <section id="things-to-watch-out-for" class="level2">
 <h2 class="anchored" data-anchor-id="things-to-watch-out-for">Things to Watch Out For</h2>
 <ul>
-<li><strong>Docker disk usage.</strong> The <code>rocker/tidyverse</code> base image is approximately 1.2 GB. Students on a shared machine or with a limited SSD should verify available space before Post 6.</li>
-<li><strong><code>wf-git-for-data-science</code> is currently in draft.</strong> Request the pre-publication PDF from the professor if the post is not yet published when you begin.</li>
-<li><strong>renv restore failures.</strong> If <code>renv::restore()</code> fails inside the container, the most common cause is a PPM snapshot date that predates the package version. The 55-item walkthrough (Post 6) documents the recovery steps.</li>
-<li><strong>Inline R evaluation in Quarto.</strong> Post 8 uses inline <code>`r `</code> expressions in prose. These are evaluated regardless of the document-level <code>eval: false</code> setting. A student who sets <code>eval: false</code> to suppress code blocks will still see inline expressions attempt to run.</li>
-<li><strong>Pipe version mismatch.</strong> The lab uses the native R pipe <code>|&gt;</code> (R 4.1+). Code copied from older tutorials using <code>%&gt;%</code> will behave differently in subtle ways; Post 7 explains exactly where the difference matters.</li>
-<li><strong>Shell escaping in Docker.</strong> Several Makefile targets in Post 6 use single-quoted R expressions passed to <code>Rscript -e</code>. Double-quoting, nested variables, or <code>$</code> characters inside those expressions require careful escaping; the walkthrough flags the three locations where this trips up new students.</li>
+<li><strong>The reading load in weeks 1 to 3 is front-heavy.</strong> Phases 1 and 2 together are eleven posts. The reading is not the bottleneck; the dotfiles and <code>pass</code> deliverables are. Pair students for those two deliverables if the cohort is new to Unix.</li>
+<li><strong>Three posts on this list are drafts</strong> (<code>rp-ai-package-review-checklist</code>, <code>wf-voice-copyedit-pipeline</code>, <code>pub-open-textbook-guidebook</code>). Do not assign a draft to a student working unsupervised; request the pre-publication version from the professor.</li>
+<li><strong>Docker disk usage.</strong> The <code>rocker/tidyverse</code> base image is approximately 1.2 GB. Students on a shared machine or with a limited SSD should verify available space before Post 8.</li>
+<li><strong>renv restore failures.</strong> If <code>renv::restore()</code> fails inside the container, the most common cause is a PPM snapshot date that predates the package version. The 55-item walkthrough (Post 8) documents the recovery steps.</li>
+<li><strong>Inline R evaluation in Quarto.</strong> Post 10 uses inline <code>`r `</code> expressions in prose. These are evaluated regardless of the document-level <code>eval: false</code> setting. A student who sets <code>eval: false</code> to suppress code blocks will still see inline expressions attempt to run.</li>
+<li><strong>Pipe version mismatch.</strong> The lab uses the native R pipe <code>|&gt;</code> (R 4.1+). Code copied from older tutorials using <code>%&gt;%</code> will behave differently in subtle ways; Post 9 explains exactly where the difference matters.</li>
+<li><strong>Shell escaping in Docker.</strong> Several Makefile targets in Post 8 use single-quoted R expressions passed to <code>Rscript -e</code>. Double-quoting, nested variables, or <code>$</code> characters inside those expressions require careful escaping; the walkthrough flags the three locations where this trips up new students.</li>
+<li><strong>GPG key loss in Phase 2.</strong> A <code>pass</code> store whose GPG private key is not backed up is an encrypted brick. The revocation certificate and key backup are part of the Phase 2 deliverable for exactly this reason.</li>
 </ul>
 </section>
 <section id="lessons-learned" class="level2">
 <h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
-<p><strong>Technical.</strong> The Five Pillars framework (Post 5) converts what appears to be a collection of independent tools into a coherent reproducibility contract. Once a student understands that the Dockerfile, renv.lock, and .Rprofile are three sides of the same constraint, the lab’s conventions stop feeling arbitrary and start feeling inevitable.</p>
-<p><strong>Process.</strong> The most efficient path through this reading list is one where the student builds a single compendium throughout Posts 5, 6, and 8, adding to it incrementally rather than creating three separate projects. The professor recommends assigning a single directory name at the start of Post 5 and carrying it through to the end of Post 8.</p>
-<p><strong>Philosophical.</strong> Reproducibility is not a property of a finished analysis; it is a property of the process that produced it. A student who runs every code block in Posts 5 and 6 but skips the git commits has a directory that renders but not a compendium that reproduces. The distinction matters when, six months later, a reviewer asks for the exact code used to produce Table 1.</p>
+<p><strong>Technical.</strong> The Five Pillars framework (Post 7) converts what appears to be a collection of independent tools into a coherent reproducibility contract. Once a student understands that the Dockerfile, renv.lock, and .Rprofile are three sides of the same constraint, the lab’s conventions stop feeling arbitrary and start feeling inevitable.</p>
+<p><strong>Process.</strong> The most efficient path through this reading list is one where the student builds a single compendium throughout Phases 4, 5, and 6, adding to it incrementally rather than creating three separate projects. The professor recommends assigning a single directory name at the start of Phase 4 and carrying it through to the end of Phase 6.</p>
+<p><strong>On sequencing.</strong> The first version of this guide ended at exploratory data analysis, on the theory that a student who could produce a rendered regression inside a container had everything they needed. That theory failed in two places. Students reached AWS credentials without a credential store, and students drafted with AI assistance without a stated position on what they were delegating. Both gaps were visible only in retrospect, which is the usual way with a curriculum.</p>
+<p><strong>Philosophical.</strong> Reproducibility is not a property of a finished analysis; it is a property of the process that produced it. A student who runs every code block in Phase 4 but skips the git commits has a directory that renders but not a compendium that reproduces. The distinction matters when, six months later, a reviewer asks for the exact code used to produce Table 1.</p>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
 <ul>
-<li>The reading list is calibrated to the lab’s current toolchain. Students joining the lab more than twelve months after this post’s date should verify that the zzcollab version referenced in Post 6 matches the version installed in the lab’s current base image.</li>
-<li>Post 4 (<code>wf-git-for-data-science</code>) is in draft; the reading sequence has a gap at that position. A student reading this list after the post is published should treat it as a required stop, not an optional one.</li>
-<li>The sequence covers setup and a first analysis only. It does not address more advanced topics (multiple regression, cross-validation, random-forest models) that appear in Posts 50 through 56 of the Palmer Penguins Arc.</li>
+<li>The reading list is calibrated to the lab’s current toolchain. Students joining the lab more than twelve months after this post’s revision date should verify that the zzcollab version referenced in Post 8 matches the version installed in the lab’s current base image.</li>
+<li>The phase durations are estimates from a small number of rotations and have not been measured systematically. Phase 2 in particular has been assigned to too few students to calibrate its time cost with confidence.</li>
+<li>The sequence assumes a single student working alone with periodic professor contact. It does not address collaborative workflows on a shared compendium, which the lab handles by convention rather than by documentation.</li>
+<li>Phases 6 through 8 have not yet been run end to end by a student who began at Phase 0. Their ordering is reasoned rather than tested.</li>
+<li>The posts in this sequence were written independently over roughly two years and cite each other by an internal post numbering that does not appear on the published site. Students will encounter references to ‘post 24’ or ‘posts 64 through 66’ with no way to resolve them. The phase structure here is the intended replacement for that numbering, and the professor should be asked whenever a cross-reference cannot be resolved.</li>
+<li>The sequence assumes the toolchain versions the posts were written against. Two are already visibly inconsistent with each other: one zzcollab post requires version 0.4 or later, another requires 2.4.0 or later. Verify against the lab’s current image rather than against either post.</li>
+<li>Phase 1 and Phase 2 together now run to eleven posts and something close to two full working days of configuration. This is the heaviest part of the sequence and the part most likely to need trimming after a cohort has been through it.</li>
 </ul>
 </section>
 <section id="opportunities" class="level2">
 <h2 class="anchored" data-anchor-id="opportunities">Opportunities</h2>
 <ul>
-<li>A lab-internal Slack channel or discussion group where students compare notes on the 55-item walkthrough (Post 6) would substantially reduce the time spent on the three or four predictable sticking points.</li>
-<li>The sequence could be extended by two posts to include <code>pp-multiple-regression</code> and <code>pp-diagnostics</code>, which introduce concepts (confounding, residual patterns) that are immediately applicable to most clinical pilot datasets.</li>
-<li>A short ‘diagnostic quiz’ after Post 5 and Post 6 – can the student rebuild their container from scratch in under ten minutes? – would give the professor an early signal on whether the infrastructure is genuinely understood or merely completed.</li>
+<li>A lab-internal Slack channel or discussion group where students compare notes on the 55-item walkthrough (Post 8) would substantially reduce the time spent on the three or four predictable sticking points.</li>
+<li>A short diagnostic exercise after Phase 4 (can the student rebuild their container from scratch in under ten minutes?) would give the professor an early signal on whether the infrastructure is genuinely understood or merely completed. The same idea applies to Phase 2: can the student restore their <code>pass</code> store onto a second machine?</li>
+<li>The collaborative-workflow gap noted under Limitations is the most valuable missing post on this blog. Two students sharing one compendium currently have no documented convention for branch naming, data handoff, or renv.lock conflict resolution.</li>
 </ul>
 </section>
 <section id="wrapping-up" class="level2">
 <h2 class="anchored" data-anchor-id="wrapping-up">Wrapping Up</h2>
 <section id="what-did-we-learn" class="level3">
 <h3 class="anchored" data-anchor-id="what-did-we-learn">What Did We Learn?</h3>
-<p>A new graduate student who completes this reading sequence in order will have traversed the same conceptual arc that took most senior lab members two or three years of trial and error: from a bare terminal to a containerized, version-controlled, reproducibly rendered analysis. The eight posts together take roughly twelve hours of active engagement. The skills they build will be used on every project the student works on for the remainder of their graduate career.</p>
-<p>The sequence is not an onboarding checklist. It is a map. The student who finishes Post 8 has not arrived; they have acquired the vocabulary and habits that make the real work possible.</p>
+<p>A new graduate student who completes Phases 0 through 5 will have traversed the same conceptual arc that took most senior lab members two or three years of trial and error: from a bare terminal to a containerized, version-controlled, reproducibly rendered analysis with a credential store behind it. That core is roughly twenty hours of active engagement. Phases 6 through 8 add the review and dissemination habits that turn an analysis into a contribution.</p>
+<p>The sequence is not an onboarding checklist. It is a map. The student who finishes Phase 5 has not arrived; they have acquired the vocabulary and habits that make the real work possible.</p>
 </section>
 </section>
 <section id="see-also" class="level2">
 <h2 class="anchored" data-anchor-id="see-also">See Also</h2>
-<p>For the full Palmer Penguins analysis arc (Posts 50 through 56), see:</p>
-<ul>
-<li><a href="../pp-multiple-regression/">pp-multiple-regression</a> – Post 51</li>
-<li><a href="../pp-cross-validation/">pp-cross-validation</a> – Post 52</li>
-<li><a href="../pp-diagnostics/">pp-diagnostics</a> – Post 53</li>
-<li><a href="../pp-random-forest/">pp-random-forest</a> – Post 54</li>
-<li><a href="../pp-body-mass-prediction/">pp-body-mass-prediction</a> – Post 55</li>
-<li><a href="../pp-grouped-plots-with-purrr/">pp-grouped-plots-with-purrr</a> – Post 56</li>
-</ul>
 <p>For the complete zzcollab documentation, see <a href="https://github.com/rgt47/zzcollab">zzcollab.sh documentation</a>.</p>
 </section>
 <section id="reproducibility" class="level2">
 <h2 class="anchored" data-anchor-id="reproducibility">Reproducibility</h2>
-<p>This post contains no embedded R code. There is nothing to reproduce computationally. The reading list is current as of June 2026; the professor will update it when post URLs change or new required posts are added to the sequence.</p>
+<p>This post contains no embedded R code. There is nothing to reproduce computationally. The reading list is current as of September 2026; the professor will update it when post URLs change or new required posts are added to the sequence.</p>
 </section>
 <section id="lets-connect" class="level2">
 <h2 class="anchored" data-anchor-id="lets-connect">Let’s Connect</h2>
@@ -448,20 +643,20 @@ document.addEventListener('DOMContentLoaded', function() {
 </section>
 <section id="related-posts-in-this-cluster" class="level2">
 <h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
-<p>This post is part of the <em>zzcollab Compendia</em> series. Recommended reading order:</p>
+<p>This post is part of the <em>zzcollab Compendia</em> series. The cluster has its own internal order, which is not the same thing as the phase sequence above; where the two differ, follow the phases.</p>
 <ol type="1">
-<li><strong>This post: A New Graduate Student Reading Guide</strong> (this post)</li>
-<li><a href="../zc-quarto-compendium-intro/">Reproducible Blog Posts with ZZCOLLAB: A Quarto Workflow</a> – Post 01</li>
-<li><a href="../zc-blog-post-template/">Constructing a Reproducible Blog Post Using zzcollab Tools</a> – Post 02</li>
-<li><a href="../zc-markdown-to-blog-workflow/">From Markdown to Blog Post: A ZZCOLLAB Workflow</a> – Post 03</li>
-<li><a href="../zc-share-rmd-via-docker/">Sharing R Code via Docker: R Markdown Reports</a> – Post 04</li>
-<li><a href="../zc-analysis-initiation-checklist/">A 55-Item Initiation Checklist for zzcollab Data Analyses</a> – Post 05</li>
-<li><a href="../zc-manuscript-report-elements/">Seven Required Elements for a zzc Manuscript report.Rmd</a> – Post 06</li>
-<li><a href="../zc-tiered-ci-strategy/">A Tiered CI Strategy for zzcollab Research Compendia</a> – Post 07</li>
-<li><a href="../zc-github-actions-workflows/">GitHub Actions Workflows for zzcollab Research Compendia</a> – Post 08</li>
+<li><strong>This post: A New Graduate Student Reading Guide</strong></li>
+<li><a href="../zc-quarto-compendium-intro/">Reproducible Blog Posts with ZZCOLLAB: A Quarto Workflow</a> (Phase 4)</li>
+<li><a href="../zc-blog-post-template/">Constructing a Reproducible Blog Post Using zzcollab Tools</a> (Phase 7, as a scaffold)</li>
+<li><a href="../zc-markdown-to-blog-workflow/">From Markdown to Blog Post: A ZZCOLLAB Workflow</a> (Phase 7)</li>
+<li><a href="../zc-share-rmd-via-docker/">Sharing R Code via Docker: R Markdown Reports</a> (Phase 8)</li>
+<li><a href="../zc-analysis-initiation-checklist/">A 55-Item Initiation Checklist for zzcollab Data Analyses</a> (Phase 8)</li>
+<li><a href="../zc-manuscript-report-elements/">Seven Required Elements for a zzc Manuscript report.Rmd</a> (Phase 7)</li>
+<li><a href="../zc-tiered-ci-strategy/">A Tiered CI Strategy for zzcollab Research Compendia</a> (Phase 8)</li>
+<li><a href="../zc-github-actions-workflows/">GitHub Actions Workflows for zzcollab Research Compendia</a> (Phase 8)</li>
 </ol>
 <hr>
-<p><em>Rendered on 2026-06-11 at 11:10 PDT.</em><br> <em>Source: ~/prj/rgtlab/posts/zc-new-student-reading-guide/analysis/report/index.qmd</em></p>
+<p><em>Rendered on 2026-09-11 at 09:42 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/zc-new-student-reading-guide/analysis/report/index.qmd</em></p>
 
 
 </section>

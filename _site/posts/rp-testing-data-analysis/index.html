@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-07-25">
-<meta name="description" content="I did not really know how to systematically test a data analysis pipeline until I applied software engineering practices from testthat and assertr to my own research workflow.">
+<meta name="description" content="Testing a data analysis pipeline systematically means applying software engineering practices from testthat and assertr to a research workflow.">
 
 <title>Testing Data Analysis Workflows in R – focusonr</title>
 <style>
@@ -157,13 +157,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Testing Data Analysis Workflows in R – focusonr">
-<meta property="og:description" content="I did not really know how to systematically test a data analysis pipeline until I applied software engineering practices from testthat and assertr to my own research workflow.">
+<meta property="og:description" content="Testing a data analysis pipeline systematically means applying software engineering practices from testthat and assertr to a research workflow.">
 <meta property="og:image" content="https://focusonr.org/posts/rp-testing-data-analysis/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="800">
 <meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="Testing Data Analysis Workflows in R – focusonr">
-<meta name="twitter:description" content="I did not really know how to systematically test a data analysis pipeline until I applied software engineering practices from testthat and assertr to my own research workflow.">
+<meta name="twitter:description" content="Testing a data analysis pipeline systematically means applying software engineering practices from testthat and assertr to a research workflow.">
 <meta name="twitter:image" content="https://focusonr.org/posts/rp-testing-data-analysis/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how to systematically test a data analysis pipeline until I applied software engineering practices from testthat and assertr to my own research workflow.
+    Testing a data analysis pipeline systematically means applying software engineering practices from testthat and assertr to a research workflow.
   </div>
 </div>
 
@@ -333,6 +333,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -342,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>Testing data analysis workflows transforms fragile scripts into reliable research infrastructure.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how to systematically test a data analysis pipeline until I applied software engineering practices from testthat and assertr to my own research workflow. Data analysis testing presents challenges that differ fundamentally from traditional software testing: one must validate data quality, ensure computational reproducibility, and verify that analytical results are both correct and meaningful.</p>
+<p>Testing a data analysis pipeline systematically means applying software engineering practices from testthat and assertr to a research workflow, which is what this post does. Data analysis testing presents challenges that differ fundamentally from traditional software testing: one must validate data quality, ensure computational reproducibility, and verify that analytical results are both correct and meaningful.</p>
 <p>For years I relied on informal validation – checking that results “looked reasonable” and trusting that my code was correct because it ran without errors. These approaches failed to scale. When a collaborator’s data arrived with unexpected column types, my pipeline broke silently. When a package update changed default behavior, my results shifted without warning.</p>
 <p>This post presents the testing taxonomy developed for data analysis workflows: unit tests for individual functions, data validation tests for quality assurance, integration tests for full pipelines, and reproducibility tests for deterministic results. All examples use the Palmer Penguins dataset and are immediately applicable to one’s own research code.</p>
 <p>More formally, this post documents the testing discipline at the Project Compendium tier of the Workflow Construct described in <a href="../wf-construct-overview-anchor/">A Workflow Construct for the Modern Data Scientist</a>. Post 52 positions the compendium tier (zzcollab and its predecessors) as the project-level reproducibility unit. Tests are the discipline that closes that unit’s loop, in the sense that an analysis is only as reproducible as its tests exercise. This post is the testing companion to <a href="../zc-quarto-compendium-intro/">Reproducible Blog Posts with ZZCOLLAB</a> (the compendium-tier keystone).</p>
@@ -396,6 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(penguins)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(penguins)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p><strong>A note on the framework.</strong> The examples below use <code>testthat</code>, which is the most widely documented R testing framework and therefore the easiest one to learn the concepts in. The lab’s own packages are written against <code>tinytest</code>; see <a href="../rp-testthat-to-tinytest/">From testthat to tinytest</a> for the conversion and for the assertion vocabulary. Every concept in this post transfers without modification, since the two frameworks differ in ceremony rather than in what they can express.</p>
 <p><strong>Background assumed:</strong> Familiarity with R and the tidyverse. No prior experience with testing frameworks is required.</p>
 </section>
 <section id="what-is-testing-for-data-analysis" class="level1">

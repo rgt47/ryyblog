@@ -317,6 +317,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/thumbnail.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:40.0%"></p>
@@ -940,13 +953,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.1 (2026-06-24)
-Platform: aarch64-apple-darwin25.4.0
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
 Running under: macOS Tahoe 26.6.2
 
 Matrix products: default
-BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
-LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -958,16 +971,17 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] collapse_2.1.7    data.table_1.18.4 rlang_1.3.0       dplyr_1.2.1      
+[1] collapse_2.1.9      data.table_1.18.6.1 rlang_1.2.0        
+[4] dplyr_1.2.1        
 
 loaded via a namespace (and not attached):
- [1] vctrs_0.7.3       cli_3.6.6         knitr_1.51        xfun_0.58        
+ [1] vctrs_0.7.3       cli_3.6.6         knitr_1.51        xfun_0.62        
  [5] otel_0.2.0        generics_0.1.4    jsonlite_2.0.0    glue_1.8.1       
  [9] htmltools_0.5.9   rmarkdown_2.31    evaluate_1.0.5    tibble_3.3.1     
-[13] fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5   compiler_4.6.1   
+[13] fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5   compiler_4.6.0   
 [17] htmlwidgets_1.6.4 Rcpp_1.1.1-1.1    pkgconfig_2.0.3   digest_0.6.39    
 [21] R6_2.6.1          tidyselect_1.2.1  utf8_1.2.6        pillar_1.11.1    
-[25] parallel_4.6.1    magrittr_2.0.5    tools_4.6.1      </code></pre>
+[25] parallel_4.6.0    magrittr_2.0.5    tools_4.6.0      </code></pre>
 </div>
 </div>
 <hr>

@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
   </ul></li>
   <li><a href="#what-is-this-framework-for" id="toc-what-is-this-framework-for" class="nav-link" data-scroll-target="#what-is-this-framework-for">What Is This Framework For?</a></li>
+  <li><a href="#how-much-review-is-proportionate" id="toc-how-much-review-is-proportionate" class="nav-link" data-scroll-target="#how-much-review-is-proportionate">How Much Review Is Proportionate?</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
   <li><a href="#the-five-review-phases" id="toc-the-five-review-phases" class="nav-link" data-scroll-target="#the-five-review-phases">The Five Review Phases</a>
   <ul class="collapse">
@@ -233,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#phase-2-function-by-function-review" id="toc-phase-2-function-by-function-review" class="nav-link" data-scroll-target="#phase-2-function-by-function-review">Phase 2: Function-by-Function Review</a>
   <ul class="collapse">
   <li><a href="#patterns-specific-to-ai-generated-code" id="toc-patterns-specific-to-ai-generated-code" class="nav-link" data-scroll-target="#patterns-specific-to-ai-generated-code">Patterns specific to AI-generated code</a></li>
+  <li><a href="#correctness-traps-in-generated-r-code" id="toc-correctness-traps-in-generated-r-code" class="nav-link" data-scroll-target="#correctness-traps-in-generated-r-code">Correctness traps in generated R code</a></li>
   </ul></li>
   <li><a href="#phase-3-test-suite-review" id="toc-phase-3-test-suite-review" class="nav-link" data-scroll-target="#phase-3-test-suite-review">Phase 3: Test Suite Review</a></li>
   <li><a href="#phase-4-integration-and-system-review" id="toc-phase-4-integration-and-system-review" class="nav-link" data-scroll-target="#phase-4-integration-and-system-review">Phase 4: Integration and System Review</a></li>
@@ -240,8 +242,16 @@ document.addEventListener('DOMContentLoaded', function() {
   </ul></li>
   <li><a href="#documentation-review" id="toc-documentation-review" class="nav-link" data-scroll-target="#documentation-review">Documentation Review</a></li>
   <li><a href="#annotation-and-severity" id="toc-annotation-and-severity" class="nav-link" data-scroll-target="#annotation-and-severity">Annotation and Severity</a></li>
-  <li><a href="#remediation-and-final-verification" id="toc-remediation-and-final-verification" class="nav-link" data-scroll-target="#remediation-and-final-verification">Remediation and Final Verification</a></li>
-  <li><a href="#per-package-review-checklist" id="toc-per-package-review-checklist" class="nav-link" data-scroll-target="#per-package-review-checklist">Per-Package Review Checklist</a></li>
+  <li><a href="#remediation-and-final-verification" id="toc-remediation-and-final-verification" class="nav-link" data-scroll-target="#remediation-and-final-verification">Remediation and Final Verification</a>
+  <ul class="collapse">
+  <li><a href="#when-the-review-fails" id="toc-when-the-review-fails" class="nav-link" data-scroll-target="#when-the-review-fails">When the review fails</a></li>
+  </ul></li>
+  <li><a href="#relation-to-established-review-standards" id="toc-relation-to-established-review-standards" class="nav-link" data-scroll-target="#relation-to-established-review-standards">Relation to Established Review Standards</a>
+  <ul class="collapse">
+  <li><a href="#what-the-external-standards-do-not-cover" id="toc-what-the-external-standards-do-not-cover" class="nav-link" data-scroll-target="#what-the-external-standards-do-not-cover">What the external standards do not cover</a></li>
+  </ul></li>
+  <li><a href="#the-consolidated-review-checklist" id="toc-the-consolidated-review-checklist" class="nav-link" data-scroll-target="#the-consolidated-review-checklist">The Consolidated Review Checklist</a></li>
+  <li><a href="#what-the-tools-can-and-cannot-check" id="toc-what-the-tools-can-and-cannot-check" class="nav-link" data-scroll-target="#what-the-tools-can-and-cannot-check">What the Tools Can and Cannot Check</a></li>
   <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
   <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
@@ -306,12 +316,25 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <!-- ============================================================================
 AUTHOR PROVIDES — concrete inputs the blogger must supply
 
 YAML FRONT MATTER
   [x] title, date, categories, description, image filled in
-  [ ] draft: false    — flip when ready
+  [x] draft: false
 
 IMAGES (4 total: hero + 3 ambiance, all in media/images/)
   [ ] Hero image (80% width)
@@ -322,10 +345,10 @@ IMAGES (4 total: hero + 3 ambiance, all in media/images/)
 
 SOURCE
   Adapted from docs/CODE_REVIEW_METHODOLOGY.md in the zzobj2fig package
-  (~/prj/sfw/10-zzobj2fig/zzobj2fig/docs/). This post is a direct
-  translation of that white paper into blog format; content has been
-  reorganised for narrative flow but no methodological claims have been
-  added beyond the source document.
+  (~/prj/sfw/10-zzobj2fig/zzobj2fig/docs/). The five phases, annotation
+  template and ownership test come from that white paper. Material
+  benchmarking the framework against rOpenSci, JOSS and The Turing Way
+  is new to this post; see the Reproducibility section.
 ============================================================================ -->
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -336,12 +359,13 @@ SOURCE
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
 <p>An increasingly common development pattern pairs a human architect, who designs package structure, API, and behavior, with an AI assistant that writes the implementation and the test suite. The arrangement is productive, but it creates a responsibility gap. The human author’s name goes on the package, and with it the obligation to understand, maintain, and defend every line of code, regardless of who typed it.</p>
-<p>This post presents a methodological framework for closing that gap: a structured code review process for R packages developed through human-AI collaboration. It synthesises established code review practice with considerations specific to AI-generated code, and it ends with an explicit ownership test rather than a vague sense that the review “went well.”</p>
+<p>This post presents a methodological framework for closing that gap: a structured code review process for R packages developed through human-AI collaboration. It synthesizes established code review practice with considerations specific to AI-generated code, and it ends with an explicit ownership test rather than a vague sense that the review “went well.”</p>
 <section id="motivations" class="level2">
 <h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
 <ul>
 <li><strong>The responsibility gap is real, not rhetorical.</strong> An author who cannot explain a function’s implementation cannot debug it, extend it, or defend it to a CRAN reviewer.</li>
 <li><strong>AI-generated code has characteristic failure modes.</strong> Over- engineering, hallucinated functionality, and pattern mimicry do not show up the same way in human-written code, so a generic review checklist misses them.</li>
+<li><strong>A generated test suite is not independent evidence.</strong> When the same assistant writes the implementation and the tests, both share the same misconceptions, and passing tests carry far less information than they appear to.</li>
 <li><strong>Coverage metrics are a floor, not a review.</strong> A package can reach 100% line coverage while every assertion checks nothing meaningful.</li>
 <li><strong>Ownership needs a definition, not a feeling.</strong> “I reviewed it” and “I can rebuild this from memory” are different claims, and only the second one licenses shipping the package under your name.</li>
 </ul>
@@ -350,8 +374,9 @@ SOURCE
 <h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
 <ol type="1">
 <li>Define the five review phases (structural, function-by-function, test suite, integration/system, security) and what each phase is for.</li>
-<li>Catalog the AI-generated code patterns that deserve specific scrutiny during function review.</li>
+<li>Catalog the AI-generated code patterns that deserve specific scrutiny during function review, with a detection method for each.</li>
 <li>Provide a concrete note-taking and severity-classification system for tracking findings through remediation.</li>
+<li>Separate the checks a machine can perform from the checks only the author can perform, and show how large the second set really is.</li>
 <li>Establish a verifiable test for “ownership”: what an author must be able to do, unaided, before claiming the package as their own.</li>
 </ol>
 <p><img src="media/images/ambiance1.jpg" class="img-fluid"></p>
@@ -361,6 +386,14 @@ SOURCE
 <h1>What Is This Framework For?</h1>
 <p>The scope is deliberately narrow. It addresses review of R packages where a human author defined requirements, architecture, and design decisions, an AI assistant wrote the implementation code and tests, and the author now seeks to establish complete ownership and understanding of the result before it ships. It is not a general code review guide, and it does not replace <code>R CMD check</code> or CRAN’s own policies; it sits alongside both.</p>
 <p>A thorough review in this context serves five purposes: comprehension (the author understands every implementation detail), correctness (the code does what it claims), quality (it meets ordinary maintainability standards), security (it introduces no new vulnerabilities), and consistency (the implementation matches the stated design, rather than drifting toward whatever the assistant found convenient).</p>
+</section>
+<section id="how-much-review-is-proportionate" class="level1">
+<h1>How Much Review Is Proportionate?</h1>
+<p>The full process described below is disproportionate for a package of four functions that only its author will ever run. Scale the effort to the risk, which is roughly the product of three factors: how many people will run the code, how bad a silently wrong answer would be, and whether the package touches personal, clinical, or otherwise sensitive data.</p>
+<p><strong>Tier 1, personal tooling.</strong> A package you alone use, whose wrong answers you would notice immediately. Run Phase 1 and Phase 2, plus the automated checks. Skip the formal annotation template; skip the integration phase unless functions actually compose. The ownership test still applies, because the cost of not understanding your own tools is paid later regardless of audience size.</p>
+<p><strong>Tier 2, shared research software.</strong> A package used by collaborators or published to CRAN, whose wrong answers would propagate into someone’s analysis before anyone noticed. Run all five phases and the full checklist. This is the tier the rest of this post assumes.</p>
+<p><strong>Tier 3, sensitive or consequential.</strong> A package touching identifiable human-subjects data, clinical decision support, or any result that would be expensive to retract. Everything in Tier 2, plus: the ethics and data-handling items, an independent reviewer who is not the author, and adversarial testing of the numerical core against a reference implementation. Self-administered review is not sufficient at this tier, and the framework’s central limitation, that the author grades their own understanding, becomes disqualifying.</p>
+<p>Two notes on tiering. First, a package moves up tiers over time without anyone deciding that it has; the trigger is usually the first external user. Re-tier at each release rather than at first publication. Second, tiering governs how much of the checklist you run, never whether a failed item may ship unfixed. A “no” is still a blocker at every tier.</p>
 </section>
 <section id="prerequisites" class="level1">
 <h1>Prerequisites</h1>
@@ -374,7 +407,8 @@ SOURCE
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Run initial quality checks</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">check</span>()</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>rcmdcheck<span class="sc">::</span><span class="fu">rcmdcheck</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Static analysis tooling worth having installed before the review starts: <code>lintr</code> for style and likely-error detection, <code>covr</code> for coverage measurement, <code>goodpractice</code> for a broader quality assessment, and <code>cyclocomp</code> for complexity metrics.</p>
+<p>Static analysis tooling worth having installed before the review starts: <code>lintr</code> for style and likely-error detection, <code>covr</code> for coverage measurement, <code>goodpractice</code> for a broader quality assessment, <code>cyclocomp</code> for complexity metrics, and <code>pkgcheck</code> for the rOpenSci conformance checks discussed later in this post.</p>
+<p>The conversation logs deserve particular emphasis. They are the only record of what was actually asked for, and the only way to distinguish a function that implements a design decision from a function that implements something the assistant inferred. Keep them; they are the provenance trail this framework depends on.</p>
 </section>
 <section id="the-five-review-phases" class="level1">
 <h1>The Five Review Phases</h1>
@@ -394,16 +428,67 @@ SOURCE
 <p><strong>Documentation quality.</strong> Does the roxygen2 block describe actual behavior? Are all parameters documented, is the return value specified, and do the examples run without error?</p>
 <p><strong>Code clarity.</strong> Can you explain what each line does and why? Are names descriptive and consistent across the file?</p>
 <p>For each function, read the documentation before the implementation, then trace the happy path with typical valid inputs and at least one failure path with an invalid or edge-case input. Verify that the test suite actually exercises the behavior just traced, and deliberately question any assumption the code makes implicitly.</p>
+<p>Work in dependency order, from the bottom of the call graph upward. Reviewing a caller before its callee means holding unresolved questions about the callee in memory while reading the caller, and then re-reading the caller once the callee is understood.</p>
 <section id="patterns-specific-to-ai-generated-code" class="level3">
 <h3 class="anchored" data-anchor-id="patterns-specific-to-ai-generated-code">Patterns specific to AI-generated code</h3>
-<p>A handful of patterns recur often enough in assistant-written code to warrant a dedicated pass:</p>
+<p>These patterns recur often enough in assistant-written code to warrant a dedicated pass. Each is given with what it looks like, how to find it, and what to do about it.</p>
+<p><strong>Over-engineering.</strong> Abstraction or generality beyond what the requirements called for: a configuration argument with five options where the design specified one behavior, a class hierarchy where a list would do, a plugin mechanism nothing plugs into.</p>
+<p><em>Detection:</em> compare the function’s parameter list against the design document. Any parameter you cannot trace to a stated requirement is a candidate. <code>cyclocomp</code> will flag the resulting complexity, though it cannot tell you the complexity was unnecessary.</p>
+<p><em>Response:</em> delete the unused generality. It is not free; every untaken branch is code you have promised to maintain and must understand to claim ownership.</p>
+<p><strong>Defensive redundancy.</strong> Checks or fallbacks that duplicate a guarantee already made elsewhere: re-validating an argument that the calling function already validated, a <code>tryCatch()</code> around an operation that cannot throw, <code>if (is.null(x))</code> after <code>x</code> has been assigned unconditionally.</p>
+<p><em>Detection:</em> for each guard, ask what input would trigger it. If you cannot construct one, it is redundant.</p>
+<p><em>Response:</em> remove it, or, if the guard encodes a real invariant, replace it with an explicit assertion that documents the invariant. Redundant guards are worse than useless because they suggest the invariant is uncertain when it is not.</p>
+<p><strong>Pattern mimicry.</strong> Code that looks correct because it resembles a familiar idiom, while missing a requirement specific to this package. The classic form is a function that follows the shape of a tidyverse verb without honoring the grouping semantics the shape implies.</p>
+<p><em>Detection:</em> this is the hardest to catch mechanically, because the code reads well. The reliable method is to state the requirement in your own words first, then read the implementation and ask whether it implements that requirement or merely the idiom.</p>
+<p><em>Response:</em> rewrite from the requirement rather than patching the idiom.</p>
+<p><strong>Inconsistent style.</strong> Naming or structural variation across functions that a single author would not have introduced: <code>n_obs</code> in one function and <code>num_observations</code> in the next, mixed assignment operators, argument order that varies between functions taking the same inputs.</p>
+<p><em>Detection:</em> <code>lintr</code> catches operator and formatting inconsistency. Naming inconsistency needs a manual pass over the full export list, which is why the API surface is reviewed as a whole rather than function by function.</p>
+<p><em>Response:</em> pick one convention and apply it everywhere. This is cheap to fix before release and expensive after, because fixing it later is a breaking change.</p>
+<p><strong>Hallucinated functionality.</strong> References to functions, arguments, or packages that do not exist. Note that this fails loudly when the call is executed and silently when it is not, which means it hides in error branches, <code>\dontrun{}</code> examples, and documentation prose.</p>
+<p><em>Detection:</em> run every example including the escaped ones; execute every error path in tests. For prose references, check each named function actually exists with <code>exists()</code> or by opening the help page.</p>
+<p><em>Response:</em> fix the reference, then look for others in the same region. Hallucination clusters.</p>
+<p><strong>Fabricated dependencies.</strong> A distinct and more dangerous case of the above: the assistant suggests a package that does not exist. Published measurements put the rate of non-existent package suggestions from large language models at roughly one in five, and attackers have begun registering the names that models hallucinate most often, so that a later install of the “missing” dependency retrieves attacker-controlled code. This is a supply-chain vulnerability, not a typo, and it is treated as such in Phase 5.</p>
+<p><em>Detection:</em> verify every entry in <code>Imports</code> and <code>Suggests</code> against the registry it claims to come from, and check the publication date and publisher of anything unfamiliar. A package registered last month that exactly matches the name an assistant suggested is a red flag, not a convenience.</p>
+<p><em>Response:</em> remove it, and pin what remains.</p>
+<p><strong>Fabricated citations.</strong> References in vignettes, documentation, or comments to papers, DOIs, or specifications that do not exist, or that exist but do not say what the text claims.</p>
+<p><em>Detection:</em> resolve every DOI and URL. For each cited method, read enough of the source to confirm it describes the algorithm actually implemented.</p>
+<p><em>Response:</em> correct or remove. A fabricated citation in a research software package is a scholarly integrity problem, not a documentation defect.</p>
+<p><strong>Comments that describe intent the code does not implement.</strong> Distinct from hallucinated functionality, and harder to see, because the comment reads as authoritative and the code below it is syntactically fine. A comment claiming a loop handles the empty case, above a loop that does not.</p>
+<p><em>Detection:</em> read comments as claims to be verified, not as guidance. Where a comment states a behavior, construct the input that would exercise it.</p>
+<p><em>Response:</em> fix the code if the comment is the requirement; delete the comment if the code is correct. Never leave both.</p>
+<p><strong>Scope drift across a session.</strong> In long generation sessions, later functions silently contradict decisions made earlier: a null-handling convention established in the third function is abandoned by the twelfth.</p>
+<p><em>Detection:</em> pick two or three cross-cutting conventions (missing value handling, error signaling, return type on failure) and check every function against each one, rather than checking each function against everything.</p>
+<p><em>Response:</em> pick the convention that is right, not the one that is more common in the file, and apply it throughout.</p>
+<p><strong>Plausible but unjustified numerical constants.</strong> Tolerances, convergence criteria, iteration caps, seeds, and thresholds that look reasonable and have no stated basis.</p>
+<p><em>Detection:</em> grep for numeric literals in the <code>R/</code> directory. Every one that is not obviously structural needs a comment explaining where it came from.</p>
+<p><em>Response:</em> justify, cite, or parameterize. An unexplained <code>1e-8</code> is a design decision nobody made.</p>
+<p><strong>Outdated patterns.</strong> Deprecated functions or superseded approaches that were correct at some point in the assistant’s training data but are not the current recommendation. In R this has a concrete and checkable form: rOpenSci treats <code>RCurl</code>, <code>rjson</code>, <code>RJSONIO</code>, and <code>XML</code> as obsolete outright, and <code>sp</code>, <code>rgdal</code>, <code>maptools</code>, and <code>rgeos</code> as superseded, and a model trained on years of published R code will suggest exactly these.</p>
+<p><em>Detection:</em> <code>pkgcheck</code> flags all eight by name. Beyond dependencies, check for superseded idioms within packages that are themselves current.</p>
+<p><em>Response:</em> migrate. The migration is only going to get more expensive.</p>
+</section>
+<section id="correctness-traps-in-generated-r-code" class="level3">
+<h3 class="anchored" data-anchor-id="correctness-traps-in-generated-r-code">Correctness traps in generated R code</h3>
+<p>Separately from the patterns above, a set of R-specific mistakes appear often enough in generated code to be worth a dedicated sweep. Most are drawn from <em>R Packages</em> by Wickham and Bryan and from the CRAN <em>Repository Policy</em>, and several are policy violations rather than matters of taste.</p>
+<p><strong>Top-level code in <code>R/</code>.</strong> This is the most consequential item in the list and the one most likely to be present, because it is the signature of code written in a script idiom. <em>R Packages</em> puts it plainly: any R code outside a function is suspicious and should be carefully reviewed. The reason is that code in <code>R/</code> runs when the package is <strong>built</strong>, not when it is used, and the build often happens on a different machine at a different time. Three concrete failures follow:</p>
 <ul>
-<li><strong>Over-engineering.</strong> Abstraction or generality beyond what the requirements called for.</li>
-<li><strong>Defensive redundancy.</strong> Checks or fallbacks that duplicate a guarantee already made elsewhere.</li>
-<li><strong>Pattern mimicry.</strong> Code that looks correct because it resembles a familiar idiom, while missing a requirement specific to this package.</li>
-<li><strong>Inconsistent style.</strong> Naming or structural variation across functions that a single author would not have introduced.</li>
-<li><strong>Hallucinated functionality.</strong> References to functions, arguments, or packages that do not exist.</li>
-<li><strong>Outdated patterns.</strong> Deprecated functions or superseded approaches that were correct at some point in the assistant’s training data but are not the current recommendation.</li>
+<li>A path computed at top level with <code>system.file()</code> is baked in at build time and points somewhere that does not exist on the user’s machine.</li>
+<li>An object computed at top level captures the capabilities of the build machine, which is typically a headless server. A cached colour table computed at build time will report that the terminal has no colours, forever, on every user’s machine.</li>
+<li>An alias written as <code>foo &lt;- pkgB::blah</code> freezes the definition of <code>blah()</code> as it existed on the build machine. If a bug in <code>blah()</code> is later fixed, your package keeps the broken version until it is rebuilt. The correct form is <code>foo &lt;- function(...) pkgB::blah(...)</code>.</li>
+</ul>
+<p>The fix in every case is the same: push the code down into the body of a function so it executes on the user’s machine at run time.</p>
+<p><strong>Modifying the R landscape.</strong> A package function should not change global state that outlives the call. <code>library()</code> and <code>require()</code> alter the search path and should never appear below <code>R/</code>; dependencies belong in <code>DESCRIPTION</code>. <code>source()</code> has no legitimate use inside a package. <code>options()</code>, <code>par()</code>, <code>setwd()</code>, <code>Sys.setenv()</code>, <code>Sys.setlocale()</code>, and anything touching the random number generator must be restored on exit. The current idiom for this is the withr package (<code>withr::local_options()</code>, <code>local_par()</code>, <code>local_dir()</code>, <code>local_envvar()</code>, or the general <code>withr::defer()</code>), which captures the old value and schedules restoration for you. Base R’s <code>on.exit()</code> also works, but you must capture and restore the state yourself, and you must remember <code>add = TRUE</code> or your second <code>on.exit()</code> silently discards the first.</p>
+<p><strong>Depending on the user’s landscape.</strong> The mirror image of the above. Sorting is the common case: <code>sort()</code> and <code>order()</code> depend on the collation locale, so results differ across platforms. Use <code>method = "radix"</code> where order must be stable.</p>
+<p><strong>ASCII-only source.</strong> CRAN requires that <code>.R</code> files contain only ASCII characters; non-ASCII must be written as <code>\uxxxx</code> escapes. The usual offenders are curly quotes that arrive through copy and paste, which is exactly how generated text tends to arrive. <code>tools::showNonASCIIfile()</code> finds them.</p>
+<p><strong>Suggested packages used unconditionally.</strong> A package in <code>Suggests</code> may not be installed. Every use of one below <code>R/</code> must be guarded with <code>requireNamespace("pkg", quietly = TRUE)</code> or <code>rlang::check_installed()</code>, with either a clear error or a documented fallback. Generated code routinely calls a suggested package as though it were a hard dependency.</p>
+<p><strong>Namespace and S3 registration.</strong> Prefer <code>pkg::fun()</code> over importing; import into your namespace only for operators, for functions used very heavily, or in a tight loop. A method for a generic that your package neither owns nor imports needs <code>@exportS3Method pkg::generic</code>, not <code>@export</code>; plain <code>@export</code> will silently fail to register it. An unregistered method works under <code>devtools::load_all()</code> and fails once installed, which is the one configuration interactive development never exercises.</p>
+<p><strong>Side effects at load.</strong> If a package genuinely needs setup, it goes in <code>.onLoad()</code>, with <code>.onAttach()</code> reserved for startup messages, which must use <code>packageStartupMessage()</code> so users can suppress them. Never disturb the random seed there; <code>withr::with_preserve_seed()</code> exists for this.</p>
+<p><strong>File system discipline.</strong> Nothing may be written outside the session temporary directory, and even there it must be cleaned up. Persistent user data belongs in <code>tools::R_user_dir()</code>, kept small and actively managed. Nor may a package launch external software during examples or tests without closing it, which makes clipboard access doubly problematic: the clipboard counts as the user’s home filespace and on Linux may spawn a process.</p>
+<p><strong>Numerical and data handling.</strong></p>
+<ul>
+<li>Comparing doubles with <code>==</code> rather than a tolerance. Prefer <code>expect_equal()</code> over <code>expect_identical()</code> in tests, because numerical precision varies across platforms.</li>
+<li>Missing-value policy left implicit; <code>NaN</code> and <code>Inf</code> handled incidentally rather than deliberately.</li>
+<li>Reference semantics. Generated code usually assumes copy-on-modify throughout, which is false for <code>data.table</code>, <code>R6</code>, and environments: such a function mutates the caller’s object.</li>
+<li><code>data()</code> calls to load the package’s own lazy-loaded datasets. These create objects in the user’s global workspace, potentially overwriting what is there, and are unnecessary.</li>
 </ul>
 </section>
 </section>
@@ -412,8 +497,23 @@ SOURCE
 <p>Coverage numbers are a starting point, not a conclusion:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>coverage <span class="ot">&lt;-</span> covr<span class="sc">::</span><span class="fu">package_coverage</span>()</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>covr<span class="sc">::</span><span class="fu">report</span>(coverage)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>High coverage does not guarantee test quality. For each test file, separately assess whether the assertions check substantive behavior or merely that the code runs without erroring, whether boundary conditions are tested, whether expected failures are verified rather than only successes, whether tests are independent of one another’s side effects, and whether a reader can tell what each test is meant to validate.</p>
+<p>Before assessing the tests, be clear about what a generated test suite can and cannot tell you. <strong>If the same assistant wrote both the implementation and the tests, the tests are not independent evidence of correctness.</strong> They were derived from the same understanding of the requirement, so any misreading of the requirement is present in both, and the test will confirm the misreading rather than catch it. A green test suite in this situation demonstrates internal consistency, which is worth something, and correctness, which it does not demonstrate at all. This is the single most important thing to understand about reviewing AI-assisted packages, and it is why Phase 3 is a review of the tests themselves rather than a reading of their results.</p>
+<p>The practical consequence: for the behaviors that matter most, write at least one test yourself, from the requirement, without looking at the implementation. If it passes, that is evidence. If the generated suite already covered the same behavior, compare the two tests and ask why they differ.</p>
+<p>With that established, for each test file separately assess whether the assertions check substantive behavior or merely that the code runs without erroring, whether boundary conditions are tested, whether expected failures are verified rather than only successes, whether tests are independent of one another’s side effects, and whether a reader can tell what each test is meant to validate.</p>
 <p>Then check correspondence in both directions: every documented behavior should have a corresponding test, and every test should correspond to a documented or intended behavior. Tests that check conditions no longer relevant to the design are as much a maintenance liability as missing tests.</p>
+<p>Two notes on coverage itself. First, 100 percent is not the goal. <em>R Packages</em> is explicit that going from 90 or 99 percent to 100 is often not the best use of effort, because the last few lines usually demand awkward gymnastics or new mocking machinery, and a test suite whose maintainability was sacrificed to a number is a bad trade. Direct effort at the code that is tricky, not at the code that is uncovered. Second, and pulling the other way, coverage counts lines executed, and a generated suite executes a great many lines while asserting very little, so a high number in this setting is weaker evidence than the same number would be elsewhere.</p>
+<p>Further checks that coverage will never surface:</p>
+<ul>
+<li><strong>Run the tests in random order.</strong> Order dependence between tests is common in generated suites, because the assistant writes each test in the context of the ones before it. A suite that passes only in file order is not a suite.</li>
+<li><strong>Count the skips.</strong> Skipped tests are close to invisible in continuous integration, so it is entirely possible to believe a suite is passing when much of it never ran. Read the skip summary in the check output deliberately, and confirm each skip is one you intended.</li>
+<li><strong>Read every snapshot before accepting it.</strong> Accepting a snapshot because the test framework offered to accept it is the coverage fallacy wearing different clothes: it records what the code does, not what it should do. Note that snapshot tests are skipped on CRAN by default.</li>
+<li><strong>Check that test files are almost entirely <code>test_that()</code> calls.</strong> The rule for <code>R/</code> applies again here: top-level code in a test file has an awkward “test file scope” that makes tests depend on each other invisibly and makes a failing test hard to reproduce in isolation. Setup belongs inside the test, in a helper function, or in <code>helper.R</code>/<code>setup.R</code>. Some duplication between tests is the correct price for this; test code should be obvious rather than dry.</li>
+<li><strong>Check that tests do not attach packages.</strong> <code>library(somePkg)</code> in a test changes the search path, so the tests no longer run under the conditions the package will actually be used in. Use <code>pkg::fun()</code>, exactly as below <code>R/</code>.</li>
+<li><strong>Check what the tests write and where.</strong> Only the session temp directory, and cleaned up afterward. <code>withr::local_tempfile()</code> and <code>withr::local_tempdir()</code> handle this. Fixture files belong under <code>tests/testthat/</code> and should be reached with <code>test_path()</code>, with the script that generated them kept alongside.</li>
+<li><strong>Guard tests that touch the network or the clock.</strong> Tests calling an API need <code>skip_on_cran()</code>, and ideally recorded fixtures. Tests depending on <code>Sys.time()</code> or the current date will fail on a day you are not watching.</li>
+<li><strong>Do not test timing or parallelism.</strong> Check machines are heavily loaded and run package checks concurrently, so elapsed-time assertions and assumptions about available cores are flaky by construction. Flakiness is not only your problem: your package is checked whenever a package you depend on updates, so a flaky test can delay someone else’s release.</li>
+<li><strong>Check that a test’s fixture is what the function will really receive.</strong> A test that constructs its own input and then asserts on it is only as good as that construction.</li>
+</ul>
 </section>
 <section id="phase-4-integration-and-system-review" class="level2">
 <h2 class="anchored" data-anchor-id="phase-4-integration-and-system-review">Phase 4: Integration and System Review</h2>
@@ -421,7 +521,10 @@ SOURCE
 </section>
 <section id="phase-5-security-and-safety-review" class="level2">
 <h2 class="anchored" data-anchor-id="phase-5-security-and-safety-review">Phase 5: Security and Safety Review</h2>
-<p>Examine every user-facing input for the standard vulnerability classes: unsanitized input used in file paths, input passed to system commands, query construction, and serialization or deserialization of untrusted data. For network and file system operations, confirm connections are closed, temporary files are cleaned up, credentials are handled appropriately, and URLs are validated before use. Finally, consider the security posture of the dependency chain itself: are the dependencies actively maintained, do any have known vulnerabilities, and is the chain as small as the design allows?</p>
+<p>Examine every user-facing input for the standard vulnerability classes: unsanitized input used in file paths, input passed to system commands, query construction, and serialization or deserialization of untrusted data. For network and file system operations, confirm connections are closed, temporary files are cleaned up, and URLs are validated before use.</p>
+<p><strong>Credentials.</strong> Credentials should be read from environment variables or <code>keyring</code>, never passed as a documented function argument, and never printed in any message, warning, or error, including in verbose mode. Recorded HTTP fixtures and test cassettes must be inspected and redacted before their first commit. Check the git history as well as the working tree: a secret committed and later removed is still in the history, and tooling exists for this (<code>gitleaks</code>, <code>trufflehog</code>, or GitHub’s own secret scanning) rather than relying on inspection.</p>
+<p><strong>The dependency chain.</strong> Are the dependencies actively maintained, is the chain as small as the design allows, and does anything in it have a known vulnerability? Be aware that R’s tooling for the last question is genuinely weak compared to other ecosystems: there is no equivalent of <code>npm audit</code>. What exists is <code>oysteR</code>, which queries the OSS Index, and <code>riskmetric</code>, which scores packages on maintenance signals rather than vulnerabilities. Neither is a substitute for reading the dependency list and knowing what each entry is for. This is a real limitation of the R ecosystem and it should be stated plainly rather than papered over with a tool name.</p>
+<p><strong>Fabricated and squatted dependencies.</strong> As described in Phase 2, assistants suggest non-existent packages at a measurable rate, and those names are a known target for pre-registration by attackers. Every dependency should be verified to exist in the registry it claims to come from, with a publisher and registration date that make sense for a package of its stated age. Pin versions in a lockfile and verify hashes; an unpinned dependency resolved at install time is a dependency someone else can change.</p>
 <p><img src="media/images/ambiance2.jpg" class="img-fluid"></p>
 </section>
 </section>
@@ -449,56 +552,301 @@ SOURCE
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">### Changes Required</span></span>
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Change 1</span>
 <span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Change 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The “Understanding” field is the load-bearing part, and it is worth seeing filled in, because the discipline it enforces is not obvious from an empty template. Here it is for a small function that normalizes a numeric vector:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">## Function: rescale_unit</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">### Status: Needs Changes</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">### Understanding</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>Maps a numeric vector onto <span class="co">[</span><span class="ot">0, 1</span><span class="co">]</span> by subtracting the minimum and</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>dividing by the range. Takes <span class="in">`x`</span> (numeric) and <span class="in">`na.rm`</span> (logical,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>default TRUE). Returns a numeric vector of the same length. If all</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>elements are equal the range is zero, and the function returns NaN</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>for every element rather than erroring.</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">### Concerns</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The all-equal case returns NaN silently. The design document says</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  degenerate input should error. This is a design-alignment failure,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  not a bug in the arithmetic.</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`na.rm = TRUE`</span> as the default contradicts the convention set in</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="in">`summarize_group()`</span>, which defaults to FALSE. Scope drift.</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Comment above the range calculation claims zero-range input is</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  "handled"; it is not.</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="fu">### Questions</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Is NaN or an error the right behavior for a constant vector? The</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  design says error, but the two callers both tolerate NaN.</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="fu">### Changes Required</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Error on zero range, with a message naming the argument</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Change <span class="in">`na.rm`</span> default to FALSE for consistency</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Delete or correct the misleading comment</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="va">[ ]</span> Add tests for constant input and all-NA input</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Note what the exercise surfaced: three of the four findings came from writing the summary, not from reading the code. A function you cannot summarize this way has not been reviewed, whatever the checklist says.</p>
 <p>Classify every finding by severity: <strong>Critical</strong> (incorrect behavior, a security vulnerability, or a data-corruption risk), <strong>Major</strong> (a significant deviation from requirements or poor error handling), <strong>Minor</strong> (style inconsistency, a documentation gap, or a small inefficiency), or <strong>Enhancement</strong> (a suggestion beyond the current requirements). The severity tier determines the order of remediation, not whether an issue gets fixed at all.</p>
+<p>The boundaries are where reviewers disagree, so an example of each:</p>
+<ul>
+<li><strong>Critical.</strong> A summary function drops rows containing <code>NA</code> without documenting it, so every downstream count is wrong and nothing signals it. Silent wrongness is critical even when the code never errors.</li>
+<li><strong>Major.</strong> A file-reading function assumes UTF-8 and fails with an uninformative error on any other encoding. It fails loudly, so nobody is misled, but the package is unusable for a class of input the design said to support.</li>
+<li><strong>Minor.</strong> One function documents its return value as “a data frame” where the others give the columns. Real, cheap, and nobody is harmed by shipping it next week instead of today.</li>
+<li><strong>Enhancement.</strong> The function could accept a grouped data frame in addition to a plain one. Nothing in the requirements asks for it.</li>
+</ul>
+<p>The dividing line between Critical and Major is not severity of consequence but whether the failure is silent. Between Major and Minor it is whether the package still does what it promised.</p>
 </section>
 <section id="remediation-and-final-verification" class="level1">
 <h1>Remediation and Final Verification</h1>
 <p>Work through issues in severity order: critical issues affecting correctness or security first, then major issues affecting usability or maintainability, then minor issues and enhancements as time allows. For each fix, understand the root cause before touching the code, and implement the fix yourself rather than delegating it back to the assistant without understanding it. Add or modify a test to prevent regression, and update documentation if the observable behavior changed.</p>
 <p>After remediation, re-run the full test suite and <code>R CMD check</code>, confirm coverage has not decreased, and review the diff in version control before considering the issue closed. Before calling the review complete, run the full verification pass:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full check</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">check</span>()</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test coverage</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>covr<span class="sc">::</span><span class="fu">package_coverage</span>()</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Additional static analysis</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>lintr<span class="sc">::</span><span class="fu">lint_package</span>()</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>goodpractice<span class="sc">::</span><span class="fu">gp</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full check, as CRAN would run it</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>devtools<span class="sc">::</span><span class="fu">check</span>(<span class="at">cran =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Test coverage</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>covr<span class="sc">::</span><span class="fu">package_coverage</span>()</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Additional static analysis</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>lintr<span class="sc">::</span><span class="fu">lint_package</span>()</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>goodpractice<span class="sc">::</span><span class="fu">gp</span>()</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># rOpenSci conformance checks</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>pkgcheck<span class="sc">::</span><span class="fu">pkgcheck</span>()</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Reverse dependencies, if anything depends on this package</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>revdepcheck<span class="sc">::</span><span class="fu">revdep_check</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Then test installation in a clean environment (<code>remove.packages()</code> followed by <code>devtools::install()</code>) and run every example in the documentation with <code>devtools::run_examples()</code>.</p>
+<p>Packages containing compiled code need more than this. <code>R CMD check</code> will not find a missing <code>PROTECT</code>, an out-of-bounds write, or undefined behavior that happens to be benign on your compiler. Run the package under the sanitizer and valgrind containers that <code>rhub::rhub_check()</code> provides, and use <code>rchk</code> for the R-specific protection analysis. Generated C and C++ is particularly prone to protection errors, because the pattern of <code>PROTECT</code> and <code>UNPROTECT</code> pairs is idiomatic enough to mimic and strict enough that mimicry is not sufficient.</p>
+<section id="when-the-review-fails" class="level2">
+<h2 class="anchored" data-anchor-id="when-the-review-fails">When the review fails</h2>
+<p>The checklist says a “no” is a blocker. It is worth being explicit about what that means in practice, because the tempting response is to note the issue and ship anyway.</p>
+<p>There are three legitimate responses to a function you cannot bring yourself to approve, and only three. <strong>Rewrite it yourself</strong>, from the requirement, using the generated version as at most a reference. <strong>Cut the feature</strong>, if the function exists to serve a requirement you are no longer sure you need. <strong>Do not ship</strong>, if neither of the first two is possible right now.</p>
+<p>What is not on the list is asking the assistant to fix it. That produces a function you understand no better than the one you started with, and it converts a known problem into an unknown one. If the assistant’s help is genuinely needed, the sequence is: understand the root cause yourself first, decide on the fix yourself, and only then use the assistant to type it. The distinction is not pedantic. It is the whole difference between a package you own and a package you host.</p>
+</section>
+</section>
+<section id="relation-to-established-review-standards" class="level1">
+<h1>Relation to Established Review Standards</h1>
+<p>This framework was not developed in a vacuum, and it is worth being explicit about where it overlaps with existing peer review practice and where it adds something. The relevant comparison is <a href="https://ropensci.org/">rOpenSci</a>, a nonprofit founded in 2011 that runs an open peer review process for scientific R packages. Its development guide, <a href="https://devguide.ropensci.org/">rOpenSci Packages: Development, Maintenance, and Peer Review</a> (source at <a href="https://github.com/ropensci/dev_guide">github.com/ropensci/dev_guide</a>), is the closest thing the R ecosystem has to a consensus statement of what a package review should cover. Much of it is mechanized in <a href="https://github.com/ropensci-review-tools/pkgcheck">pkgcheck</a>, which runs automatically on every submission, so the guide is not merely aspirational: a substantial fraction of it is enforced before a human reviewer sees the package. rOpenSci maintains a separate and stricter set of <a href="https://stats-devguide.ropensci.org/standards.html">statistical software standards</a> for packages implementing algorithms rather than accessing data.</p>
+<p>Beneath the review standards sit the two documents that define what a correct R package is in the first place: the CRAN <a href="https://cran.r-project.org/web/packages/policies.html"><em>Repository Policy</em></a>, which is binding on anything distributed through CRAN, and <a href="https://r-pkgs.org/"><em>R Packages</em></a> by Wickham and Bryan, which is the field’s standard explanation of why the rules are what they are. A large share of the checklist below comes from these two rather than from the review standards, and they are the source of most of the items that generated code actually fails. That is not a coincidence: the review standards mostly govern the shape of a package, which is easy to get right, while the policy and the book govern its behavior under conditions the author never sees, which is where code written from a script idiom breaks.</p>
+<p>Two other standards are worth naming. The <a href="https://joss.readthedocs.io/en/latest/review_checklist.html">JOSS review checklist</a> is language-agnostic and weighted toward research impact and provenance rather than code internals. The Turing Way’s <a href="https://book.the-turing-way.org/reproducible-research/reviewing/reviewing-checklist/">checklist for the code review process</a> is the most general of these and the only one that treats licensing and legal compatibility as a first-class review concern.</p>
+<p>The checklist in the next section merges the items from all of these into the five-phase structure, so the rest of this section is about positioning rather than content.</p>
+<section id="what-the-external-standards-do-not-cover" class="level2">
+<h2 class="anchored" data-anchor-id="what-the-external-standards-do-not-cover">What the external standards do not cover</h2>
+<p>All three assume an <em>external</em> reviewer. Someone other than the author reads the code, and the author’s own understanding of their package is taken for granted rather than tested. This framework inverts that assumption, because in AI-assisted development the author’s understanding is precisely the thing in doubt.</p>
+<p>That is not a rhetorical distinction. Reading the full development guide at its current revision, there is no guidance anywhere on AI-assisted development: no mention of generative models, large language models, or machine-generated code, in any of its chapters or templates. The consensus R standard is, at present, silent on the development pattern this post addresses. Its checks are all conformance checks, and conformance is exactly the property AI-generated code satisfies most easily and least meaningfully. A package can pass every mechanized check while its author cannot explain a single function in it.</p>
+<p>External review practice has begun to move in this direction elsewhere. JOSS now asks reviewers to check for transparent disclosure of generative AI use, and for evidence of sustained development over months rather than a repository generated rapidly and recently. Those are provenance questions of exactly the kind the Establishing Ownership section below argues an author should be able to answer about their own work.</p>
 <p><img src="media/images/ambiance3.jpg" class="img-fluid"></p>
 </section>
-<section id="per-package-review-checklist" class="level1">
-<h1>Per-Package Review Checklist</h1>
-<p>The five phases above are the reasoning behind this checklist; the checklist itself is what to actually run through for a given package. Copy it per package rather than trying to hold it in memory across multiple reviews in progress at once.</p>
-<p><strong>Phase 1: Structural</strong></p>
+</section>
+<section id="the-consolidated-review-checklist" class="level1">
+<h1>The Consolidated Review Checklist</h1>
+<p>This is the whole checklist, in one place. Copy it per package rather than trying to hold it in memory across several reviews at once, and scale which sections you run to the risk tier established earlier.</p>
+<p>Items ending in a tool name are checked mechanically; run the tool rather than reading for them. <strong>Items with no tool name are the ones only you can do, and they are the majority.</strong> That distribution is the argument of this post in one glance: the automatable half of review is large, well-specified, and already solved by other people’s software, and it is not the half that establishes ownership.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>This is not a CRAN conformance checklist
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A number of items below come from the CRAN <em>Repository Policy</em>, and the sections that follow include the policy requirements most often broken by generated code. That does not make this list a substitute for the policy, and completing it is neither necessary nor sufficient for acceptance.</p>
+<p>Three reasons. The policy is revised without announcement, so any list is a snapshot of a moving target. Parts of it are matters of judgment rather than rules: “no warnings or significant notes” is decided by a person, and CRAN enforces expectations that are not written down anywhere. And the actual mechanical gate is <code>R CMD check --as-cran</code> run against current R-devel on every platform, which catches things no enumeration will reach.</p>
+<p>This list is also deliberately wider than CRAN in the directions that matter here (ownership, the AI failure modes, ethics, test independence) and narrower on submission mechanics, which are out of scope. It overlaps CRAN policy; it does not contain it. For a list maintained specifically against the policy, use ThinkR’s <a href="https://github.com/ThinkR-open/prepare-for-cran"><em>Prepare for CRAN</em></a>, and read the policy itself before you submit.</p>
+</div>
+</div>
+<p><strong>Phase 1: structural</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox">File structure follows standard R package conventions</label></li>
+<li><label><input type="checkbox">File structure follows standard R package conventions <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox"><code>NAMESPACE</code> generated by roxygen2, not hand-edited <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">No nested <code>R/</code> subdirectory, no <code>renv</code> infrastructure committed inside the package <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">No scrap files (<code>.DS_Store</code> and similar) tracked <code>pkgcheck</code></label></li>
 <li><label><input type="checkbox">Every <code>Imports</code> entry is necessary, correctly tiered (<code>Imports</code> vs <code>Suggests</code>), and version-constrained appropriately</label></li>
 <li><label><input type="checkbox"><code>NAMESPACE</code> exports only what is meant to be public</label></li>
+<li><label><input type="checkbox">Every exported name traced to a design requirement</label></li>
 </ul>
-<p><strong>Phase 2: Function-by-function</strong></p>
+<p><strong>Phase 2: function-by-function</strong></p>
 <ul class="task-list">
 <li><label><input type="checkbox">Every exported and internal function reviewed for correctness, design alignment, input validation, documentation quality, and code clarity</label></li>
+<li><label><input type="checkbox">Functions reviewed in dependency order, not file order</label></li>
 <li><label><input type="checkbox">Happy path and at least one failure path traced for each function, with the test suite confirmed to exercise both</label></li>
-<li><label><input type="checkbox">Every AI-generated-code pattern in this post’s list (over-engineering, defensive redundancy, pattern mimicry, inconsistent style, hallucinated functionality, outdated patterns) checked for, not just read past</label></li>
+<li><label><input type="checkbox">Every parameter traced to a stated requirement; unrequested generality removed</label></li>
+<li><label><input type="checkbox">Every guard clause has a constructible triggering input</label></li>
 </ul>
-<p><strong>Phase 3: Test suite</strong></p>
+<p><strong>Phase 2: AI failure modes</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox">Coverage report reviewed file by file, not just as a percentage</label></li>
-<li><label><input type="checkbox">A sample of test bodies read to confirm assertions check substantive behavior, not just that the code runs</label></li>
-<li><label><input type="checkbox">Every documented behavior has a corresponding test, and every test corresponds to a documented or intended behavior</label></li>
+<li><label><input type="checkbox">Over-engineering: unused generality deleted</label></li>
+<li><label><input type="checkbox">Defensive redundancy: unreachable guards removed or converted to documented assertions</label></li>
+<li><label><input type="checkbox">Pattern mimicry: requirement stated in your own words before reading the implementation</label></li>
+<li><label><input type="checkbox">Inconsistent style: naming, argument order, and assignment operator uniform across the export list <code>lintr</code></label></li>
+<li><label><input type="checkbox">Hallucinated functionality: every referenced function and package confirmed to exist, including in error branches and escaped examples</label></li>
+<li><label><input type="checkbox">Fabricated dependencies: every dependency verified in its registry, with a plausible publisher and registration date</label></li>
+<li><label><input type="checkbox">Fabricated citations: every DOI resolved and every cited method confirmed to describe what was implemented</label></li>
+<li><label><input type="checkbox">Misleading comments: every comment read as a claim and verified</label></li>
+<li><label><input type="checkbox">Scope drift: cross-cutting conventions checked across all functions, not within each</label></li>
+<li><label><input type="checkbox">Unjustified numerical constants: every non-structural literal justified, cited, or parameterized</label></li>
 </ul>
-<p><strong>Phase 4: Integration and system</strong></p>
+<p><strong>Phase 2: R correctness traps</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">No R code at top level in <code>R/</code> beyond object creation; nothing whose value depends on the build machine (<code>system.file()</code> paths, capability probes, <code>pkg::fun</code> aliases)</label></li>
+<li><label><input type="checkbox">No <code>library()</code>, <code>require()</code>, or <code>source()</code> below <code>R/</code></label></li>
+<li><label><input type="checkbox"><code>options()</code>, <code>par()</code>, <code>setwd()</code>, <code>Sys.setenv()</code>, <code>Sys.setlocale()</code>, and RNG state restored on exit, preferably with <code>withr::local_*()</code>; any <code>on.exit()</code> uses <code>add = TRUE</code></label></li>
+<li><label><input type="checkbox">Nothing written outside the session temp directory, and cleaned up; persistent user data only via <code>tools::R_user_dir()</code></label></li>
+<li><label><input type="checkbox">No external software launched without being closed; no clipboard access in examples or tests</label></li>
+<li><label><input type="checkbox">No <code>set.seed()</code> inside package functions; parallel code sets <code>RNGkind("L'Ecuyer-CMRG")</code>; load hooks preserve the seed</label></li>
+<li><label><input type="checkbox">Sorting is not locale-dependent where order must be stable</label></li>
+<li><label><input type="checkbox"><code>.R</code> files are ASCII only, with <code>\uxxxx</code> escapes for anything else <code>tools::showNonASCIIfile()</code></label></li>
+<li><label><input type="checkbox">Every use of a <code>Suggests</code> package below <code>R/</code> guarded by <code>requireNamespace()</code> or <code>rlang::check_installed()</code></label></li>
+<li><label><input type="checkbox">External functions called as <code>pkg::fun()</code> unless there is a reason to import; whole-namespace <code>@import</code> avoided</label></li>
+<li><label><input type="checkbox">S3 methods for foreign generics registered with <code>@exportS3Method pkg::generic</code>, and the package tested as installed rather than only via <code>load_all()</code></label></li>
+<li><label><input type="checkbox">Setup confined to <code>.onLoad()</code>; startup messages in <code>.onAttach()</code> via <code>packageStartupMessage()</code></label></li>
+<li><label><input type="checkbox">Reference-semantics objects (<code>data.table</code>, <code>R6</code>, environments) not mutated through arguments</label></li>
+<li><label><input type="checkbox">Nothing modifies code or bindings in base, recommended, or other packages’ namespaces</label></li>
+<li><label><input type="checkbox">Nothing in the examples or tests could be read as malicious or anti-social, which the policy prohibits in those words</label></li>
+<li><label><input type="checkbox">No floating-point equality comparison; tolerances used and justified</label></li>
+<li><label><input type="checkbox">Missing-value policy explicit per function; <code>NaN</code> and <code>Inf</code> handled deliberately</label></li>
+<li><label><input type="checkbox">No <code>data()</code> calls for the package’s own lazy-loaded datasets</label></li>
+</ul>
+<p><strong>Phase 3: test suite</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Coverage report reviewed file by file, not just as a percentage <code>covr</code></label></li>
+<li><label><input type="checkbox">At least one test per critical behavior written by you, from the requirement, without reading the implementation</label></li>
+<li><label><input type="checkbox">A sample of test bodies read to confirm assertions check substantive behavior, not just that the code runs</label></li>
+<li><label><input type="checkbox">Each behavior tested in one place, and the external interface tested rather than the internals</label></li>
+<li><label><input type="checkbox">Every documented behavior has a corresponding test, and every test corresponds to a documented or intended behavior</label></li>
+<li><label><input type="checkbox">Test files consist almost entirely of <code>test_that()</code> calls; shared setup lives in helpers, <code>helper.R</code>, or <code>setup.R</code></label></li>
+<li><label><input type="checkbox">No <code>library()</code> or <code>source()</code> below <code>tests/</code></label></li>
+<li><label><input type="checkbox">Test suite passes in randomized order</label></li>
+<li><label><input type="checkbox">Skip count read and every skip confirmed as intended</label></li>
+<li><label><input type="checkbox">Every snapshot read before acceptance</label></li>
+<li><label><input type="checkbox">Tests write only to the session temp directory and clean up (<code>withr::local_tempfile()</code>); fixtures reached with <code>test_path()</code>, with their generating script kept</label></li>
+<li><label><input type="checkbox">Tests touching the network or the clock guarded, and backed by recorded fixtures where possible</label></li>
+<li><label><input type="checkbox">No assertions about elapsed time or available cores</label></li>
+<li><label><input type="checkbox"><code>expect_equal()</code> used rather than <code>expect_identical()</code> for anything numeric</label></li>
+<li><label><input type="checkbox">Whole suite runs in about a minute; anything longer is <code>skip_on_cran()</code></label></li>
+<li><label><input type="checkbox">What remains after the CRAN skips still exercises every feature of the package. Policy allows long-running tests to be made optional; it does not allow the checks that remain to stop covering the package</label></li>
+<li><label><input type="checkbox">Zero-length, single-row, all-<code>NA</code>, and unsupported-type inputs tested rather than assumed to error</label></li>
+</ul>
+<p><strong>Phase 4: integration and system</strong></p>
 <ul class="task-list">
 <li><label><input type="checkbox">Data flow traced across function boundaries, not just within individual functions</label></li>
 <li><label><input type="checkbox">State management (globals, options, environment modifications, file system, external connections) identified and evaluated</label></li>
+<li><label><input type="checkbox">No function assigns to the global environment; data-importing functions return objects</label></li>
 <li><label><input type="checkbox">Error propagation verified: caught at the right level, with actionable messages and correct cleanup on partial failure</label></li>
 </ul>
-<p><strong>Phase 5: Security and safety</strong></p>
+<p><strong>Phase 5: security, secrets, and supply chain</strong></p>
 <ul class="task-list">
 <li><label><input type="checkbox">Every user-facing input checked against the standard vulnerability classes (unsanitized paths, shell commands, query construction, deserialization)</label></li>
 <li><label><input type="checkbox">Network and file system operations confirmed to close connections, clean up temporary files, and validate URLs</label></li>
-<li><label><input type="checkbox">Dependency chain reviewed for maintenance status and known vulnerabilities</label></li>
+<li><label><input type="checkbox">Credentials read from environment variables or <code>keyring</code>, never a documented argument</label></li>
+<li><label><input type="checkbox">No credential printed in any message, warning, or error, including verbose mode</label></li>
+<li><label><input type="checkbox">Recorded HTTP fixtures inspected and redacted before first commit</label></li>
+<li><label><input type="checkbox">Git history scanned for secrets, not just the working tree <code>gitleaks</code></label></li>
+<li><label><input type="checkbox">Tests requiring credentials skipped on CRAN and handled for pull requests from forks</label></li>
+<li><label><input type="checkbox">Dependency chain reviewed for maintenance status and known vulnerabilities <code>oysteR</code>, <code>riskmetric</code></label></li>
+<li><label><input type="checkbox">Dependency versions pinned and hashes verified</label></li>
+</ul>
+<p><strong>API surface as a whole</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Argument names and orderings consistent across exported functions; for functions returning the type they consume, the data object is the first argument so the function composes with <code>|&gt;</code></label></li>
+<li><label><input type="checkbox">One naming scheme applied uniformly</label></li>
+<li><label><input type="checkbox">Exported names checked for collisions across CRAN, not just base R <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Console output uses <code>message()</code>, <code>warning()</code>, or <code>cli</code>, never <code>print()</code> or <code>cat()</code> outside <code>print.*()</code> and <code>str.*()</code> methods</label></li>
+<li><label><input type="checkbox">Verbosity controlled by an option or environment variable rather than a function argument</label></li>
+<li><label><input type="checkbox">No package startup message except where genuinely required</label></li>
+</ul>
+<p><strong>Documentation</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Every exported function and every exported dataset documented <code>R CMD check</code></label></li>
+<li><label><input type="checkbox">Every function documents its return value under <code>@return</code>, which CRAN requires for a first submission; a placeholder restating the function name does not count <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Every parameter’s default stated in the documentation text, in the form “a logical value (default <code>TRUE</code>) determining …”</label></li>
+<li><label><input type="checkbox">Every exported function has at least one runnable example, and not all of them wrapped in <code>\dontrun{}</code> <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Examples throw no errors, avoid network access, and complete well inside the ten-minute limit</label></li>
+<li><label><input type="checkbox">Examples use only packages in <code>Imports</code> or <code>Suggests</code>, and attach or qualify them, since examples run in the user’s environment</label></li>
+<li><label><input type="checkbox"><code>\dontrun{}</code> and <code>\donttest{}</code> used only where necessary, and those examples still executed in CI via <code>--run-dontrun</code> and <code>--run-donttest</code> <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Internal functions marked <code>@keywords internal</code>; developer-only exports marked <code>@export</code> plus <code>@keywords internal</code></label></li>
+<li><label><input type="checkbox">Related functions cross-linked and grouped with <code>@family</code></label></li>
+<li><label><input type="checkbox"><code>Title</code> in title case with no trailing period, software names in single quotes, no “A package for …” opening, acronyms expanded in <code>Description</code></label></li>
+<li><label><input type="checkbox">URLs valid, including redirects, which CRAN rejects <code>urlchecker</code></label></li>
+<li><label><input type="checkbox">Spelling checked mechanically <code>spelling</code></label></li>
+<li><label><input type="checkbox">Vignettes substantive rather than perfunctory; reference index grouped by topic</label></li>
+<li><label><input type="checkbox">Vignette and data sizes within CRAN limits, and packaged data documented</label></li>
+</ul>
+<p><strong>Licensing and attribution</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox"><code>LICENSE</code> present, CRAN- or OSI-accepted, consistent with the <code>DESCRIPTION</code> <code>License</code> field <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Licenses of all dependencies compatible with the package’s own, remembering that compatibility is not symmetric: MIT code can be bundled into a GPL package, but not the reverse</label></li>
+<li><label><input type="checkbox">Bundled or adapted third-party code attributed, with original authors given <code>ctb</code> and copyright holders <code>cph</code> in <code>Authors@R</code> with a comment saying what they wrote, or recorded in <code>inst/COPYRIGHTS</code>; <code>LICENSE.note</code> present if bundled components carry different licenses</label></li>
+<li><label><input type="checkbox"><code>LICENSE.md</code>, if present, listed in <code>.Rbuildignore</code>, since CRAN does not accept the full text of standard licenses</label></li>
+<li><label><input type="checkbox">Any generated code closely resembling an identifiable existing implementation traced and attributed, or rewritten. Two wrinkles make this sharper for AI-assisted code than it looks. Stack Overflow answers are CC BY-SA licensed, which is compatible only with GPLv3, and models are trained heavily on Stack Overflow. And a derivative work does not require copied text: re-implementing an algorithm from a source can qualify even when no line is shared</label></li>
+<li><label><input type="checkbox">Copyright holders tracked from the start, since relicensing later requires permission from every one of them</label></li>
+<li><label><input type="checkbox">The chosen license grants CRAN the right to distribute the package in perpetuity</label></li>
+<li><label><input type="checkbox">Any change of license flagged explicitly in the submission</label></li>
+<li><label><input type="checkbox">Trademarks respected, including in the package name</label></li>
+<li><label><input type="checkbox">The maintainer’s warranty honestly satisfiable. CRAN requires the maintainer to warrant that they act on behalf of all credited authors and have their agreement, and that copyright over every component is clear and unambiguous. This is the provision AI-assisted development strains hardest, because it is a claim about the origin of code whose origin the author cannot inspect. CRAN says nothing about generative tools; it simply asks you to warrant something they make harder to know</label></li>
+</ul>
+<p><strong>Dependencies</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Dependency count sane relative to comparable packages; <code>pkgcheck</code> flags the top five percent of CRAN by number of <code>Imports</code> <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">No obsolete dependency: <code>RCurl</code>, <code>rjson</code>, <code>RJSONIO</code>, <code>XML</code> outright, and <code>sp</code>, <code>rgdal</code>, <code>maptools</code>, <code>rgeos</code> as superseded <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Functions imported from the package where they are defined, not one that re-exports them</label></li>
+<li><label><input type="checkbox"><code>Imports</code> used rather than <code>Depends</code>; test and documentation packages in <code>Suggests</code></label></li>
+<li><label><input type="checkbox">Minimum version constraints justified individually</label></li>
+<li><label><input type="checkbox">No <code>Remotes</code> field at submission time, and no dependency pinned to a version unavailable from CRAN or Bioconductor</label></li>
+<li><label><input type="checkbox">Internet-using code fails gracefully with an informative message when a resource is unavailable, rather than erroring or warning during check</label></li>
+<li><label><input type="checkbox">No more than two cores used simultaneously</label></li>
+<li><label><input type="checkbox">All downloads use secure mechanisms; rate limits respected so that checks do not provoke 429 or 403 responses, remembering that other packages may be hitting the same resource</label></li>
+<li><label><input type="checkbox">No dependency that restricts users’ rights, since that restriction propagates to your users</label></li>
+<li><label><input type="checkbox">System dependencies declared and checked in <code>configure</code></label></li>
+</ul>
+<p><strong>API evolution</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Removed arguments retained in the signature to error explicitly, never absorbed silently by <code>...</code></label></li>
+<li><label><input type="checkbox">Renamed functions aliased and warned about before removal</label></li>
+<li><label><input type="checkbox">Deprecation staged through <code>.Deprecated()</code> then <code>.Defunct()</code>, with corresponding man pages</label></li>
+<li><label><input type="checkbox">Semantic versioning, and a <code>NEWS.md</code> entry for every user-visible change <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Reverse dependencies checked before any breaking change <code>revdepcheck</code></label></li>
+</ul>
+<p><strong>Verification beyond one machine</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox"><code>R CMD check --as-cran</code> clean on Linux, macOS, and Windows <code>rhub</code></label></li>
+<li><label><input type="checkbox">Tested against R release, oldrel, and devel <code>rhub</code></label></li>
+<li><label><input type="checkbox">CI running check, tests, coverage, and lint on every commit <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Clean-environment install tested, not just <code>load_all()</code></label></li>
+<li><label><input type="checkbox">Compiled code run under sanitizers, valgrind, and <code>rchk</code> <code>rhub</code></label></li>
+<li><label><input type="checkbox">Numerical results checked for stability across platforms and BLAS implementations</label></li>
+</ul>
+<p><strong>Project-level documentation and provenance</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Statement of need: what problem the package solves, for whom, and how it compares to existing packages</label></li>
+<li><label><input type="checkbox"><code>CONTRIBUTING</code> and a code of conduct present <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox"><code>DESCRIPTION</code> carries <code>URL</code>, <code>BugReports</code>, and a maintainer <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox"><code>CITATION</code> present, using <code>bibentry</code>, citing any wrapped data source or algorithm as well as the package <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">ORCID recorded for authors who are people, ROR for organizations <code>pkgcheck</code></label></li>
+<li><label><input type="checkbox">Example datasets checked for licensing and inclusivity</label></li>
+<li><label><input type="checkbox">Issue and pull request trackers in a state a newcomer can read</label></li>
+<li><label><input type="checkbox">AI involvement in development documented</label></li>
+</ul>
+<p><strong>Ethics and data handling</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">Data sources’ terms of use, <code>robots.txt</code>, and rate limits respected in code, examples, and vignettes, and linked from the documentation</label></li>
+<li><label><input type="checkbox">Handling of personally identifiable or reasonably re-identifiable data identified, with de-identification and secure-storage workflows documented and demonstrated</label></li>
+<li><label><input type="checkbox">Where the package touches vulnerable populations or human-subjects data, informed-consent practice supported and documented; accessibility of data does not imply consent to its use</label></li>
+</ul>
+<p><strong>Package contents, if you intend to distribute</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox">No binary executable code in the source package</label></li>
+<li><label><input type="checkbox">Source provided, or provided in an easily convertible form, for every component covered by an open-source license</label></li>
+<li><label><input type="checkbox">Source tarball within 10MB, and no single data or documentation component over 5MB, or an exemption argued for</label></li>
+<li><label><input type="checkbox">Data compression chosen deliberately rather than left at the default <code>tools::checkRdaFiles()</code></label></li>
+<li><label><input type="checkbox">Java sources, if any, in a top-level <code>java/</code> directory</label></li>
+</ul>
+<p><strong>Submission process, if you intend to distribute</strong></p>
+<ul class="task-list">
+<li><label><input type="checkbox"><code>Maintainer</code> is one named person with a working address, not a mailing list or a role account</label></li>
+<li><label><input type="checkbox">Maintainers of reverse dependencies notified at least two weeks before an update that could break them</label></li>
+<li><label><input type="checkbox">Version number increased</label></li>
+<li><label><input type="checkbox">Submission spaced sensibly from the last one; CRAN asks for one to two months between updates once a package is established</label></li>
+<li><label><input type="checkbox">Any remaining check notes explained in <code>cran-comments.md</code> rather than left for the reviewer to interpret</label></li>
 </ul>
 <p><strong>Before shipping: ownership sign-off</strong></p>
 <ul class="task-list">
@@ -507,18 +855,87 @@ SOURCE
 <li><label><input type="checkbox">Can identify where a new requirement would require a change</label></li>
 <li><label><input type="checkbox">Can debug an issue without AI assistance</label></li>
 <li><label><input type="checkbox">Can respond to a user’s issue, review an external contribution, and extend the package’s functionality unaided</label></li>
+<li><label><input type="checkbox">Passed the cold-start, modification, and teach tests described in Establishing Ownership</label></li>
+<li><label><input type="checkbox">Willing to state a two-year maintenance commitment, or name a succession plan</label></li>
 </ul>
-<p>A “no” anywhere in this checklist is a blocker, not a note for later; see Establishing Ownership below for what each unchecked box actually costs if it ships unresolved.</p>
+<p>A “no” anywhere in this checklist is a blocker, not a note for later. What that means in practice is set out in “When the review fails” above, and what each unchecked box costs if it ships unresolved is set out in Establishing Ownership below.</p>
+</section>
+<section id="what-the-tools-can-and-cannot-check" class="level1">
+<h1>What the Tools Can and Cannot Check</h1>
+<p>The checklist above is long, and a fair reading of it is that most of it is someone else’s problem. That is true, and worth making explicit, because the residue is the point.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Tool</th>
+<th style="text-align: left;">Covers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>R CMD check --as-cran</code></td>
+<td style="text-align: left;">Package structure, documentation completeness, example execution, encoding, many CRAN policies</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>pkgcheck</code></td>
+<td style="text-align: left;">rOpenSci conformance: <code>@return</code> tags, examples, CITATION, CONTRIBUTING, license, URLs, CRAN-wide name collisions, obsolete and excessive dependencies, CI and coverage presence</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>goodpractice</code></td>
+<td style="text-align: left;">Cyclomatic complexity, line length, <code>T</code>/<code>F</code> shorthand, <code>sapply()</code> use, dependency count, common defects</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>lintr</code></td>
+<td style="text-align: left;">Style, assignment operators, naming conventions, likely errors</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>covr</code></td>
+<td style="text-align: left;">Line coverage, file by file</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>urlchecker</code>, <code>spelling</code></td>
+<td style="text-align: left;">Dead links, redirects, misspellings</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>revdepcheck</code></td>
+<td style="text-align: left;">Breakage in packages that depend on yours</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>rhub</code></td>
+<td style="text-align: left;">Multi-platform, multi-R-version checks, sanitizers, valgrind</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>gitleaks</code>, <code>trufflehog</code></td>
+<td style="text-align: left;">Secrets in the git history</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>oysteR</code>, <code>riskmetric</code></td>
+<td style="text-align: left;">Dependency vulnerabilities and maintenance signals, partially</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>tools::showNonASCIIfile()</code>, <code>checkRdaFiles()</code></td>
+<td style="text-align: left;">Non-ASCII source characters, data compression</td>
+</tr>
+</tbody>
+</table>
+<p>What no tool in that table can check: whether the implementation matches the design, whether a test asserts something that matters, whether a comment is true, whether a numerical constant was chosen or guessed, whether generality is warranted, whether a cited paper says what the vignette claims, and whether the author understands any of it. Every one of those is a judgment, every one of them is where AI-generated code fails, and every one of them is unmarked in the checklist above.</p>
+<p>There is also a category that falls between the two, worth naming because it is easy to assume the tools have it covered: several CRAN requirements are enforced by a human reader rather than by <code>R CMD check</code>. The conventions for <code>Title</code> and <code>Description</code>, the requirement that every function document its return value on a first submission, the prohibition on writing outside the session temp directory, the rule that internet-using code must fail gracefully rather than error during check. These are checkable in principle, mostly unchecked in practice, and a package can pass every automated check and still be rejected on them.</p>
+<p>Run the tools first, always. They are fast, they are free, and clearing them removes the noise that would otherwise obscure the judgments. Just do not mistake a clean report for a completed review.</p>
 </section>
 <section id="things-to-watch-out-for" class="level1">
 <h1>Things to Watch Out For</h1>
 <ul>
 <li><strong>Coverage as a proxy for quality.</strong> A test that asserts nothing meaningful still counts toward the coverage percentage.</li>
+<li><strong>A green suite written by the same assistant as the code.</strong> It demonstrates internal consistency, not correctness. Treat it as a regression net, not as evidence.</li>
 <li><strong>Delegating the fix back to the assistant.</strong> Understanding the root cause and then asking the assistant to patch it is not the same as understanding the fix; do the remediation yourself.</li>
-<li><strong>Treating hallucinated functionality as a rare edge case.</strong> It surfaces often enough in assistant-written code that a dedicated existence check for every referenced function and package is worth the time.</li>
+<li><strong>Treating hallucinated functionality as a rare edge case.</strong> It surfaces often enough in assistant-written code that a dedicated existence check for every referenced function and package is worth the time, and in the case of dependencies it is a supply-chain control rather than a tidiness measure.</li>
 <li><strong>Reviewing functions in file order instead of dependency order.</strong> Reviewing a caller before its callee means re-reading context twice; work from the bottom of the dependency graph up.</li>
 <li><strong>Skipping the “why,” not just the “what.”</strong> A function can be correct and still misaligned with the stated design; design alignment is a separate question from correctness.</li>
 <li><strong>Conflating “reviewed” with “understood.”</strong> The annotation template’s “Understanding” field is not decorative; if you cannot fill it in from memory, the function has not actually been reviewed.</li>
+<li><strong>Accepting a snapshot because the framework offered to.</strong> The snapshot records what the code does. You are reviewing whether that is what it should do.</li>
 </ul>
 </section>
 <section id="lessons-learned" class="level1">
@@ -526,45 +943,55 @@ SOURCE
 <p><strong>Conceptual understanding:</strong></p>
 <ul>
 <li>Ownership is a testable claim, not a feeling of familiarity.</li>
+<li>A generated test suite is not independent evidence about generated code, because both encode the same reading of the requirement.</li>
 <li>Coverage and correctness are different axes; a review needs both.</li>
-<li>AI-generated code has a distinct failure signature (over-engineering, mimicry, hallucination) that a generic checklist will not catch.</li>
+<li>AI-generated code has a distinct failure signature (over-engineering, mimicry, hallucination, scope drift) that a generic checklist will not catch.</li>
+<li>The automatable half of package review is large and already solved; the residue is entirely judgment, and the residue is the review.</li>
 </ul>
 <p><strong>Technical:</strong></p>
 <ul>
 <li><code>covr::package_coverage()</code> plus <code>covr::report()</code> gives a navigable, file-by-file coverage view, not just a percentage.</li>
-<li><code>goodpractice::gp()</code> and <code>lintr::lint_package()</code> catch a different class of issue than <code>R CMD check</code> and are worth running separately.</li>
-<li>A clean-environment install/reinstall test surfaces dependency issues that a <code>devtools::load_all()</code> session will never expose.</li>
+<li><code>goodpractice::gp()</code>, <code>lintr::lint_package()</code>, and <code>pkgcheck::pkgcheck()</code> each catch a different class of issue than <code>R CMD check</code>, and are worth running separately.</li>
+<li>A clean-environment install/reinstall test surfaces dependency issues, and unregistered S3 methods, that a <code>devtools::load_all()</code> session will never expose.</li>
+<li>Running the test suite in randomized order surfaces inter-test dependencies that no amount of coverage will reveal.</li>
 </ul>
 <p><strong>Gotchas:</strong></p>
 <ul>
 <li>High coverage can mask assertion-free tests; read a sample of test bodies, not just the coverage report.</li>
 <li><code>R CMD check</code> passing does not imply the design was followed; that requires the separate design-alignment pass.</li>
 <li>A function’s documentation can describe intended behavior accurately while the implementation has drifted from it; verify both directions.</li>
+<li>A comment can be a hallucination too, and it will not fail any check that exists.</li>
 </ul>
 </section>
 <section id="limitations" class="level1">
 <h1>Limitations</h1>
 <ul>
-<li>The framework is scoped to R packages specifically; the phase structure generalizes, but the tooling references (<code>covr</code>, <code>lintr</code>, <code>goodpractice</code>) do not transfer to other languages without substitution.</li>
+<li>The framework is scoped to R packages specifically; the phase structure generalizes, but the tooling references do not transfer to other languages without substitution.</li>
 <li>It assumes the human author already has enough R fluency to evaluate correctness and design alignment; it is not a tutorial on reading R.</li>
-<li>It does not specify how much reviewer time is proportionate to package size or risk; that judgment is left to the reviewer.</li>
-<li>The ownership test in the final section is self-administered; it provides no external verification that the answers given are accurate.</li>
+<li>The ownership test is self-administered. The cold-start, modification, and teach tests below make it harder to pass dishonestly, but they remain self-graded, and at the sensitive tier described earlier that is not sufficient: an independent reviewer is required.</li>
+<li>The AI failure modes catalogued here are drawn from current assistant behavior, which changes. The categories have been stable so far, but the frequencies have not, and a pattern that is common today may be rare in a year.</li>
+<li>The framework says nothing about how to review the prompts and design documents themselves, which are upstream of every problem it addresses.</li>
 </ul>
 </section>
 <section id="opportunities-for-improvement" class="level1">
 <h1>Opportunities for Improvement</h1>
 <ol type="1">
-<li>A companion checklist scaled down for small, low-risk packages, where the full five-phase process is disproportionate.</li>
-<li>Worked severity-classification examples, since “Major” versus “Critical” boundary cases are where reviewers disagree most.</li>
 <li>Guidance on reviewing an AI-assisted <em>contribution</em> to an already-owned package, as distinct from reviewing an entire AI-assisted package from scratch.</li>
-<li>A shared vocabulary for documenting AI involvement in <code>CITATION.cff</code> or a <code>NEWS.md</code> entry, referenced in this framework’s §8.3 but not specified in detail.</li>
-<li>An adaptation of the framework for packages with compiled code (C/C++/Rust via <code>cpp11</code> or extendr), where the security review phase needs additional scrutiny.</li>
+<li>A standard vocabulary for documenting AI involvement in <code>CITATION.cff</code>, <code>DESCRIPTION</code>, or a <code>NEWS.md</code> entry. JOSS now asks for disclosure but does not specify a format, and no R-side convention exists.</li>
+<li>An empirical base rate for each of the failure modes catalogued here. The categories are observational; nobody has measured how often each occurs per thousand generated lines.</li>
+<li>Tooling for the checks that are currently manual, particularly comment-versus-code consistency and design-document traceability, both of which look mechanizable.</li>
+<li>A treatment of the review of prompts and design documents, which this framework takes as given.</li>
 </ol>
 </section>
 <section id="establishing-ownership" class="level1">
 <h1>Establishing Ownership</h1>
 <p>Before claiming ownership of the package, verify that you can, without referring to the code: explain any function’s purpose and implementation, predict its behavior for a novel input, identify where a new requirement would require a change, and debug an issue without AI assistance. Separately, confirm maintenance readiness: can you respond to a user’s issue, review an external contribution, adapt to a breaking change in a dependency, and extend the package’s functionality yourself?</p>
-<p>Consider also documenting the development process itself: that AI assistance was used, what review process was undertaken, and a clear version-control history showing the remediation work. This is not required by CRAN, but it is honest, and it gives a future maintainer (possibly a future version of yourself) the context this review process assumed from the start.</p>
+<p>Those questions are easy to answer yes to in the moment, immediately after a review, when everything is fresh and the honest answer and the flattering answer are hard to tell apart. Three concrete tests make the claim falsifiable:</p>
+<p><strong>The cold-start test.</strong> Wait two weeks. Then have someone pick a function at random, or pick one with a random number generator, and write its “Understanding” summary from memory before opening the file. Compare. This is the test the ownership claim actually makes, and the delay is what makes it a test rather than a recital.</p>
+<p><strong>The modification test.</strong> Implement a small feature you did not plan for, unaided, and time it. The absolute time matters less than whether you knew where to start. If the first twenty minutes went to rediscovering how the package is organized, you have the code but not the design.</p>
+<p><strong>The teach test.</strong> Write the vignette section explaining the package’s central algorithm, without looking at the implementation. Explaining is a stricter test than reading, because it fails on exactly the parts you have been skimming.</p>
+<p>Consider also documenting the development process itself: that AI assistance was used, what review process was undertaken, and a clear version-control history showing the remediation work. This is not required by CRAN, but JOSS now asks for it, it is honest, and it gives a future maintainer (possibly a future version of yourself) the context this review process assumed from the start.</p>
+<p>One further question, borrowed from rOpenSci’s guidance to prospective authors, is worth adding to the sign-off because it is sharper than anything above: <strong>do you expect to maintain this package for at least two years, or to be able to identify a new maintainer?</strong> That is falsifiable and time-bounded in a way that “do you understand it” is not, and it converts ownership from a state into a commitment.</p>
 <p>Review does not end at first release. Any AI-generated change should go through the same review before merging, static analysis should run in continuous integration, and older code sections benefit from periodic re-review as the author’s own understanding of the package deepens. Knowledge decays without use: working with the codebase regularly, documenting decisions as they are made, and keeping review notes accessible are what keep the ownership claim true over time, not just true at the moment of first publication.</p>
 </section>
 <section id="wrapping-up" class="level1">
@@ -574,11 +1001,13 @@ SOURCE
 <p>Thorough review of an AI-assisted package requires the same rigor a careful reviewer would bring to any package, plus a specific sensitivity to the failure modes assistant-written code tends to produce. The process demands more than a read-through; it requires achieving genuine understanding of every component before accepting responsibility for it. The five-phase structure (structural, function-by-function, test suite, integration, security) gives that process a checklist rather than leaving it to instinct. The ownership test at the end gives it a stopping condition: review is complete when the answers to the ownership questions are honestly yes, not when the reviewer is tired of reading code.</p>
 <p><strong>Main takeaways:</strong></p>
 <ul>
+<li>A test suite written by the same assistant as the code is not independent evidence; write the tests that matter yourself.</li>
 <li>Coverage is a floor, not a target; read test bodies, not just coverage percentages.</li>
-<li>AI-generated code has a specific set of failure patterns worth a dedicated review pass.</li>
+<li>AI-generated code has a specific set of failure patterns worth a dedicated review pass, each with its own detection method.</li>
+<li>Most of a package review is mechanizable, and none of the mechanizable part is the part that establishes ownership.</li>
 <li>Ownership is demonstrated by prediction and unaided debugging, not claimed by completing a checklist.</li>
 </ul>
-<p><strong>If you are trying this yourself:</strong> start with the structural review before touching any function body, keep the annotation template open in a second window rather than trying to hold findings in memory, and do not flip a package to “reviewed” until you can honestly answer every question in the Establishing Ownership section.</p>
+<p><strong>If you are trying this yourself:</strong> run every tool in the table before reading a single function, so that the automated noise is out of the way; start with the structural review before touching any function body; keep the annotation template open in a second window rather than trying to hold findings in memory; and do not flip a package to “reviewed” until you can honestly answer every question in the Establishing Ownership section.</p>
 </section>
 </section>
 <section id="see-also" class="level1">
@@ -592,22 +1021,29 @@ SOURCE
 <li><a href="https://cran.r-project.org/doc/manuals/r-release/R-exts.html">Writing R Extensions</a> — R Core Team</li>
 <li><a href="https://cran.r-project.org/web/packages/policies.html">CRAN Repository Policy</a></li>
 <li><a href="https://devguide.ropensci.org/">rOpenSci Packages: Development, Maintenance, and Peer Review</a></li>
+<li><a href="https://stats-devguide.ropensci.org/standards.html">rOpenSci Statistical Software Standards</a></li>
+<li><a href="https://github.com/ropensci-review-tools/pkgcheck">pkgcheck</a></li>
+<li><a href="https://joss.readthedocs.io/en/latest/review_checklist.html">JOSS Review Checklist</a></li>
+<li><a href="https://book.the-turing-way.org/reproducible-research/reviewing/reviewing-checklist/">The Turing Way: Checklist for Code Review</a></li>
 </ul>
 <hr>
 </section>
 <section id="reproducibility" class="level1">
 <h1>Reproducibility</h1>
-<p><strong>Source document:</strong> <code>docs/CODE_REVIEW_METHODOLOGY.md</code>, from the <code>zzobj2fig</code> package (<code>~/prj/sfw/10-zzobj2fig/zzobj2fig/</code>). This post is a direct translation of that white paper into blog format; no methodological claims were added beyond the source.</p>
+<p><strong>Source document:</strong> <code>docs/CODE_REVIEW_METHODOLOGY.md</code>, from the <code>zzobj2fig</code> package (<code>~/prj/sfw/10-zzobj2fig/zzobj2fig/</code>). The five phases, the annotation template, the severity tiers, and the ownership test are taken from that white paper.</p>
+<p><strong>Material new to this post:</strong> the risk tiers, the detection and response guidance attached to each AI failure mode, the fabricated dependency and fabricated citation modes, the R correctness traps, the test-independence argument in Phase 3, the worked annotation and severity examples, the failed-review protocol, the consolidated checklist, the tooling table, and the cold-start, modification, and teach tests.</p>
+<p><strong>Sources consulted, and how.</strong> Read from source: the rOpenSci development guide (the <code>ropensci/dev_guide</code> repository, all English chapters and templates); <em>R Packages</em>, 2nd ed.&nbsp;(the <code>hadley/r-pkgs</code> repository, the chapters covering code, testing, dependencies, licensing, documentation, data, and release); and <code>pkgcheck</code>’s implemented checks, read as code rather than as documentation. The CRAN <em>Repository Policy</em> was read directly. The rOpenSci statistical software standards, the JOSS review checklist, and The Turing Way code review checklist were consulted as published pages rather than source. Everything is cited inline.</p>
+<p><strong>AI involvement in this post:</strong> drafting and revision of this post were AI-assisted, and the benchmarking against external standards was carried out by an assistant reading the sources listed above directly. Claims attributed to an external standard were checked against that standard’s own text rather than a summary of it, at the level of detail indicated above. The argument, the structure, and the framework itself are the author’s. This disclosure is included because the post argues that authors of AI-assisted work should make it, and a methodological post that declined to apply its own standard to itself would not be worth much.</p>
 <p><strong>Session information:</strong></p>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>R version 4.6.1 (2026-06-24)
-Platform: aarch64-apple-darwin25.4.0
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
 Running under: macOS Tahoe 26.6.2
 
 Matrix products: default
-BLAS:   /opt/homebrew/Cellar/openblas/0.3.34/lib/libopenblasp-r0.3.34.dylib 
-LAPACK: /opt/homebrew/Cellar/r/4.6.1/lib/R/lib/libRlapack.dylib;  LAPACK version 3.12.1
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -619,14 +1055,14 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 loaded via a namespace (and not attached):
- [1] htmlwidgets_1.6.4 compiler_4.6.1    fastmap_1.2.0     cli_3.6.6        
- [5] tools_4.6.1       htmltools_0.5.9   parallel_4.6.1    otel_0.2.0       
+ [1] htmlwidgets_1.6.4 compiler_4.6.0    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.0       htmltools_0.5.9   parallel_4.6.0    otel_0.2.0       
  [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
-[13] xfun_0.58         digest_0.6.39     rlang_1.3.0       evaluate_1.0.5   </code></pre>
+[13] xfun_0.62         digest_0.6.39     rlang_1.2.0       evaluate_1.0.5   </code></pre>
 </div>
 </div>
 <hr>
-<p><em>Rendered on 2026-08-18 at 11:00 PDT.</em><br> <em>Source: ~/prj/rgtlab/posts/rp-code-review-methodology/analysis/report/index.qmd</em></p>
+<p><em>Rendered on 2026-09-05 at 18:39 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/rp-code-review-methodology/analysis/report/index.qmd</em></p>
 <hr>
 </section>
 <section id="lets-connect" class="level1">

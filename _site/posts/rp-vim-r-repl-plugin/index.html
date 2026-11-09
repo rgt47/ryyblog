@@ -8,7 +8,7 @@
 
 <meta name="author" content="Ronald G. Thomas">
 <meta name="dcterms.date" content="2025-05-20">
-<meta name="description" content="I did not really know how Vim’s terminal API worked until I wrote a small plugin that sends code from an editing buffer to a running R session.">
+<meta name="description" content="Writing a small plugin that sends code from an editing buffer to a running R session is the fastest way to learn how Vim’s terminal API works.">
 
 <title>Writing a Simple Vim Plugin for REPL Interaction – focusonr</title>
 <style>
@@ -122,13 +122,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <meta property="og:title" content="Writing a Simple Vim Plugin for REPL Interaction – focusonr">
-<meta property="og:description" content="I did not really know how Vim’s terminal API worked until I wrote a small plugin that sends code from an editing buffer to a running R session.">
+<meta property="og:description" content="Writing a small plugin that sends code from an editing buffer to a running R session is the fastest way to learn how Vim’s terminal API works.">
 <meta property="og:image" content="https://focusonr.org/posts/rp-vim-r-repl-plugin/media/images/hero.png">
 <meta property="og:site_name" content="focusonr">
 <meta property="og:image:height" content="800">
 <meta property="og:image:width" content="1200">
 <meta name="twitter:title" content="Writing a Simple Vim Plugin for REPL Interaction – focusonr">
-<meta name="twitter:description" content="I did not really know how Vim’s terminal API worked until I wrote a small plugin that sends code from an editing buffer to a running R session.">
+<meta name="twitter:description" content="Writing a small plugin that sends code from an editing buffer to a running R session is the fastest way to learn how Vim’s terminal API works.">
 <meta name="twitter:image" content="https://focusonr.org/posts/rp-vim-r-repl-plugin/media/images/hero.png">
 <meta name="twitter:creator" content="@rgt47">
 <meta name="twitter:card" content="summary_large_image">
@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div>
   <div class="description">
-    I did not really know how Vim’s terminal API worked until I wrote a small plugin that sends code from an editing buffer to a running R session.
+    Writing a small plugin that sends code from an editing buffer to a running R session is the fastest way to learn how Vim’s terminal API works.
   </div>
 </div>
 
@@ -289,6 +289,19 @@ document.addEventListener('DOMContentLoaded', function() {
 </header>
 
 
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="media/images/hero.png" class="img-fluid figure-img" style="width:80.0%"></p>
@@ -298,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <p><em>A lightweight Vim plugin for sending R code to a terminal REPL.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>I did not really know how Vim’s terminal API worked until I sat down and wrote a small plugin that sends code from an editing buffer to a running R session. The established tools for this task (Nvim-R and vim-slime) are feature-rich but complex. I wanted something minimal: select code in Vim, press a key, and see it execute in an R terminal pane.</p>
+<p>Vim’s terminal API is best learned by using it, so I sat down and wrote a small plugin that sends code from an editing buffer to a running R session. The established tools for this task (Nvim-R and vim-slime) are feature-rich but complex. I wanted something minimal: select code in Vim, press a key, and see it execute in an R terminal pane.</p>
 <p>The result is <code>rgt-R.vim</code>, a single-file plugin under 150 lines that handles line submission, visual selection, chunk navigation, and a handful of convenience mappings for common R inspection commands. It uses Vim’s built-in <code>term_sendkeys()</code> and <code>term_list()</code> functions, requiring no external dependencies beyond Vim 8+ with terminal support.</p>
 <p>This post presents the complete plugin code, explains each function, documents the key mappings, and discusses the experiments that shaped the design.</p>
 <div class="callout callout-style-default callout-note callout-titled">

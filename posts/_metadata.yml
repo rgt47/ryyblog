@@ -1,5 +1,9 @@
 freeze: auto
 toc: true
+# Draft callout at the top of each post; opt out per post with
+# `draft-note: false`.
+filters:
+  - ../_includes/draft-note.lua
 format:
   html:
     code-fold: false

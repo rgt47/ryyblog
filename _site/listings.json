@@ -2,6 +2,10 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/zc-offload-simulations-home-server/index.html",
+      "/posts/sec-fleet-hardening-lessons/index.html",
+      "/posts/sec-five-machine-storage/index.html",
+      "/posts/sec-object-store-research-data/index.html",
       "/posts/pub-open-textbook-guidebook/index.html",
       "/posts/wf-voice-copyedit-pipeline/index.html",
       "/posts/cln-shiny-docker-caddy-hosting/index.html",
