@@ -61,5 +61,8 @@ format:
     include-after-body:
       file: _includes/after-body.html
 
+filters:
+  - _filters/pdf-site-links.lua
+
 execute:
   freeze: auto
