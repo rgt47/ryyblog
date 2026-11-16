@@ -228,7 +228,10 @@ document.addEventListener('DOMContentLoaded', function() {
   </ul></li>
   <li><a href="#what-is-the-home-server-for" id="toc-what-is-the-home-server-for" class="nav-link" data-scroll-target="#what-is-the-home-server-for">What Is the Home Server For?</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#a-laptop-that-behaves-like-a-server" id="toc-a-laptop-that-behaves-like-a-server" class="nav-link" data-scroll-target="#a-laptop-that-behaves-like-a-server">A Laptop That Behaves Like a Server</a></li>
+  <li><a href="#a-laptop-that-behaves-like-a-server" id="toc-a-laptop-that-behaves-like-a-server" class="nav-link" data-scroll-target="#a-laptop-that-behaves-like-a-server">A Laptop That Behaves Like a Server</a>
+  <ul class="collapse">
+  <li><a href="#two-adapters-on-one-network" id="toc-two-adapters-on-one-network" class="nav-link" data-scroll-target="#two-adapters-on-one-network">Two Adapters on One Network</a></li>
+  </ul></li>
   <li><a href="#addressing-tailscale-for-scripts-the-lan-for-samba" id="toc-addressing-tailscale-for-scripts-the-lan-for-samba" class="nav-link" data-scroll-target="#addressing-tailscale-for-scripts-the-lan-for-samba">Addressing: Tailscale for Scripts, the LAN for Samba</a></li>
   <li><a href="#the-firewall-default-deny" id="toc-the-firewall-default-deny" class="nav-link" data-scroll-target="#the-firewall-default-deny">The Firewall: Default Deny</a></li>
   <li><a href="#the-borg-repository-host" id="toc-the-borg-repository-host" class="nav-link" data-scroll-target="#the-borg-repository-host">The Borg Repository Host</a></li>
@@ -326,7 +329,18 @@ AUTHOR NOTES
       replaced by a documentation range, UUIDs removed.
   [ ] Claims about restores must match what has been tested.
   [x] Images: hero + 3 ambiance, all present in media/images/.
+  [x] Updated 2026-11-16 for the November backup review
+      (BLOG_UPDATE_PLAN.md 4.2): two-adapter ARP flux and routes,
+      the mDNS firewall rule, remote unlock status, alerting.
+  [ ] Remote unlock: rewrite once a working USB Ethernet adapter is
+      attached and an unlock has been tested with a planned reboot.
 ============================================================================ -->
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+<p><em>A retired laptop at the center of the fleet: always awake, closed by default, and holding backups it cannot read.</em></p>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
 <p>Five machines are enough to need a center. This post describes the one in our fleet: a 2016 MacBook Pro, retired from daily use, running Linux Mint, and serving the other four machines as their backup destination and as a home for the few things that must not leave the house.</p>
@@ -342,11 +356,6 @@ Note
 <div class="callout-body-container callout-body">
 <p>Part 6 of the security series; start with <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a> for the overview.</p>
 </div>
-</div>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
-</figure>
 </div>
 <p>The server is called mercury. The other machines are julia (the primary workstation), athena (a laptop, and the only Mac running Time Machine), joe (a secondary Mac), and zeus (a Linux laptop). The backup policy that runs against mercury is the subject of <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>; this post is about the machine itself: what it does, how it is reached, how it is protected, and the configuration details that took more than one attempt to get right.</p>
 <section id="motivations" class="level2">
@@ -451,10 +460,31 @@ Note
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># masked</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The remaining hardware realities are less tractable:</p>
 <ul>
-<li><strong>No wired network.</strong> The 2016 MacBook Pro has no Ethernet port, and mercury runs on Wi-Fi. It has two Wi-Fi adapters, the built-in one and a USB adapter, both joined to the home network. That detail caused one of the Samba failures described below.</li>
+<li><strong>No wired network.</strong> The 2016 MacBook Pro has no Ethernet port, and mercury runs on Wi-Fi. It has two Wi-Fi adapters, the built-in one and a USB adapter, both joined to the home network. That detail caused one of the Samba failures described below, and a less visible problem described next.</li>
 <li><strong>A battery is not a UPS.</strong> The battery carries the machine through a short outage, but there is no clean-shutdown trigger and the battery is old.</li>
-<li><strong>LUKS needs a passphrase at boot.</strong> An unattended reboot stops at the unlock prompt until someone types it. This is the server’s equivalent of the FileVault behavior described in the series overview, and it is the price of encryption at rest.</li>
+<li><strong>LUKS needs a passphrase at boot.</strong> An unattended reboot stops at the unlock prompt until someone types it. This is the server’s equivalent of the FileVault behavior described in the series overview, and it is the price of encryption at rest. A remote unlock path exists on paper: a small SSH server (dropbear) in the initial ramdisk accepts the passphrase over the network. It was set up when mercury had a USB Ethernet adapter, and the initial ramdisk can bring up only a wired interface, not Wi-Fi. With no adapter attached, remote unlock almost certainly does not work (inferred from the configuration in November 2026; not tested), so in practice someone has to be at the keyboard.</li>
 </ul>
+<section id="two-adapters-on-one-network" class="level2">
+<h2 class="anchored" data-anchor-id="two-adapters-on-one-network">Two Adapters on One Network</h2>
+<p>Two Wi-Fi adapters on the same subnet looked like redundancy. A review of the backups in November 2026 found that they behave more like two machines answering to one name:</p>
+<ul>
+<li>Each adapter holds its own DHCP lease and installs its own default route. NetworkManager switched the preferred route between them every 10 to 20 minutes.</li>
+<li>Linux’s default ARP settings (<code>arp_ignore</code> and <code>arp_announce</code> both
+<ol start="0" type="1">
+<li>let either adapter answer for either address, so traffic sent to one adapter’s address arrived on the other. The firewall log showed this directly. The usual name for it is <em>ARP flux</em>.</li>
+</ol></li>
+<li><code>mercury.local</code> advertises both addresses, so a client may open a session to either, and the return path can change in the middle of that session.</li>
+<li>The two radios compete for airtime on one access point. Pings from athena ranged from 7 to 117 ms, high jitter for a LAN.</li>
+</ul>
+<p>None of this was isolated as the cause of a particular failure, but each makes a long-lived SMB session more fragile. The intended fix is one wired interface: a USB Ethernet adapter on a cable to the router, with both Wi-Fi adapters dropped from the LAN role. The same adapter would restore the remote unlock path. The first adapter tried, in November 2026, was not detected at all, by mercury or by a Mac, so it is very likely faulty, and a replacement is needed. If wiring is delayed, the interim step is to take the USB Wi-Fi adapter off the network and tighten ARP:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nmcli device set <span class="op">&lt;</span>usb-wifi-device<span class="op">&gt;</span> managed no</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ip link set <span class="op">&lt;</span>usb-wifi-device<span class="op">&gt;</span> down</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">'%s\n'</span> <span class="st">'net.ipv4.conf.all.arp_ignore = 1'</span> <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">'net.ipv4.conf.all.arp_announce = 2'</span> <span class="kw">|</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sudo</span> tee /etc/sysctl.d/60-arp-flux.conf</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sysctl <span class="at">--system</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>and then list only the remaining adapter in Samba’s <code>interfaces</code>.</p>
+</section>
 </section>
 <section id="addressing-tailscale-for-scripts-the-lan-for-samba" class="level1">
 <h1>Addressing: Tailscale for Scripts, the LAN for Samba</h1>
@@ -467,25 +497,28 @@ Note
 <li>When the address of a machine changes, search every client for every file that names it before declaring the fix done.</li>
 </ul>
 <p>One more addressing detail affects Samba clients. On the Macs, <code>mercury.local</code> (multicast DNS) resolves to both Wi-Fi adapters’ IPv4 addresses and to two IPv6 link-local addresses. A client that tries them one at a time can spend tens of seconds on the addresses that do not answer before reaching one that does.</p>
+<p>Name resolution failed in a second way, found in November 2026. Time Machine finds its destination through Bonjour, and macOS sends some of those queries to the server’s unicast address rather than to the multicast group. mercury’s firewall, described next, dropped them: in one day athena logged 105 failures to resolve the share’s Bonjour name, and mercury’s firewall logged the matching blocked packets on UDP port 5353. One rule fixed it (below), and the blocks stopped.</p>
 </section>
 <section id="the-firewall-default-deny" class="level1">
 <h1>The Firewall: Default Deny</h1>
-<p>Before Samba was added, mercury ran with its firewall installed but inactive, relying on the home router and on the restricted Borg keys. Adding a second network-facing service was the point at which that stopped being defensible. <code>ufw</code> now denies all incoming connections by default and opens three things:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Policy as configured, shown as the commands that produce it.</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The LAN subnet is shown as a documentation range.</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default deny incoming</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default allow outgoing</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow in on tailscale0</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.0.2.0/24 to any port 22 proto tcp</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.0.2.0/24 to any port 445 proto tcp</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw enable</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The Tailscale interface is trusted as a whole because every machine on the tailnet is one of ours and the Borg traffic arrives that way. SSH and Samba are additionally reachable from the LAN subnet and from nowhere else. Enabling a firewall over SSH is the moment to be careful: allow SSH first, keep the existing session open, and test a second login before closing the first.</p>
+<p>Before Samba was added, mercury ran with its firewall installed but inactive, relying on the home router and on the restricted Borg keys. Adding a second network-facing service was the point at which that stopped being defensible. <code>ufw</code> now denies all incoming connections by default and opens four things:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Policy as configured, shown as the commands that produce it.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The LAN subnet is shown as a documentation range.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default deny incoming</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw default allow outgoing</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow in on tailscale0</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.0.2.0/24 to any port 22 proto tcp</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.0.2.0/24 to any port 445 proto tcp</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow from 192.0.2.0/24 to any port 5353 proto udp <span class="dt">\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  comment <span class="st">'mDNS for Time Machine Bonjour resolution'</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw enable</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The Tailscale interface is trusted as a whole because every machine on the tailnet is one of ours and the Borg traffic arrives that way. SSH and Samba are additionally reachable from the LAN subnet and from nowhere else. The mDNS rule was added in November 2026, two months after the others: a default-deny firewall also blocks the discovery traffic that a service’s clients rely on, and that failure shows up on the client, as a name that intermittently fails to resolve, not on the server. Enabling a firewall over SSH is the moment to be careful: allow SSH first, keep the existing session open, and test a second login before closing the first.</p>
 <p>Samba applies its own restriction on top of the firewall, so a mistake in either layer alone does not expose the share:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/samba/smb.conf, [grey] share (excerpt)</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">hosts allow </span><span class="ot">=</span><span class="st"> 192.0.2.0/24 127.0.0.1</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="dt">hosts deny </span><span class="ot">=</span><span class="st"> 0.0.0.0/0</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="dt">valid users </span><span class="ot">=</span><span class="st"> &lt;backup-user&gt;</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="dt">guest ok </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/samba/smb.conf, [grey] share (excerpt)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">hosts allow </span><span class="ot">=</span><span class="st"> 192.0.2.0/24 127.0.0.1</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="dt">hosts deny </span><span class="ot">=</span><span class="st"> 0.0.0.0/0</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="dt">valid users </span><span class="ot">=</span><span class="st"> &lt;backup-user&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="dt">guest ok </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="the-borg-repository-host" class="level1">
 <h1>The Borg Repository Host</h1>
@@ -514,9 +547,9 @@ UUID=...  /media/grey  ext4  defaults,noatime,nofail,\
   x-systemd.device-timeout=10s  0  2</code></pre>
 <p><code>nofail</code> with a short device timeout lets mercury boot normally when the disk is unplugged; without it, a missing USB drive drops a Linux machine into emergency mode at boot, which on a headless server means a trip to the keyboard.</p>
 <p>The opposite failure is quieter and worse: with the disk absent, <code>/media/grey</code> is an empty directory on the internal SSD, and Samba would happily serve it. Time Machine would then fill the server’s system disk. The share refuses to start a session unless the disk is actually mounted:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/samba/smb.conf, [grey] share (excerpt)</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dt">root preexec </span><span class="ot">=</span><span class="st"> /usr/bin/mountpoint -q /media/grey</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="dt">root preexec close </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/samba/smb.conf, [grey] share (excerpt)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dt">root preexec </span><span class="ot">=</span><span class="st"> /usr/bin/mountpoint -q /media/grey</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="dt">root preexec close </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>root preexec close = yes</code> turns a failing pre-exec command into a refused connection.</p>
 </section>
 <section id="trim-over-usb" class="level2">
@@ -527,9 +560,9 @@ ACTION=="add|change", ATTRS{idVendor}=="04e8", \
   ATTRS{idProduct}=="4001", SUBSYSTEM=="scsi_disk", \
   ATTR{provisioning_mode}="unmap"</code></pre>
 <p>(Shown wrapped; udev needs one line.) Check it and trim:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /sys/block/sda/device/scsi_disk/<span class="pp">*</span>/provisioning_mode</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># unmap</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fstrim <span class="at">-v</span> /media/grey</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /sys/block/sda/device/scsi_disk/<span class="pp">*</span>/provisioning_mode</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># unmap</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> fstrim <span class="at">-v</span> /media/grey</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The first <code>fstrim</code> after the reformat released the whole drive, 915.6 GiB. The vendor and product IDs come from <code>lsusb</code>; the rule is specific to one drive model, which is intended, since forcing <code>unmap</code> on a bridge that does not support it can cause errors.</p>
 <p><img src="media/images/ambiance2.jpg" class="img-fluid" style="height:3.5in"></p>
 </section>
@@ -537,44 +570,45 @@ ACTION=="add|change", ATTRS{idVendor}=="04e8", \
 <section id="the-time-machine-share" class="level1">
 <h1>The Time Machine Share</h1>
 <p>The share definition, trimmed of comments:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[grey]</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="dt">   comment </span><span class="ot">=</span><span class="st"> Time Machine backup for athena (ext4 on mercury)</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="dt">   path </span><span class="ot">=</span><span class="st"> /media/grey</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="dt">   root preexec </span><span class="ot">=</span><span class="st"> /usr/bin/mountpoint -q /media/grey</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="dt">   root preexec close </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="dt">   vfs objects </span><span class="ot">=</span><span class="st"> fruit streams_xattr</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:time machine </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:time machine max size </span><span class="ot">=</span><span class="st"> </span><span class="dv">966367641600</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:metadata </span><span class="ot">=</span><span class="st"> stream</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:model </span><span class="ot">=</span><span class="st"> MacSamba</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="dt">   hosts allow </span><span class="ot">=</span><span class="st"> 192.0.2.0/24 127.0.0.1</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="dt">   hosts deny </span><span class="ot">=</span><span class="st"> 0.0.0.0/0</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="dt">   valid users </span><span class="ot">=</span><span class="st"> &lt;backup-user&gt;</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="dt">   guest ok </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="dt">   read only </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="dt">   create mask </span><span class="ot">=</span><span class="st"> </span><span class="dv">0600</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="dt">   directory mask </span><span class="ot">=</span><span class="st"> </span><span class="dv">0700</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[grey]</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">   comment </span><span class="ot">=</span><span class="st"> Time Machine backup for athena (ext4 on mercury)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">   path </span><span class="ot">=</span><span class="st"> /media/grey</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="dt">   root preexec </span><span class="ot">=</span><span class="st"> /usr/bin/mountpoint -q /media/grey</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="dt">   root preexec close </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="dt">   vfs objects </span><span class="ot">=</span><span class="st"> fruit streams_xattr</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:time machine </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:time machine max size </span><span class="ot">=</span><span class="st"> </span><span class="dv">966367641600</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:metadata </span><span class="ot">=</span><span class="st"> stream</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="dt">   fruit:model </span><span class="ot">=</span><span class="st"> MacSamba</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="dt">   hosts allow </span><span class="ot">=</span><span class="st"> 192.0.2.0/24 127.0.0.1</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="dt">   hosts deny </span><span class="ot">=</span><span class="st"> 0.0.0.0/0</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="dt">   valid users </span><span class="ot">=</span><span class="st"> &lt;backup-user&gt;</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="dt">   guest ok </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a><span class="dt">   read only </span><span class="ot">=</span><span class="st"> </span><span class="kw">no</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="dt">   create mask </span><span class="ot">=</span><span class="st"> </span><span class="dv">0600</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="dt">   directory mask </span><span class="ot">=</span><span class="st"> </span><span class="dv">0700</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Notes on the choices:</p>
 <ul>
 <li><code>fruit:time machine = yes</code> makes the share advertise itself as a Time Machine destination; <code>max size</code> caps it below the disk’s capacity (here 900 GiB) so Time Machine prunes before the disk fills.</li>
 <li>The Samba account has its own password, set with <code>smbpasswd</code>, separate from the Linux login and from the password store.</li>
 <li>Encryption is the client’s job: Time Machine encrypts the backup only if Encrypt Backup is chosen when the destination is added. The server stores an encrypted sparse bundle it cannot read. The first attempt here was added without encryption and had to be deleted and restarted; the procedure is in the backup post.</li>
+<li>Most Time Machine failures in November 2026 started on the client, not here: a laptop sleep timer that cut sessions short, then files unreadable while the screen was locked. The server’s part was the mDNS rule above. Both client failures are described in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>.</li>
 </ul>
 <section id="binding-to-interfaces-and-waiting-for-them" class="level2">
 <h2 class="anchored" data-anchor-id="binding-to-interfaces-and-waiting-for-them">Binding to Interfaces, and Waiting for Them</h2>
 <p>The share was configured to listen only on chosen interfaces:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[global]</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="dt">   interfaces </span><span class="ot">=</span><span class="st"> lo wlp2s0 wlx9cefd5fb70dd</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="dt">   bind interfaces only </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[global]</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="dt">   interfaces </span><span class="ot">=</span><span class="st"> lo wlp2s0 wlx9cefd5fb70dd</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">   bind interfaces only </span><span class="ot">=</span><span class="st"> </span><span class="kw">yes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>This is good practice (Samba does not answer on the Tailscale interface at all) and it caused two failures.</p>
 <p><strong>Samba started before the network.</strong> At boot, <code>smbd</code> started before the USB Wi-Fi adapter had an address, bound only to loopback, and never retried. From the LAN the share simply refused connections, while the disk itself was mounted and writable. A systemd drop-in makes Samba wait for the network:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/smbd.service.d/wait-for-network.conf</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># /etc/systemd/system/smbd.service.d/wait-for-network.conf</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">[Unit]</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="dt">Wants</span><span class="ot">=</span><span class="st">network-online.target</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="dt">After</span><span class="ot">=</span><span class="st">network-online.target</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>This only helps if a wait-online service is enabled for the network manager in use (<code>NetworkManager-wait-online.service</code> on Mint); check it, or <code>network-online.target</code> is reached immediately.</p>
 <p><strong>Samba listened on one of two adapters.</strong> The original line named only the USB adapter. Because <code>mercury.local</code> resolves to both adapters, a Mac reaching the built-in adapter’s address was refused. Listing both adapters fixed it. Confirm what Samba is actually listening on, rather than what the configuration says:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-tln</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">':445 '</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-tln</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">':445 '</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The general lesson: a service bound to named interfaces on a machine whose interfaces come up late or change needs both a boot ordering dependency and a check of its real listening sockets after every reboot.</p>
 </section>
 </section>
@@ -588,29 +622,29 @@ ACTION=="add|change", ATTRS{idVendor}=="04e8", \
 <section id="verification" class="level1">
 <h1>Verification</h1>
 <p>Run on the server after any change and after every reboot:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Encrypted root and the SSD mounted read-write</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,TYPE,FSTYPE,MOUNTPOINT</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> <span class="at">-n</span> <span class="at">-o</span> TARGET,FSTYPE,OPTIONS /media/grey</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># TRIM enabled on the USB SSD</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /sys/block/sda/device/scsi_disk/<span class="pp">*</span>/provisioning_mode</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Samba up and listening on the LAN adapters, not just loopback</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-active smbd</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-tln</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">':445 '</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Firewall active with the expected rules</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status verbose</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Sleep impossible</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-enabled sleep.target suspend.target</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Encrypted root and the SSD mounted read-write</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">lsblk</span> <span class="at">-o</span> NAME,TYPE,FSTYPE,MOUNTPOINT</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">findmnt</span> <span class="at">-n</span> <span class="at">-o</span> TARGET,FSTYPE,OPTIONS /media/grey</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># TRIM enabled on the USB SSD</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> /sys/block/sda/device/scsi_disk/<span class="pp">*</span>/provisioning_mode</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Samba up and listening on the LAN adapters, not just loopback</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-active smbd</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="ex">ss</span> <span class="at">-tln</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">':445 '</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Firewall active with the expected rules</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw status verbose</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Sleep impossible</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> is-enabled sleep.target suspend.target</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>From a client:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS: the share answers on each LAN address</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nc</span> <span class="at">-z</span> <span class="at">-G</span> 5 <span class="op">&lt;</span>server-lan-address<span class="op">&gt;</span> 445</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Borg: the restricted key reaches only borg serve</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-F</span> ~/.borg/ssh_config mercury true</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># expected: a borg usage message, not a shell</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS: the share answers on each LAN address</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">nc</span> <span class="at">-z</span> <span class="at">-G</span> 5 <span class="op">&lt;</span>server-lan-address<span class="op">&gt;</span> 445</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Borg: the restricted key reaches only borg serve</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-F</span> ~/.borg/ssh_config mercury true</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># expected: a borg usage message, not a shell</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The last check is the one that proves the restriction: if <code>true</code> runs, the forced command is not in effect.</p>
 <p><img src="media/images/ambiance3.jpg" class="img-fluid" style="height:3.5in"></p>
 </section>
@@ -625,7 +659,9 @@ ACTION=="add|change", ATTRS{idVendor}=="04e8", \
 <li><strong>USB SSDs do not TRIM by default on Linux.</strong> Set <code>provisioning_mode</code> with a udev rule scoped to the drive model.</li>
 <li><strong>HFS+ on Linux is not a recovery format.</strong> Without a working checker, cross-platform readability does not help.</li>
 <li><strong>Enabling a firewall over SSH can lock you out.</strong> Allow SSH before <code>ufw enable</code>, and test a second session.</li>
-<li><strong>LUKS and unattended reboots do not mix.</strong> Plan for someone to unlock the server after power loss or a kernel update.</li>
+<li><strong>LUKS and unattended reboots do not mix.</strong> Plan for someone to unlock the server after power loss or a kernel update. A remote unlock in the initial ramdisk needs a wired interface, and should be tested with a planned reboot, not discovered during an outage.</li>
+<li><strong>Two adapters on one subnet are not redundancy.</strong> Expect ARP flux and alternating default routes; give the server one LAN interface.</li>
+<li><strong>Default-deny blocks discovery too.</strong> If clients find a service through Bonjour, allow UDP 5353 from the LAN, and look for the failure on the clients.</li>
 </ol>
 </section>
 <section id="what-did-we-learn" class="level1">
@@ -644,16 +680,19 @@ ACTION=="add|change", ATTRS{idVendor}=="04e8", \
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
 <ul>
 <li>One server is one point of failure for the Borg tier; the cloud copies and the server’s own backup to julia mitigate this, but a restore onto replacement hardware has not yet been rehearsed.</li>
-<li>Wi-Fi is the only network path, and the server’s throughput sets the pace of large first backups (a full Time Machine baseline runs for many hours).</li>
+<li>Wi-Fi is the only network path, over two adapters that interfere with each other, and the server’s throughput sets the pace of large first backups (a full Time Machine baseline runs for many hours).</li>
+<li>Remote unlock very probably does not work until a wired adapter is attached, so any reboot needs someone at the server.</li>
+<li>The server’s own <code>/etc</code>, including the LUKS and remote-unlock configuration, is not in any backup.</li>
 <li>The Time Machine share is treated as a convenience tier. athena’s research data also exists in Borg and in its cloud copies; the share itself has no second copy.</li>
-<li>There is no automated alerting on the server’s services; the verification list above is run by hand.</li>
+<li>There is no automated alerting on the server’s services; the verification list above is run by hand. Alerts now exist for failed Borg runs and for a stale Time Machine backup, but both are sent from the clients.</li>
 <li>Simulation jobs run as a dedicated account, <code>simrun</code>, with no <code>sudo</code> and no access to the backup repositories, in rootless containers under that account. A job can still fill the disk or keep the CPU busy, so a runaway job affects availability, and <code>simrun</code> owns the simulation data store. Mercury remains the slower of the two simulation hosts, with four threads.</li>
 </ul>
 </section>
 <section id="opportunities-for-improvement" class="level2">
 <h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
 <ul>
-<li>A USB Ethernet adapter and a wired link to the router.</li>
+<li>A USB Ethernet adapter and a wired link to the router, which would end the two-adapter problem and restore remote unlock. Choose one with a chipset Linux supports without extra drivers (Realtek RTL8153 or RTL8156), and confirm it appears in <code>lsusb</code> before relying on it.</li>
+<li>The server’s <code>/etc</code> added to its own Borg backup to julia.</li>
 <li>A small UPS with a shutdown trigger, so power loss ends in a clean shutdown rather than a drained battery.</li>
 <li>A daily check that reports the services’ status and listening sockets, alongside the backup status check recommended in the backup post.</li>
 <li>A scheduled restore test from both the Borg repositories and the Time Machine share.</li>
@@ -685,6 +724,7 @@ ACTION=="add|change", ATTRS{idVendor}=="04e8", \
 <li>A Home Server for a Five-Machine Research Fleet (this post)</li>
 <li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
 <li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+<li><a href="../sec-backup-failure-forensics/">Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks</a></li>
 </ol>
 <p>External references:</p>
 <ul>
@@ -699,6 +739,7 @@ ACTION=="add|change", ATTRS{idVendor}=="04e8", \
 <section id="reproducibility" class="level1">
 <h1>Reproducibility</h1>
 <p><strong>What was checked.</strong> The configuration excerpts (logind drop-in, masked sleep targets, Samba <code>[global]</code> binding and <code>[grey]</code> share, the smbd drop-in, the fstab line, the udev rule, the Borg forced commands) were read from the running server on 2026-10-01 and are shown trimmed, with the LAN subnet replaced by a documentation range and the filesystem UUID removed. The firewall policy is given as the commands that produce it, from the build notes; <code>ufw status</code> output was not captured for this post. Listening sockets, the mount, and TRIM were verified on the server; port 445 on both LAN addresses was verified from athena. The simulation role was added after those checks (2026-10-03 onward); for this post, only the file ownership behind the limitation above was read from the server on 2026-10-12: the Borg repositories and the Time Machine drive are owned by the backup account, which is in the <code>sudo</code> group. The separate <code>simrun</code> account was created on 2026-10-15; that it has no <code>sudo</code> membership and that the repositories are mode 0750 for another owner and group was read from the account listing and file modes, not tested by trying to read them as <code>simrun</code>. The simulation design itself is verified in its own post.</p>
+<p><strong>November 2026 additions.</strong> The two-adapter behavior (routes, lease, ARP settings, firewall log) and the mDNS blocks come from a review of the backups on 2026-11-11; the mDNS rule’s effect was verified over the following day. The routes, ARP settings, absence of an Ethernet device, and the initial ramdisk’s network setting were read from the server again on 2026-11-15 and 2026-11-16. Remote unlock was not tested.</p>
 <p><strong>Versions.</strong> Server: Linux Mint 22.3, kernel 7.0.0-31, Samba 4.19.5, BorgBackup 1.4.5, Tailscale 1.102.4. Clients: macOS 26.</p>
 <p><strong>Not done.</strong> A restore from the Time Machine share, and a full restore from Borg onto replacement hardware, have not been tested.</p>
 <p><strong>AI involvement in this post:</strong> drafting was AI-assisted, and the configuration was read and verified with assistance. The design decisions and editorial judgment are the author’s.</p>
@@ -730,7 +771,7 @@ loaded via a namespace (and not attached):
 </div>
 </div>
 <hr>
-<p><em>Rendered on 2026-10-15 at 12:23 PDT.</em><br> <em>Source: ~/prj/ryyblog/posts/sec-five-machine-storage/analysis/report/index.qmd</em></p>
+<p><em>Rendered on 2026-11-16 at 08:57 PST.</em><br> <em>Source: ~/prj/web/ryyblog/posts/sec-five-machine-storage/analysis/report/index.qmd</em></p>
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>

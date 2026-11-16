@@ -2,6 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/sec-backup-failure-forensics/index.html",
+      "/posts/sh-autopush-and-leave-check/index.html",
       "/posts/zc-offload-simulations-home-server/index.html",
       "/posts/sec-fleet-hardening-lessons/index.html",
       "/posts/sec-five-machine-storage/index.html",

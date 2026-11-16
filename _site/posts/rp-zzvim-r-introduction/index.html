@@ -324,7 +324,6 @@ CLAIMS VERIFICATION
 <li>Point readers toward the plugin’s own documentation for installation and full mapping reference, rather than duplicating it here.</li>
 </ol>
 <p><img src="media/images/ambiance1.jpg" class="img-fluid" style="height:3.5in"></p>
-<p><em>A single-purpose instrument that grew a small panel of readings around itself.</em></p>
 </section>
 </section>
 <section id="what-is-zzvim-r" class="level1">
@@ -336,10 +335,8 @@ CLAIMS VERIFICATION
 <p>The original <code>SubmitLine</code> function did one thing: copy the current line, append a newline, send it to the first terminal in <code>term_list()</code>. zzvim-R’s <code>&lt;CR&gt;</code> mapping still sends code to a terminal, but it first inspects the buffer around the cursor to decide what ‘the current expression’ actually is, so pressing Enter inside a multi-line <code>dplyr</code> pipe or an unfinished <code>function()</code> body sends the whole thing, not one fragment of it. Terminal sessions are now tracked per buffer instead of taking whichever terminal happens to be first in the list, which is what makes working across several R projects in one Vim session practical.</p>
 <p>Two capabilities did not exist at all in the prototype. The workspace HUD (<code>&lt;LocalLeader&gt;0</code>) opens a tabbed dashboard over memory usage, loaded data frames, and attached packages, sourced directly from the live R session rather than typed by hand each time. Inline plots go further still: zzvim-R renders a PDF master and a PNG preview and displays the PNG directly in the terminal pane, for the terminals that support it (Kitty, Ghostty, WezTerm, iTerm2), which closes a real gap the original design left completely unaddressed: it had no plot story at all.</p>
 <p><img src="media/images/ambiance2.jpg" class="img-fluid" style="height:3.5in"></p>
-<p><em>A plot resolving into view in the terminal pane, the way a print resolves in a developing tray.</em></p>
 <p>The Docker integration answers the motivation above directly: zzvim-R detects a zzcollab-scaffolded project (via the <code>.zzcollab</code> marker file) and launches R inside the container through <code>make r</code>, using the project’s <code>renv</code> environment, rather than assuming a bare <code>R</code> on the host <code>$PATH</code>.</p>
 <p><img src="media/images/ambiance3.jpg" class="img-fluid" style="height:3.5in"></p>
-<p><em>A self-contained unit that carries its own environment wherever it runs.</em></p>
 </section>
 <section id="how-it-compares" class="level1">
 <h1>How It Compares</h1>

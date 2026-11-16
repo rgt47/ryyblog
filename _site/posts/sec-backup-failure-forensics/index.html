@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Ronald G. Thomas">
+<meta name="dcterms.date" content="2026-11-16">
+<meta name="description" content="A laptop’s Time Machine backups failed for weeks, for four different reasons in turn, and none of them raised an alert. This post works through how each cause was found: pairing failures with sleep events, reading the result code backupd records, checking the server’s firewall log, and the one control that would have caught all of them.">
+
+<title>Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks – focusonr</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-d1f979f567abd94e3c058709025db867.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Open+Sans:ital,wght@0,400;0,600;1,400&amp;family=Fira+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/0fba9333d8.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+<!-- Custom meta tags for social sharing -->
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@rgt47">
+
+<!-- Add responsive features -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Add analytics if needed -->
+<!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXX');
+</script> -->
+
+<!-- Add custom javascript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Remove code tools button completely
+  const codeButton = document.querySelector('.code-tools-button');
+  if (codeButton) {
+    codeButton.remove();
+  }
+
+  // Smooth scrolling for in-page anchor links (skip listing category elements)
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    if (anchor.closest('.quarto-listing-category')) return;
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+});
+</script>
+
+
+<meta property="og:title" content="Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks – focusonr">
+<meta property="og:description" content="A laptop’s Time Machine backups failed for weeks, for four different reasons in turn, and none of them raised an alert. This post works through how each cause was found: pairing failures with sleep events, reading the result code backupd records, checking the server’s firewall log, and the one control that would have caught all of them.">
+<meta property="og:image" content="https://focusonr.org/posts/sec-backup-failure-forensics/media/images/hero.jpg">
+<meta property="og:site_name" content="focusonr">
+<meta name="twitter:title" content="Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks – focusonr">
+<meta name="twitter:description" content="A laptop’s Time Machine backups failed for weeks, for four different reasons in turn, and none of them raised an alert. This post works through how each cause was found: pairing failures with sleep events, reading the result code backupd records, checking the server’s firewall log, and the one control that would have caught all of them.">
+<meta name="twitter:image" content="https://focusonr.org/posts/sec-backup-failure-forensics/media/images/hero.jpg">
+<meta name="twitter:creator" content="@rgt47">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">focusonr</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://rgtlab.org"> 
+<span class="menu-text">rgtlab.org</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/rgt47"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction">Introduction</a>
+  <ul class="collapse">
+  <li><a href="#motivations" id="toc-motivations" class="nav-link" data-scroll-target="#motivations">Motivations</a></li>
+  <li><a href="#objectives" id="toc-objectives" class="nav-link" data-scroll-target="#objectives">Objectives</a></li>
+  </ul></li>
+  <li><a href="#what-is-backup-failure-forensics" id="toc-what-is-backup-failure-forensics" class="nav-link" data-scroll-target="#what-is-backup-failure-forensics">What Is Backup Failure Forensics?</a></li>
+  <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#the-evidence-sources" id="toc-the-evidence-sources" class="nav-link" data-scroll-target="#the-evidence-sources">The Evidence Sources</a></li>
+  <li><a href="#case-1-fourteen-failures-in-a-day" id="toc-case-1-fourteen-failures-in-a-day" class="nav-link" data-scroll-target="#case-1-fourteen-failures-in-a-day">Case 1: Fourteen Failures in a Day</a>
+  <ul class="collapse">
+  <li><a href="#collecting-the-two-records" id="toc-collecting-the-two-records" class="nav-link" data-scroll-target="#collecting-the-two-records">Collecting the two records</a></li>
+  <li><a href="#pairing-each-failure-with-the-nearest-transition" id="toc-pairing-each-failure-with-the-nearest-transition" class="nav-link" data-scroll-target="#pairing-each-failure-with-the-nearest-transition">Pairing each failure with the nearest transition</a></li>
+  <li><a href="#why-the-match-alone-was-not-enough" id="toc-why-the-match-alone-was-not-enough" class="nav-link" data-scroll-target="#why-the-match-alone-was-not-enough">Why the match alone was not enough</a></li>
+  <li><a href="#the-alternatives-tested-the-same-way" id="toc-the-alternatives-tested-the-same-way" class="nav-link" data-scroll-target="#the-alternatives-tested-the-same-way">The alternatives, tested the same way</a></li>
+  <li><a href="#the-fix-and-what-it-did-not-cover" id="toc-the-fix-and-what-it-did-not-cover" class="nav-link" data-scroll-target="#the-fix-and-what-it-did-not-cover">The fix, and what it did not cover</a></li>
+  </ul></li>
+  <li><a href="#case-2-the-corrupted-image" id="toc-case-2-the-corrupted-image" class="nav-link" data-scroll-target="#case-2-the-corrupted-image">Case 2: The Corrupted Image</a></li>
+  <li><a href="#case-3-the-lock-screen" id="toc-case-3-the-lock-screen" class="nav-link" data-scroll-target="#case-3-the-lock-screen">Case 3: The Lock Screen</a>
+  <ul class="collapse">
+  <li><a href="#reading-the-result-code" id="toc-reading-the-result-code" class="nav-link" data-scroll-target="#reading-the-result-code">Reading the result code</a></li>
+  <li><a href="#why-the-earlier-fix-could-not-help" id="toc-why-the-earlier-fix-could-not-help" class="nav-link" data-scroll-target="#why-the-earlier-fix-could-not-help">Why the earlier fix could not help</a></li>
+  <li><a href="#the-fix-after-a-check" id="toc-the-fix-after-a-check" class="nav-link" data-scroll-target="#the-fix-after-a-check">The fix, after a check</a></li>
+  </ul></li>
+  <li><a href="#case-4-the-network-underneath" id="toc-case-4-the-network-underneath" class="nav-link" data-scroll-target="#case-4-the-network-underneath">Case 4: The Network Underneath</a></li>
+  <li><a href="#case-5-the-cloud-copies" id="toc-case-5-the-cloud-copies" class="nav-link" data-scroll-target="#case-5-the-cloud-copies">Case 5: The Cloud Copies</a></li>
+  <li><a href="#the-control-that-covers-all-of-them" id="toc-the-control-that-covers-all-of-them" class="nav-link" data-scroll-target="#the-control-that-covers-all-of-them">The Control That Covers All of Them</a></li>
+  <li><a href="#things-to-watch-out-for" id="toc-things-to-watch-out-for" class="nav-link" data-scroll-target="#things-to-watch-out-for">Things to Watch Out For</a></li>
+  <li><a href="#what-did-we-learn" id="toc-what-did-we-learn" class="nav-link" data-scroll-target="#what-did-we-learn">What Did We Learn?</a>
+  <ul class="collapse">
+  <li><a href="#lessons-learned" id="toc-lessons-learned" class="nav-link" data-scroll-target="#lessons-learned">Lessons Learned</a></li>
+  <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
+  <li><a href="#opportunities-for-improvement" id="toc-opportunities-for-improvement" class="nav-link" data-scroll-target="#opportunities-for-improvement">Opportunities for Improvement</a></li>
+  </ul></li>
+  <li><a href="#wrapping-up" id="toc-wrapping-up" class="nav-link" data-scroll-target="#wrapping-up">Wrapping Up</a></li>
+  <li><a href="#see-also" id="toc-see-also" class="nav-link" data-scroll-target="#see-also">See Also</a></li>
+  <li><a href="#reproducibility" id="toc-reproducibility" class="nav-link" data-scroll-target="#reproducibility">Reproducibility</a></li>
+  <li><a href="#lets-connect" id="toc-lets-connect" class="nav-link" data-scroll-target="#lets-connect">Let’s Connect</a>
+  <ul class="collapse">
+  <li><a href="#related-posts-in-this-cluster" id="toc-related-posts-in-this-cluster" class="nav-link" data-scroll-target="#related-posts-in-this-cluster">Related posts in this cluster</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content column-page-left" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">security</div>
+    <div class="quarto-category">backup</div>
+    <div class="quarto-category">macos</div>
+    <div class="quarto-category">time-machine</div>
+    <div class="quarto-category">linux</div>
+    <div class="quarto-category">troubleshooting</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    A laptop’s Time Machine backups failed for weeks, for four different reasons in turn, and none of them raised an alert. This post works through how each cause was found: pairing failures with sleep events, reading the result code backupd records, checking the server’s firewall log, and the one control that would have caught all of them.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta column-page-left">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Ronald G. Thomas </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">November 16, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="callout callout-style-simple callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Draft
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This post is a work in progress and may change.</p>
+</div>
+</div>
+<!-- ============================================================================
+AUTHOR PROVIDES
+
+  Post 9 of the security series. Owns: the November 2026 backup
+  incidents as a method (evidence sources, time correlation, result
+  codes, mechanism checks). Architecture lives in part 5, the server
+  in part 6, the first audit in part 8.
+  Sources: BACKUP_REVIEW_2026-11-11.md, LAN_ARCHITECTURE.Rmd and
+  BLOG_UPDATE_PLAN.md (C1-C20), all in ~/.local/share/rgtlab/security.
+
+  [x] Draft written 2026-11-16 from the sources above.
+  [x] Images: hero + 3 ambiance generated 2026-11-16 and placed;
+      prompts and model recorded in analysis/media/images/README.md.
+  [ ] Author to confirm wording, tone and title.
+  [ ] Cross-reference: add part 9 to the series lists in the hub and
+      in parts 2-8, and the one-sentence pointer in part 8.
+  [ ] Open items stated as open: the cause of the Google Drive
+      authorization loss; the two-adapter fix on the server.
+  [ ] draft: true until images are placed and HTML renders.
+============================================================================ -->
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+<p><em>Each failure was written down somewhere; the work was putting the records side by side until the cause lined up with the effect.</em></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Part 9 of the security series; start with <a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a> for the overview.</p>
+</div>
+</div>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>Between mid-October and mid-November 2026 the laptop in our fleet, athena, made Time Machine backups to a network share on the home server and, for most of that time, did not complete one. The backups were scheduled every hour, the destination was reachable, and the disk had room. Nothing reported a problem. When the failures were finally examined, they turned out to have four separate causes, each of which hid the next.</p>
+<p>This post is about how those causes were found. The architecture they broke is described in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a> and the server in <a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a>; here the subject is the method. Almost everything needed was already recorded on the two machines: a power-management log on the laptop, the backup daemon’s own log and result codes, and the server’s firewall and Samba logs. The skill was in choosing which records to compare, aligning them in time, and then asking whether a plausible mechanism connected them.</p>
+<section id="motivations" class="level2">
+<h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
+<ul>
+<li>An intermittent failure rarely announces its cause; the failing process reports what broke, not why.</li>
+<li>macOS records far more about a backup than System Settings shows, but in places most users never look.</li>
+<li>A coincidence in time is evidence, not proof, and it is easy to over-read on a machine that changes state constantly.</li>
+<li>Fixing one cause can expose another that was masked all along.</li>
+<li>A method written down once can be reused on the next failure.</li>
+</ul>
+</section>
+<section id="objectives" class="level2">
+<h2 class="anchored" data-anchor-id="objectives">Objectives</h2>
+<ol type="1">
+<li>List the evidence sources on a Mac client and a Linux server, and the commands that read them.</li>
+<li>Show the time-correlation method on a real set of 14 failures, including its limitation.</li>
+<li>Work through four causes in the order they were found: sleep, a corrupted image, the lock screen, and the network.</li>
+<li>Identify the single control that would have caught all of them.</li>
+</ol>
+<p><img src="media/images/ambiance1.jpg" class="img-fluid"></p>
+</section>
+</section>
+<section id="what-is-backup-failure-forensics" class="level1">
+<h1>What Is Backup Failure Forensics?</h1>
+<p>The term is grander than the practice. It means treating a failing backup the way one would treat any intermittent fault: collect the records that both ends keep, put them on one timeline, and look for events that consistently occur together. Three rules kept the work honest:</p>
+<ol type="1">
+<li><strong>Start from the failures, not from a theory.</strong> Extract every failure with its exact time and code before deciding what to compare it with.</li>
+<li><strong>Test the alternatives the same way.</strong> If sleep is the suspect, the server’s network faults, disk errors and session logs should be checked against the same failure times, and recorded as not matching when they do not.</li>
+<li><strong>Require a mechanism.</strong> A timing match on a machine that changes state every few minutes can arise by chance. It becomes persuasive only when the configuration explains <em>how</em> one event causes the other.</li>
+</ol>
+</section>
+<section id="prerequisites" class="level1">
+<h1>Prerequisites</h1>
+<ul>
+<li>Administrator access to the client Mac and the server, ideally over SSH so that logs can be collected from one place.</li>
+<li>On the Mac: the unified log (<code>/usr/bin/log</code>), <code>pmset</code>, <code>tmutil</code>, and <code>defaults</code>.</li>
+<li>On the Linux server: <code>journalctl</code> with access to the kernel and service logs (membership in the <code>adm</code> group suffices for reading), and the firewall’s log.</li>
+<li>A shell that can do date arithmetic. The script below uses the BSD <code>date -j</code> found on macOS.</li>
+</ul>
+</section>
+<section id="the-evidence-sources" class="level1">
+<h1>The Evidence Sources</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Where it is recorded</th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>When did each backup fail, and how?</td>
+<td>the unified log, subsystem <code>com.apple.TimeMachine</code></td>
+<td><code>/usr/bin/log show --info --predicate ...</code></td>
+</tr>
+<tr class="even">
+<td>What was the last result?</td>
+<td>Time Machine’s preferences file</td>
+<td><code>defaults read /Library/Preferences/com.apple.TimeMachine</code></td>
+</tr>
+<tr class="odd">
+<td>When did the Mac sleep and wake?</td>
+<td>the power-management log</td>
+<td><code>pmset -g log</code></td>
+</tr>
+<tr class="even">
+<td>How is sleep configured?</td>
+<td>the active power profile</td>
+<td><code>pmset -g</code></td>
+</tr>
+<tr class="odd">
+<td>Did the server see the session drop?</td>
+<td>the Samba service log</td>
+<td><code>journalctl -u smbd</code></td>
+</tr>
+<tr class="even">
+<td>Did the server block anything?</td>
+<td>the kernel log (firewall entries)</td>
+<td><code>journalctl -k --grep 'UFW BLOCK'</code></td>
+</tr>
+<tr class="odd">
+<td>Did the server’s hardware complain?</td>
+<td>the kernel log</td>
+<td><code>journalctl -k</code></td>
+</tr>
+</tbody>
+</table>
+<p>Two details of the Mac side cost time and are worth knowing in advance.</p>
+<p><strong>zsh has a built-in command named <code>log</code>.</strong> On a Mac whose login shell is zsh, <code>log show ...</code> runs the built-in, which either prints nothing or complains about its arguments. Call the program by its path, <code>/usr/bin/log</code>, every time, including inside scripts run over SSH.</p>
+<p><strong>Successes and failures are logged at different levels.</strong> backupd writes failures at the error level and successes at the <em>info</em> level, which <code>log show</code> omits unless asked. An early count in this investigation reported zero successful backups for a night that in fact had fourteen; the query lacked <code>--info</code>. Every query below includes it.</p>
+</section>
+<section id="case-1-fourteen-failures-in-a-day" class="level1">
+<h1>Case 1: Fourteen Failures in a Day</h1>
+<p>The first examination covered 24 hours. Time Machine had made 24 attempts: 10 succeeded and 14 failed. Twelve failures carried the code <code>BACKUP_FAILED_DISCONNECTED_NETWORK</code> (the SMB session to the server was lost mid-backup), one <code>DISCONNECTED_DISK_IMAGE</code> (the backup image detached), and one <code>TARGETVOL_NOT_MOUNTED</code> (the share was not mounted at the start). The two disconnect codes are logged together when a session drops, so they describe one kind of event, not two.</p>
+<section id="collecting-the-two-records" class="level2">
+<h2 class="anchored" data-anchor-id="collecting-the-two-records">Collecting the two records</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Every Time Machine event of the last day, successes included.</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">/usr/bin/log</span> show <span class="at">--last</span> 24h <span class="at">--style</span> compact <span class="at">--info</span> <span class="dt">\</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predicate</span> <span class="st">'subsystem == "com.apple.TimeMachine"'</span> <span class="op">&gt;</span> tm24.log</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># One line per sleep or wake transition.</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">pmset</span> <span class="at">-g</span> log <span class="kw">|</span> <span class="fu">grep</span> <span class="st">'Delays to Sleep notifications'</span> <span class="op">&gt;</span> pmsleep.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The <code>Delays to Sleep notifications</code> record is written by the kernel on every power transition, so it serves as a clean list of moments when the machine went to sleep or woke.</p>
+</section>
+<section id="pairing-each-failure-with-the-nearest-transition" class="level2">
+<h2 class="anchored" data-anchor-id="pairing-each-failure-with-the-nearest-transition">Pairing each failure with the nearest transition</h2>
+<p>The script pairs every failure with the closest power transition and prints the offset in seconds:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># corr.sh tm24.log pmsleep.txt</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="va">tm</span><span class="op">=</span><span class="st">"</span><span class="va">$1</span><span class="st">"</span><span class="kw">;</span> <span class="va">ps</span><span class="op">=</span><span class="st">"</span><span class="va">$2</span><span class="st">"</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">to_epoch()</span> <span class="kw">{</span> <span class="fu">date</span> <span class="at">-j</span> <span class="at">-f</span> <span class="st">'%Y-%m-%d %H:%M:%S'</span> <span class="st">"</span><span class="va">$1</span><span class="st">"</span> <span class="st">'+%s'</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">'BackupDispatching\] Backup failed'</span> <span class="st">"</span><span class="va">$tm</span><span class="st">"</span> <span class="kw">|</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="bu">read</span> <span class="at">-r</span> <span class="va">d</span> <span class="va">t</span> <span class="va">rest</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="va">f</span><span class="op">=</span><span class="st">"</span><span class="va">$d</span><span class="st"> </span><span class="va">${t</span><span class="op">%</span>.<span class="pp">*</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="va">fe</span><span class="op">=</span><span class="va">$(</span><span class="ex">to_epoch</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="va">best</span><span class="op">=</span><span class="st">''</span><span class="kw">;</span> <span class="va">bestd</span><span class="op">=</span>999999</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">while</span> <span class="bu">read</span> <span class="at">-r</span> <span class="va">sd</span> <span class="va">st</span> <span class="va">_</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="va">se</span><span class="op">=</span><span class="va">$(</span><span class="ex">to_epoch</span> <span class="st">"</span><span class="va">$sd</span><span class="st"> </span><span class="va">$st</span><span class="st">"</span><span class="va">)</span><span class="kw">;</span> <span class="va">diff</span><span class="op">=</span><span class="va">$((</span> <span class="va">se</span> <span class="op">-</span> <span class="va">fe</span> <span class="va">))</span><span class="kw">;</span> <span class="va">ad</span><span class="op">=</span><span class="va">${diff</span><span class="op">#</span>-<span class="va">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$ad</span><span class="st">"</span> <span class="ot">-lt</span> <span class="st">"</span><span class="va">$bestd</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="va">bestd</span><span class="op">=</span><span class="va">$ad</span><span class="kw">;</span> <span class="va">best</span><span class="op">=</span><span class="st">"</span><span class="va">$sd</span><span class="st"> </span><span class="va">$st</span><span class="st"> (</span><span class="va">${diff}</span><span class="st">s)"</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">done</span> <span class="op">&lt;</span> <span class="st">"</span><span class="va">$ps</span><span class="st">"</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"</span><span class="va">$f</span><span class="st"> </span><span class="va">$(</span><span class="bu">echo</span> <span class="st">"</span><span class="va">$rest</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-oE</span> <span class="st">'BACKUP_[A-Z_]+'</span><span class="va">)</span><span class="st"> </span><span class="va">$best</span><span class="st">"</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>It is quadratic and slow, and for a day’s records that does not matter. The result:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Failure</th>
+<th>Code</th>
+<th>Nearest transition</th>
+<th>Offset</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>08:09:14</td>
+<td>NETWORK</td>
+<td>08:09:07</td>
+<td>-7 s</td>
+</tr>
+<tr class="even">
+<td>11:47:39</td>
+<td>NETWORK</td>
+<td>11:47:27</td>
+<td>-12 s</td>
+</tr>
+<tr class="odd">
+<td>11:58:47</td>
+<td>DISK_IMAGE</td>
+<td>11:58:06</td>
+<td>-41 s</td>
+</tr>
+<tr class="even">
+<td>12:25:17</td>
+<td>NETWORK</td>
+<td>12:25:22</td>
+<td>+5 s</td>
+</tr>
+<tr class="odd">
+<td>14:57:44</td>
+<td>NETWORK</td>
+<td>14:57:33</td>
+<td>-11 s</td>
+</tr>
+<tr class="even">
+<td>17:08:30</td>
+<td>NETWORK</td>
+<td>17:08:15</td>
+<td>-15 s</td>
+</tr>
+<tr class="odd">
+<td>17:27:19</td>
+<td>TARGETVOL_NOT_MOUNTED</td>
+<td>17:27:32</td>
+<td>+13 s</td>
+</tr>
+<tr class="even">
+<td>17:36:31</td>
+<td>NETWORK</td>
+<td>17:36:37</td>
+<td>+6 s</td>
+</tr>
+<tr class="odd">
+<td>18:05:54</td>
+<td>NETWORK</td>
+<td>18:05:59</td>
+<td>+5 s</td>
+</tr>
+<tr class="even">
+<td>18:14:50</td>
+<td>NETWORK</td>
+<td>18:14:49</td>
+<td>-1 s</td>
+</tr>
+<tr class="odd">
+<td>19:57:06</td>
+<td>NETWORK</td>
+<td>19:57:05</td>
+<td>-1 s</td>
+</tr>
+<tr class="even">
+<td>20:16:58</td>
+<td>NETWORK</td>
+<td>20:17:04</td>
+<td>+6 s</td>
+</tr>
+<tr class="odd">
+<td>22:12:19</td>
+<td>NETWORK</td>
+<td>22:12:20</td>
+<td>+1 s</td>
+</tr>
+<tr class="even">
+<td>22:28:43</td>
+<td>NETWORK</td>
+<td>22:28:49</td>
+<td>+6 s</td>
+</tr>
+</tbody>
+</table>
+<p>All 14 failures fell within 41 seconds of a sleep or wake transition, and 13 within 15 seconds.</p>
+</section>
+<section id="why-the-match-alone-was-not-enough" class="level2">
+<h2 class="anchored" data-anchor-id="why-the-match-alone-was-not-enough">Why the match alone was not enough</h2>
+<p>The same power log showed why this result needed care. The laptop was changing state constantly: the log for the period consisted almost entirely of short dark wakes (the background wakes that Power Nap schedules) and the sleeps that ended them, each lasting from under a minute to about a quarter of an hour. On a machine that changes power state that often, <em>any</em> list of events will sit fairly close to some transition. The correlation was verified, but by itself it could not separate cause from coincidence.</p>
+<p>What made it persuasive was the mechanism, read from the configuration:</p>
+<ul>
+<li>On mains power the system was set to sleep after <strong>one minute</strong> of user idle (<code>pmset -c sleep 1</code>). Backups therefore ran mostly inside dark wakes.</li>
+<li>backupd holds an assertion that prevents <em>idle</em> sleep, but that assertion does not stop the <em>maintenance</em> sleep that ends a dark wake.</li>
+<li>The SMB session to the share does not survive sleep (<code>networkoversleep 0</code>). On the next wake, backupd found its mount gone and failed.</li>
+</ul>
+</section>
+<section id="the-alternatives-tested-the-same-way" class="level2">
+<h2 class="anchored" data-anchor-id="the-alternatives-tested-the-same-way">The alternatives, tested the same way</h2>
+<p>Three other candidates were checked against the same failure times, on the server:</p>
+<ul>
+<li><strong>The server’s Wi-Fi.</strong> Its kernel logged one fault event from the internal wireless adapter in the window, and it fell between two failures, not at one.</li>
+<li><strong>The server’s backup disk.</strong> No USB reset, I/O error or file-system error was logged for the drive.</li>
+<li><strong>The server’s Samba sessions.</strong> smbd opened and closed sessions for the backup account in step with the laptop’s wake cycles: the server side of the same disconnects, not an independent cause.</li>
+</ul>
+</section>
+<section id="the-fix-and-what-it-did-not-cover" class="level2">
+<h2 class="anchored" data-anchor-id="the-fix-and-what-it-did-not-cover">The fix, and what it did not cover</h2>
+<p>The fix was one line on the laptop:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pmset <span class="at">-c</span> sleep 0   <span class="co"># on mains power, never sleep on idle</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The next night, backups completed every hour without a gap while the lid was open. Then the lid was closed in the morning, and three more failures followed. Each coincided <em>to the second</em> with a dark wake out of the resulting clamshell sleep: <code>sleep 0</code> disables idle sleep only, and a MacBook with its lid shut and no external display sleeps regardless.</p>
+<p><code>sudo pmset -a disablesleep 1</code> would have closed that gap, and it was applied and then reversed five minutes later. It keeps the machine awake on every power source and with the lid closed, and athena is also carried in a bag, where it must be able to sleep. The settled arrangement is an operating rule, the lid stays open while the laptop sits at its desk, plus one more setting: Power Nap off (<code>sudo pmset -a powernap 0</code>), so that a closed-lid laptop sleeps fully instead of waking to start backups it cannot finish.</p>
+</section>
+</section>
+<section id="case-2-the-corrupted-image" class="level1">
+<h1>Case 2: The Corrupted Image</h1>
+<p>Power Nap was turned off because of what it had already done. With the lid closed overnight, it kept waking the laptop for short windows; Time Machine started a network backup in each, and each was cut off when the window ended. Those interrupted writes accumulated in the hours before the backup image on the share was found corrupt, and they are the likely cause.</p>
+<p>The recovery took three steps, in an order that kept the old history available:</p>
+<ol type="1">
+<li>The damaged image was detached by restarting the laptop, because a read-only consistency check (<code>fsck_apfs</code>) was holding it open.</li>
+<li>On the server, the image was renamed with a <code>.corrupt-&lt;date&gt;</code> suffix and made read-only (<code>chmod -R a-w</code>), so that files from the old history could still be recovered from it if needed.</li>
+<li>Time Machine started a fresh full backup into a new image.</li>
+</ol>
+<p>The plan for the old image, at 454 GB, is to keep it until the new one has completed and been verified. Deleting it sooner would discard the only history from before the fault.</p>
+<p><img src="media/images/ambiance2.jpg" class="img-fluid"></p>
+</section>
+<section id="case-3-the-lock-screen" class="level1">
+<h1>Case 3: The Lock Screen</h1>
+<p>The fresh full backup did not complete. For two days every hourly attempt ran for a while, copied data, and then failed: 19 attempts in a row. The disconnects of Case 1 were gone. Something else was failing, and the unified log’s usual failure line did not say what.</p>
+<section id="reading-the-result-code" class="level2">
+<h2 class="anchored" data-anchor-id="reading-the-result-code">Reading the result code</h2>
+<p>Time Machine keeps the outcome of the last run in its preferences file, per destination:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">defaults</span> read /Library/Preferences/com.apple.TimeMachine <span class="kw">|</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'RESULT|SnapshotDates'</span> <span class="at">-A2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The field holds only the last run’s result, and it read <code>RESULT = 80</code>; backupd’s log showed the same outcome for all 19 attempts. The code is not explained in System Settings, but backupd’s log names it when a run ends: <code>BACKUP_FAILED_DEVICE_LOCKED</code>. The same log lists the files it could not read, one line each, which made the cause concrete:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The files a run could not read. Use the path; zsh has a builtin log.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">/usr/bin/log</span> show <span class="at">--last</span> 2h <span class="at">--style</span> compact <span class="at">--info</span> <span class="dt">\</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predicate</span> <span class="st">'eventMessage BEGINSWITH "Failed to backup"'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>There were 255 of them, in two places: the cached attachments of an Exchange calendar (<code>~/Library/Group Containers/group.com.apple.calendar/Attachments</code>) and four containers belonging to the Find My widgets. macOS protects these with data protection, so they cannot be read while the user session is locked, and backupd treats one unreadable file as a failed backup. The data had been copied each time; the run was then marked failed in its last step.</p>
+</section>
+<section id="why-the-earlier-fix-could-not-help" class="level2">
+<h2 class="anchored" data-anchor-id="why-the-earlier-fix-could-not-help">Why the earlier fix could not help</h2>
+<p>The operating rule from Case 1 keeps the lid open, and an open lid keeps the Mac <em>awake</em>. It does not keep the session <em>unlocked</em>: the screen still locks when the machine is idle, as it should. The sleep fix had removed the failure that ended every run early; with runs now lasting long enough to reach their final step, the lock-screen failure became visible for the first time.</p>
+</section>
+<section id="the-fix-after-a-check" class="level2">
+<h2 class="anchored" data-anchor-id="the-fix-after-a-check">The fix, after a check</h2>
+<p>Excluding the five folders from Time Machine was the obvious remedy, but an exclusion is only safe if nothing in the folders is unique. Two checks came first:</p>
+<ul>
+<li>Calendar’s database listed 976 attachment records for the Exchange account, and every one belonged to an event that still existed, so each attachment’s original lived on the server.</li>
+<li>A sample attachment was opened from the server, through the calendar, on two different Macs.</li>
+</ul>
+<p>The four Find My widget containers were excluded on the same reasoning but were not examined separately. Then:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tmutil</span> addexclusion <span class="dt">\</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  ~/Library/Group\ Containers/group.com.apple.calendar/Attachments</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># and the same for each of the four Find My widget containers</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">tmutil</span> isexcluded <span class="dt">\</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  ~/Library/Group\ Containers/group.com.apple.calendar/Attachments</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Without <code>-p</code>, <code>tmutil addexclusion</code> marks the folder itself, and the mark travels with it; <code>tmutil isexcluded</code> is the right check. The next run, with the screen unlocked, completed: the first completed backup in three days. From then on backups completed every hour, nineteen in a row by the next morning, including through the night with the display off and the session locked, and the log recorded no failures. That the session stayed locked all night is inferred from the display log and from a query in the morning, which found it locked; but before the exclusions, every run under a locked session had failed.</p>
+</section>
+</section>
+<section id="case-4-the-network-underneath" class="level1">
+<h1>Case 4: The Network Underneath</h1>
+<p>Two server-side conditions were found along the way. Neither caused the failures above, but both made the backups more fragile.</p>
+<p><strong>The firewall hid the share.</strong> Time Machine found its destination by Bonjour name, and macOS sends some Bonjour queries to the server’s unicast address rather than to the multicast group. The server’s default-deny firewall dropped them: its log showed blocked packets on UDP port 5353 from the laptop, and over the same day the laptop logged 105 failures to resolve the share’s Bonjour name. One firewall rule allowing port 5353 from the LAN fixed it. Over the next day the server blocked no such packets, and the laptop’s resolution failures fell from 105 to 10. The symptom was on the client and the cause on the server, which is why both logs had to be read.</p>
+<p><strong>Two Wi-Fi adapters on one network.</strong> The server, a laptop without an Ethernet port, had two wireless adapters joined to the same network. Each held its own address and default route, the preferred route switched between them every 10 to 20 minutes, and with Linux’s default ARP settings either adapter answered for either address. Pings from the laptop ranged from 7 to 117 ms. This was never isolated as the cause of a particular failure; the fix, a single wired interface, is described in <a href="../sec-five-machine-storage/">part 6</a> and is still pending.</p>
+</section>
+<section id="case-5-the-cloud-copies" class="level1">
+<h1>Case 5: The Cloud Copies</h1>
+<p>The same review found the nightly cloud copies failing for reasons unrelated to Time Machine but identical in one respect: nobody was told. Over one week the Google Drive jobs on the two main Macs failed on a per-minute query quota, a lapsed login, a night when neither Mac could resolve Google’s hosts at 02:00, and finally authorizations that stopped working on both Macs on the same night. Each failure was recorded in the job’s log and in launchd’s exit status. The details and fixes are in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>; the cause of the simultaneous authorization loss is still unknown.</p>
+</section>
+<section id="the-control-that-covers-all-of-them" class="level1">
+<h1>The Control That Covers All of Them</h1>
+<p>Before any of the cases above, the backup history already held the plainest evidence. <code>tmutil listbackups</code> showed no completed backup between 15 October and 5 November, a gap of 21 days, and a second gap of nearly two days later in November. Time Machine keeps daily backups for a month, so a backup made in those periods would still have been listed; the gaps were real. Nothing reported either one.</p>
+<p>The four cases share a property: each produced an error in some log, but no single error check would have covered all of them, because each failed in a different way and backupd reported only one cause at a time. What they had in common was their effect, a growing age of the newest completed backup. That is the quantity to alert on.</p>
+<p>A small script now runs daily at noon on the laptop. It reads the completion dates that backupd records in its preferences file (which remain available while the network share is unmounted, unlike <code>tmutil latestbackup</code>), and sends a push notification when the newest is more than 26 hours old. Its log line is the whole story:</p>
+<pre class="text"><code>2026-11-15 12:00:04 last='2026-11-15 19:23:26 +0000' age=0h max=26h</code></pre>
+<p>Had it been installed in October, it would have reported the 21-day gap on its second day.</p>
+</section>
+<section id="things-to-watch-out-for" class="level1">
+<h1>Things to Watch Out For</h1>
+<ol type="1">
+<li><strong><code>log</code> in zsh is not <code>/usr/bin/log</code>.</strong> Use the full path, especially over SSH.</li>
+<li><strong>Omitting <code>--info</code> hides every success.</strong> A failure count without the matching success count can mislead badly.</li>
+<li><strong>A timing match on a busy machine is weak evidence alone.</strong> Look for the mechanism in the configuration, and test the alternatives against the same times.</li>
+<li><strong><code>pmset sleep 0</code> does not stop clamshell sleep.</strong> A closed lid sleeps the machine whatever the idle setting says.</li>
+<li><strong>Awake is not unlocked.</strong> Files under data protection fail a backup while the session is locked; read <code>RESULT</code> and the ‘Failed to backup’ lines.</li>
+<li><strong>Check before excluding.</strong> An exclusion is safe only for data whose original lives somewhere else; verify that it does.</li>
+<li><strong>Preserve a damaged image before starting over.</strong> Rename it and make it read-only; it holds the only earlier history.</li>
+</ol>
+<p><img src="media/images/ambiance3.jpg" class="img-fluid"></p>
+</section>
+<section id="what-did-we-learn" class="level1">
+<h1>What Did We Learn?</h1>
+<section id="lessons-learned" class="level2">
+<h2 class="anchored" data-anchor-id="lessons-learned">Lessons Learned</h2>
+<ul>
+<li><strong>The records existed; the alerting did not.</strong> Every cause in this post was written down by the machines at the time it happened.</li>
+<li><strong>A backup reports one failure at a time.</strong> Fixing sleep exposed the lock screen, because runs finally lasted long enough to reach it.</li>
+<li><strong>Correlation narrows the search; mechanism settles it.</strong> The timing table pointed at sleep, and the power configuration explained why.</li>
+<li><strong>Read both ends.</strong> The Bonjour failures were visible on the client and caused on the server.</li>
+<li><strong>Alert on the outcome, not on each cause.</strong> A staleness check catches causes that have not been discovered yet.</li>
+</ul>
+</section>
+<section id="limitations" class="level2">
+<h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
+<ul>
+<li>The correlation used a single day of data from one laptop on one network, and the base-rate question was answered by mechanism, not by a statistical test.</li>
+<li>That the laptop stayed locked all night during the confirming run is inferred, not observed.</li>
+<li>The staleness alert has run on schedule, but no backup has been stale since it was installed, so a delivered notification has not yet been observed.</li>
+<li>The server’s two-adapter problem remains, and the cause of the cloud authorization loss is unknown.</li>
+<li>No restore from the new backup image has been tested yet.</li>
+</ul>
+</section>
+<section id="opportunities-for-improvement" class="level2">
+<h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
+<ol type="1">
+<li>Force one staleness alert (by setting the age limit to zero) to confirm that the notification arrives.</li>
+<li>Extend staleness alerting to the cloud copies, which still rely on a manual check.</li>
+<li>Turn the correlation script into a reusable tool that takes any two timestamped logs.</li>
+<li>Run Time Machine’s backup verification on the new image, and restore one file from it.</li>
+<li>Give the server a single wired interface.</li>
+</ol>
+</section>
+</section>
+<section id="wrapping-up" class="level1">
+<h1>Wrapping Up</h1>
+<p>The laptop’s backups failed for four reasons in turn: an idle-sleep timer that cut sessions short, interrupted writes that corrupted the image, protected files that could not be read while the screen was locked, and a firewall that hid the share from Bonjour. Each was found by reading records the machines already kept, aligned in time and checked against a mechanism. None was reported when it happened.</p>
+<p>Main takeaways:</p>
+<ul>
+<li>Extract failures with exact times and codes first; then decide what to compare them with.</li>
+<li>On a Mac, <code>/usr/bin/log show --info</code>, <code>pmset -g log</code> and the <code>RESULT</code> field in Time Machine’s preferences answer most questions.</li>
+<li>Treat a timing match as a lead, and confirm it in the configuration.</li>
+<li>Keep a damaged backup read-only until its replacement is verified.</li>
+<li>Alert on the age of the newest good backup.</li>
+</ul>
+</section>
+<section id="see-also" class="level1">
+<h1>See Also</h1>
+<p>Security series:</p>
+<ol type="1">
+<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a></li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+<li>Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks (this post)</li>
+</ol>
+<p>External references:</p>
+<ul>
+<li><a href="https://ss64.com/mac/pmset.html"><code>pmset</code> manual page</a>: power settings, including <code>sleep</code>, <code>powernap</code> and <code>disablesleep</code>.</li>
+<li><a href="https://ss64.com/mac/tmutil.html"><code>tmutil</code> manual page</a>: exclusions and backup listings.</li>
+<li><a href="https://ntfy.sh">ntfy</a>: the push-notification service the alerts use.</li>
+</ul>
+</section>
+<section id="reproducibility" class="level1">
+<h1>Reproducibility</h1>
+<p><strong>What was checked.</strong> The failure counts, codes and the correlation table come from the laptop’s unified log and power log for 2026-11-10 to 2026-11-11, collected and analyzed on 2026-11-11 with the script above; the server-side checks (kernel, Samba and firewall logs) were read on the same day. The lid-closed failures and the clamshell sleep event are from the follow-up on 2026-11-12. The lock-screen result code, the ‘Failed to backup’ lines, the calendar-attachment check, the exclusions and the first completed backup are from 2026-11-15; the overnight confirmation is from 2026-11-16. Times are Pacific. Addresses and account names are omitted.</p>
+<p><strong>Not done.</strong> No restore from the new backup image has been tested, and the staleness alert’s notification has not been observed.</p>
+<p><strong>AI involvement in this post:</strong> the investigation’s commands were run with AI assistance, and drafting was AI-assisted from the investigation’s notes. The choice of fixes, the operating rule and the editorial judgment are the author’s.</p>
+<p><strong>Session information:</strong></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS Tahoe 26.6.2
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Los_Angeles
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] htmlwidgets_1.6.4 compiler_4.6.0    fastmap_1.2.0     cli_3.6.6        
+ [5] tools_4.6.0       htmltools_0.5.9   parallel_4.6.0    otel_0.2.0       
+ [9] yaml_2.3.12       rmarkdown_2.31    knitr_1.51        jsonlite_2.0.0   
+[13] xfun_0.62         digest_0.6.39     rlang_1.2.0       evaluate_1.0.5   </code></pre>
+</div>
+</div>
+<hr>
+<p><em>Rendered on 2026-11-16 at 09:39 PST.</em><br> <em>Source: ~/prj/web/ryyblog/posts/sec-backup-failure-forensics/analysis/report/index.qmd</em></p>
+<!-- ============================================================================
+PRE-PUBLISH QA CHECKLIST
+
+  [ ] No real LAN or tailnet addresses, ntfy topic, Syncthing device
+      IDs, password-store entry names, or account identifiers.
+  [ ] Every figure traceable to BACKUP_REVIEW_2026-11-11.md or
+      LAN_ARCHITECTURE.Rmd.
+  [x] Images placed and uncommented; images README completed.
+  [ ] Code lines within 78 characters.
+  [ ] Series lists in other posts updated to include part 9.
+  [ ] PDF and HTML render cleanly.
+============================================================================ -->
+</section>
+<section id="lets-connect" class="level1">
+<h1>Let’s Connect</h1>
+<p><em>Questions, suggestions, or corrections are welcome.</em></p>
+<ul>
+<li><strong>GitHub:</strong> <a href="https://github.com/rgt47">rgt47</a></li>
+<li><strong>Twitter/X:</strong> <a href="https://twitter.com/rgt47"><span class="citation" data-cites="rgt47">@rgt47</span></a></li>
+<li><strong>LinkedIn:</strong> <a href="https://linkedin.com/in/rgthomaslab">Ronald Glenn Thomas</a></li>
+<li><strong>Email:</strong> <a href="https://rgtlab.org/contact">Contact form</a></li>
+</ul>
+<p>I would like to hear from you if:</p>
+<ul>
+<li>You find an error, or a better approach to anything in this series.</li>
+<li>You have chased an intermittent backup failure and found a better way to line up the evidence.</li>
+<li>You want to compare notes on backups, secrets, or reproducible research infrastructure.</li>
+</ul>
+<section id="related-posts-in-this-cluster" class="level2">
+<h2 class="anchored" data-anchor-id="related-posts-in-this-cluster">Related posts in this cluster</h2>
+<p>This post is part of the <em>Security</em> series. Recommended reading order:</p>
+<ol type="1">
+<li><a href="../sec-multi-laptop-threat-model/">Security Foundations for a Multi-Machine Research Fleet</a></li>
+<li><a href="../sec-pass-password-manager/">Setting Up pass: a Unix Password Manager</a></li>
+<li><a href="../sec-aws-and-pass-secrets/">Secrets Management for the Workflow Construct</a></li>
+<li><a href="../sec-dropbox-to-portable-sync/">Migrating Off Dropbox: Beyond Dotfiles</a></li>
+<li><a href="../sec-three-tier-backup-architecture/">Research Backup Architecture: Borg, Cloud Copies, and Time Machine</a></li>
+<li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
+<li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
+<li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+<li><strong>Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks</strong> (this post)</li>
+</ol>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/focusonr\.org");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Ronald G. Thomas.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/rgt47/ryyblog">
+      <i class="bi bi-github" role="img" aria-label="Source on GitHub">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+<!-- Fix category filtering. itemValues.categories is always a base64+URI-
+     encoded comma-joined blob and must be decoded before comparing. The
+     incoming `category` argument's encoding is NOT reliable: Quarto's own
+     native click path decodes it to plain text before calling
+     filterListingCategory, but other call sites (older cached scripts,
+     manual calls, other Quarto builds) pass the raw base64 data-category
+     value instead. A word like "docker" also happens to be valid-shaped
+     base64, so blindly re-decoding an already-plain-text argument silently
+     corrupts it rather than failing loudly. Match against both
+     interpretations instead of guessing which one applies. -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    function decodeCategory(value) {
+      try {
+        return decodeURIComponent(atob(value));
+      } catch (e) {
+        return value;
+      }
+    }
+
+    window.filterListingCategory = function(category) {
+      const listingIds = Object.keys(window['quarto-listings']);
+      for (const listingId of listingIds) {
+        const list = window['quarto-listings'][listingId];
+        if (list) {
+          if (category === '') {
+            list.filter();
+          } else {
+            const decodedTarget = decodeCategory(category);
+            list.filter(function (item) {
+              const itemValues = item.values();
+              if (itemValues.categories !== null && itemValues.categories !== undefined) {
+                const categories = decodeCategory(itemValues.categories)
+                  .split(",")
+                  .map(c => c.trim());
+                return categories.includes(category) || categories.includes(decodedTarget);
+              } else {
+                return false;
+              }
+            });
+          }
+        }
+      }
+    };
+  }, 500);
+});
+</script>
+
+<!-- PDF view/download button for blog posts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Only add the button on post pages
+  if (window.location.pathname.includes('/posts/') && !window.location.pathname.endsWith('/posts/') && !window.location.pathname.endsWith('/posts/index.html')) {
+    var currentPath = window.location.pathname;
+    // Handle both /posts/name/ and /posts/name/index.html formats
+    var pdfPath;
+    if (currentPath.endsWith('/')) {
+      pdfPath = currentPath + 'index.pdf';
+    } else {
+      pdfPath = currentPath.replace('.html', '.pdf');
+    }
+
+    // Check if PDF exists first
+    fetch(pdfPath, { method: 'HEAD' })
+      .then(function(response) {
+        if (response.ok) {
+          // PDF exists, show download button
+          showDownloadButton(pdfPath);
+        }
+        // If PDF doesn't exist, don't show any button
+      })
+      .catch(function(error) {
+        // Error checking PDF, don't show any button
+      });
+  }
+});
+
+function showDownloadButton(pdfPath) {
+  var downloadBtn = document.createElement('div');
+  downloadBtn.className = 'pdf-download-button';
+
+  // Get file size if possible
+  fetch(pdfPath, { method: 'HEAD' })
+    .then(function(response) {
+      var size = response.headers.get('Content-Length');
+      var sizeText = '';
+
+      if (size) {
+        // Convert to MB or KB
+        var sizeInMB = size / (1024 * 1024);
+        if (sizeInMB >= 1) {
+          sizeText = ' (' + sizeInMB.toFixed(1) + ' MB)';
+        } else {
+          sizeText = ' (' + (size / 1024).toFixed(0) + ' KB)';
+        }
+      }
+
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' + sizeText +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    })
+    .catch(function() {
+      // Basic fallback if we can't get file size
+      downloadBtn.innerHTML =
+        '<div class="alert alert-secondary d-flex align-items-center p-3" role="alert">' +
+        '  <a href="' + pdfPath + '" class="btn btn-primary btn-sm me-3" target="_blank">' +
+        '    <i class="bi bi-file-pdf me-1"></i> Download PDF' +
+        '  </a>' +
+        '  <span class="small text-muted">View or save a printer-friendly version of this article</span>' +
+        '</div>';
+    });
+
+  // Find where to insert the button (right after the title block)
+  var titleBlock = document.querySelector('.quarto-title-meta');
+  if (titleBlock) {
+    titleBlock.after(downloadBtn);
+  }
+}
+
+
+</script>
+
+<style>
+.pdf-download-button {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+</style>
+
+
+
+
+</body></html>

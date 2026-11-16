@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <ul class="collapse">
   <li><a href="#design-1" id="toc-design-1" class="nav-link" data-scroll-target="#design-1">Design</a></li>
   <li><a href="#the-wrapper" id="toc-the-wrapper" class="nav-link" data-scroll-target="#the-wrapper">The wrapper</a></li>
-  <li><a href="#two-hazards-of-rclone-sync" id="toc-two-hazards-of-rclone-sync" class="nav-link" data-scroll-target="#two-hazards-of-rclone-sync">Two hazards of <code>rclone sync</code></a></li>
+  <li><a href="#hazards-of-rclone-sync" id="toc-hazards-of-rclone-sync" class="nav-link" data-scroll-target="#hazards-of-rclone-sync">Hazards of <code>rclone sync</code></a></li>
   </ul></li>
   <li><a href="#tier-3-time-machine" id="toc-tier-3-time-machine" class="nav-link" data-scroll-target="#tier-3-time-machine">Tier 3: Time Machine</a></li>
   <li><a href="#restore-testing" id="toc-restore-testing" class="nav-link" data-scroll-target="#restore-testing">Restore Testing</a></li>
@@ -249,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <li><a href="#a-partial-backup-looks-like-a-successful-one" id="toc-a-partial-backup-looks-like-a-successful-one" class="nav-link" data-scroll-target="#a-partial-backup-looks-like-a-successful-one">A partial backup looks like a successful one</a></li>
   <li><a href="#a-job-can-fail-every-night-without-anyone-noticing" id="toc-a-job-can-fail-every-night-without-anyone-noticing" class="nav-link" data-scroll-target="#a-job-can-fail-every-night-without-anyone-noticing">A job can fail every night without anyone noticing</a></li>
   <li><a href="#the-network-is-part-of-the-backup" id="toc-the-network-is-part-of-the-backup" class="nav-link" data-scroll-target="#the-network-is-part-of-the-backup">The network is part of the backup</a></li>
+  <li><a href="#a-fix-can-expose-the-next-failure" id="toc-a-fix-can-expose-the-next-failure" class="nav-link" data-scroll-target="#a-fix-can-expose-the-next-failure">A fix can expose the next failure</a></li>
   <li><a href="#a-fix-needs-checking-on-every-machine-it-touches" id="toc-a-fix-needs-checking-on-every-machine-it-touches" class="nav-link" data-scroll-target="#a-fix-needs-checking-on-every-machine-it-touches">A fix needs checking on every machine it touches</a></li>
   <li><a href="#settings-chosen-once-cannot-be-changed-later" id="toc-settings-chosen-once-cannot-be-changed-later" class="nav-link" data-scroll-target="#settings-chosen-once-cannot-be-changed-later">Settings chosen once cannot be changed later</a></li>
   </ul></li>
@@ -327,8 +328,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <p>This post is a work in progress and may change.</p>
 </div>
 </div>
-<!--
-AUTHOR NOTES
+<!-- ============================================================================
+AUTHOR PROVIDES
+
   Post 5 of the security series. Owns: the backup architecture (Borg,
   cloud copies, Time Machine policy), retention, restore testing,
   monitoring, and the backup incidents as lessons. Server-side detail
@@ -337,14 +339,43 @@ AUTHOR NOTES
   sec-fleet-hardening-lessons.
   Configuration excerpts are trimmed from the scripts in use; account
   names and addresses are replaced with placeholders.
--->
+
+  [x] Correction of 2026-11-16 drafted from BLOG_UPDATE_PLAN.md
+      (C1-C20) and LAN_ARCHITECTURE.Rmd.
+  [ ] Open items written as open; revisit when settled: off-site Borg
+      target (C9), password-store mirror remedy (C10), first prune
+      date (C8), cause of the Google Drive token loss (C15), Time
+      Machine under a locked session (C14), athena's Drive client ID
+      and the duplicate objects (C5).
+  [ ] Author to confirm the correction's wording and tone.
+  [x] Images: hero + 3 ambiance present in media/images/.
+============================================================================ -->
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
-<figcaption>Three identical small wooden boxes stacked in a staggered row on a shelf, each a different size.</figcaption>
+<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 <p><em>Three copies, two kinds of media, one off site: the rule is old, and the hard part is knowing that all three are still current.</em></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Updated 2026-11-16">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Updated 2026-11-16
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A review of the fleet’s backups in November found failures this post did not anticipate, and some of its statements are no longer true. The changes, made in the body below:</p>
+<ul>
+<li><strong>Monitoring.</strong> Borg now sends a push notification when a run fails, and Time Machine has a staleness alert. The cloud copies still have no alert, and they were the tier that failed most.</li>
+<li><strong>Tier 2.</strong> Three new hazards: authorizations that expire silently, a mirror that faithfully copies an empty source, and manual runs that leave no log. The wrapper now refuses an empty source and caps deletions per run, and stores links instead of following them.</li>
+<li><strong>Tier 3.</strong> Time Machine needs a client that is awake and unlocked. A sleep timer and then the lock screen each broke it, one sleep-interrupted night corrupted the backup image, and an earlier 21-day gap with no completed backup went unnoticed.</li>
+<li><strong>Retention.</strong> The repositories’ current size, and the first quarterly prune, which is not yet due.</li>
+<li><strong>What broke</strong> and <strong>Things to Watch Out For</strong> gain the November incidents. The off-site Borg copy remains open.</li>
+</ul>
+</div>
+</div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
 <p>A research workstation accumulates material that cannot be regenerated: analysis code between commits, derived datasets that took days to compute, manuscripts in progress, and the credentials that unlock everything else. Version control protects some of this, but only what has been committed and pushed, and only the files that belong in a repository. A backup architecture covers the rest.</p>
@@ -387,6 +418,7 @@ Note
 <li>Old archives are pruned on a documented schedule without placing decryption keys on the storage host.</li>
 <li>Each tier is verified by restoring from it, and each job’s exit status is checked daily on every machine.</li>
 </ol>
+<p><img src="media/images/ambiance1.jpg" class="img-fluid"></p>
 </section>
 </section>
 <section id="what-is-a-research-backup-architecture" class="level1">
@@ -523,19 +555,16 @@ Host mercury
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> compact <span class="st">"</span><span class="va">$REPO</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Fourteen daily archives, eight weekly, twelve monthly, and three yearly: roughly two weeks of fine-grained history, a year of monthly checkpoints, and a few years of annual ones.</p>
 <p>The policy runs <strong>manually, once a quarter</strong>, on the machine that holds each repository, not over the append-only path. This is a deliberate trade. Automating the prune would require each repository’s passphrase in a file on the storage host, which gives up the property that the server cannot decrypt what it stores. A small script, <code>borg-prune</code>, makes the manual step cheap and safe: it prompts for the passphrase (read from <code>pass</code> on a machine that already holds it), lists the archives, shows a dry run of what the policy would delete, requires typing <code>YES</code>, and only then prunes and compacts. The pass over all five repositories is a standing item in the quarterly audit described in the <a href="../sec-multi-laptop-threat-model/">series overview</a>.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
-<figcaption>A single external hard drive resting on a desk beside a coiled cable and a small paper luggage tag.</figcaption>
-</figure>
-</div>
+<p>In November 2026 the four client repositories on the server held about 90 GiB together, the largest 33 GiB. They were created in September, so the first quarterly pass falls in December and has not yet run. One practical gap surfaced while checking: <code>borg-prune</code> had been installed only on julia, so it must be copied to the server before that first pass.</p>
+<p><img src="media/images/ambiance2.jpg" class="img-fluid"></p>
 </section>
 </section>
 <section id="tier-2-cloud-copies-with-rclone" class="level1">
 <h1>Tier 2: Cloud Copies with rclone</h1>
 <section id="design-1" class="level2">
 <h2 class="anchored" data-anchor-id="design-1">Design</h2>
-<p>The two machines where most project work happens, julia and athena, each mirror <code>~/prj</code> nightly to Google Drive, iCloud Drive, and a personal OneDrive account. joe and zeus have no cloud job; Borg covers them, and three copies of two machines’ projects are enough off-site redundancy.</p>
+<p>The two machines where most project work happens, julia and athena, each mirror <code>~/prj</code> nightly to Google Drive, iCloud Drive, and a personal OneDrive account. joe and zeus have no cloud job; Borg covers them, and three copies of two machines’ projects are enough off-site redundancy. The same job also mirrors the password store (<code>~/.password-store</code>, without its git history) to each provider, so that the store has a copy outside the house to match the offline copy of the key that decrypts it.</p>
+<p>The three providers do not work alike. Google Drive and OneDrive are rclone remotes, reached over their APIs, and a run spends most of its time listing folders. iCloud Drive is a local folder (<code>~/Library/Mobile Documents/com~apple~CloudDocs</code>) that macOS uploads in the background, so rclone’s part is a comparison between two folders on the same disk. A nightly iCloud run that compares about 22,000 files finishes in a few seconds, which is expected; whether iCloud has finished uploading is a separate question that rclone cannot answer.</p>
 <p>Two decisions shape this tier:</p>
 <ul>
 <li><strong>One destination per machine.</strong> Each machine syncs to its own folder, for example <code>backup/prj-julia</code> and <code>backup/prj-athena</code>. <code>rclone sync</code> makes the destination an exact mirror of the source, including deletions. When two machines mirrored their own slightly different copies of <code>~/prj</code> to the same folder, each run undid the other’s, and neither copy was ever complete.</li>
@@ -553,32 +582,46 @@ Host mercury
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># icloud and onedrive follow the same pattern</span></span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">esac</span></span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># -E 75: a held lock means an earlier run is still going. Without it</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># flock exits 1 silently, and a skipped night looks like a failure.</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="va">rc</span><span class="op">=</span>0</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="ex">/opt/homebrew/bin/flock</span> <span class="at">-n</span> <span class="at">-E</span> 75 <span class="st">"</span><span class="va">$lock</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  /opt/homebrew/bin/rclone sync <span class="at">-L</span> <span class="st">"</span><span class="va">$PRJ_ROOT</span><span class="st">"</span> <span class="st">"</span><span class="va">$dest</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">--backup-dir</span> <span class="st">"</span><span class="va">$deleted</span><span class="st">/</span><span class="va">$(</span><span class="fu">date</span> +%Y-%m-%d<span class="va">)</span><span class="st">"</span> <span class="dt">\</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/.cache/**"</span> <span class="dt">\</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/node_modules/**"</span> <span class="dt">\</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/.venv/**"</span> <span class="dt">\</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/renv/library/**"</span> <span class="dt">\</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="va">$@</span><span class="st">"</span> <span class="kw">||</span> <span class="va">rc</span><span class="op">=</span><span class="va">$?</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$rc</span><span class="st">"</span> <span class="ot">-eq</span> 75 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"</span><span class="va">$(</span><span class="fu">date</span> <span class="st">'+%Y/%m/%d %H:%M:%S'</span><span class="va">)</span><span class="st"> backup-remote: </span><span class="va">$target</span><span class="st"> run"</span> <span class="dt">\</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"skipped: an earlier run still holds </span><span class="va">$lock</span><span class="st">"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> <span class="st">"</span><span class="va">$rc</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The lock prevents two runs to the same destination from overlapping, which matters because the first upload to a provider can take many hours. The exit code 75 (<code>EX_TEMPFAIL</code>) makes a skipped run visible in <code>launchctl list</code> and leaves a dated line in the log.</p>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># rclone sync mirrors an empty source faithfully; refuse to start.</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">-z</span> <span class="st">"</span><span class="va">$(</span><span class="fu">ls</span> <span class="at">-A</span> <span class="st">"</span><span class="va">$PRJ_ROOT</span><span class="st">"</span> <span class="dv">2</span><span class="op">&gt;</span>/dev/null<span class="va">)</span><span class="st">"</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"backup-remote: </span><span class="va">$target</span><span class="st"> refused: </span><span class="va">$PRJ_ROOT</span><span class="st"> is empty"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="bu">exit</span> 3</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># -E 75: a held lock means an earlier run is still going. Without it</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="co"># flock exits 1 silently, and a skipped night looks like a failure.</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="va">rc</span><span class="op">=</span>0</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="ex">/opt/homebrew/bin/flock</span> <span class="at">-n</span> <span class="at">-E</span> 75 <span class="st">"</span><span class="va">$lock</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  /opt/homebrew/bin/rclone sync <span class="at">--links</span> <span class="st">"</span><span class="va">$PRJ_ROOT</span><span class="st">"</span> <span class="st">"</span><span class="va">$dest</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">--retries</span> 1 <span class="dt">\</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">--max-delete</span> <span class="st">"</span><span class="va">${BACKUP_REMOTE_MAX_DELETE</span><span class="op">:-</span>6000<span class="va">}</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">--backup-dir</span> <span class="st">"</span><span class="va">$deleted</span><span class="st">/</span><span class="va">$(</span><span class="fu">date</span> +%Y-%m-%d<span class="va">)</span><span class="st">"</span> <span class="dt">\</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/.cache/**"</span> <span class="dt">\</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/node_modules/**"</span> <span class="dt">\</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/.venv/**"</span> <span class="dt">\</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">--exclude</span> <span class="st">"**/renv/library/**"</span> <span class="dt">\</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="st">"</span><span class="va">$@</span><span class="st">"</span> <span class="kw">||</span> <span class="va">rc</span><span class="op">=</span><span class="va">$?</span></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$rc</span><span class="st">"</span> <span class="ot">-eq</span> 75 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"</span><span class="va">$(</span><span class="fu">date</span> <span class="st">'+%Y/%m/%d %H:%M:%S'</span><span class="va">)</span><span class="st"> backup-remote: </span><span class="va">$target</span><span class="st"> run"</span> <span class="dt">\</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">"skipped: an earlier run still holds </span><span class="va">$lock</span><span class="st">"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span> <span class="st">"</span><span class="va">$rc</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The lock prevents two runs to the same destination from overlapping, which matters because the first upload to a provider can take many hours. The exit code 75 (<code>EX_TEMPFAIL</code>) makes a skipped run visible in <code>launchctl list</code> and leaves a dated line in the log. The full script also waits up to five minutes for the provider’s login host to answer before starting, puts a time limit on each run, and ends every run with a line <code>backup-remote: &lt;target&gt; finished rc=N</code>, because rclone itself writes nothing on a clean run.</p>
 </section>
-<section id="two-hazards-of-rclone-sync" class="level2">
-<h2 class="anchored" data-anchor-id="two-hazards-of-rclone-sync">Two hazards of <code>rclone sync</code></h2>
+<section id="hazards-of-rclone-sync" class="level2">
+<h2 class="anchored" data-anchor-id="hazards-of-rclone-sync">Hazards of <code>rclone sync</code></h2>
 <p><strong>Cache directories.</strong> The excludes are not an optimization. One night’s Google Drive run went more than fifteen hours without finishing because it was uploading tens of thousands of small files from R package caches, which the provider deliberately throttles. The excludes now match the categories Borg already skips.</p>
-<p><strong>Symlinks and the deletion guard.</strong> <code>-L</code> follows symbolic links, which the project tree uses for shortcuts between repositories. If rclone hits any listing error during a run, it skips <strong>all deletions</strong> for that run as a safety measure, and logs <code>not deleting files as there were IO errors</code>. A single broken or self-referencing link anywhere in <code>~/prj</code> therefore disables deletion permanently and silently: files removed or renamed locally are never removed from the mirror, which grows without bound. A student repository containing a link that pointed to itself did exactly this on every machine that held it. The remedy is to scan for such links before uninstalling or moving anything:</p>
+<p><strong>Symlinks and the deletion guard.</strong> The wrapper originally used <code>-L</code>, which follows symbolic links; the project tree uses them for shortcuts between repositories. If rclone hits any listing error during a run, it skips <strong>all deletions</strong> for that run as a safety measure, and logs <code>not deleting files as there were IO errors</code>. A single broken or self-referencing link anywhere in <code>~/prj</code> therefore disabled deletion permanently and silently: files removed or renamed locally were never removed from the mirror, which grew without bound. A student repository containing a link that pointed to itself did exactly this on every machine that held it. Following links also copied every linked folder twice, since all of them pointed inside <code>~/prj</code>.</p>
+<p>Since November 2026 the wrapper uses <code>--links</code> instead, which stores each link as a small <code>.rclonelink</code> file and recreates it on restore. A loop can no longer stall a run. The trade is that a link pointing <em>outside</em> <code>~/prj</code> is now stored as the link only, so its target needs some other backup. A scan for broken links remains cheap enough for the quarterly audit:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Links that loop or point nowhere, under the backed-up tree.</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> <span class="at">-L</span> ~/prj <span class="at">-type</span> l <span class="dv">2</span><span class="op">&gt;</span>/dev/null</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>find -L</code> reports links it cannot resolve; it is cheap enough to run in the quarterly audit.</p>
+<p><strong>Authorizations expire silently.</strong> In November the Google Drive authorizations on both Macs stopped working on the same night (<code>invalid_grant</code>), and the nightly jobs failed in seconds, for one night on julia and two on athena. Earlier in the month the same jobs had failed on a lapsed login (HTTP 401) and, on athena, on Google’s per-minute query quota (HTTP 403). The quota failures came from rclone’s built-in client identifier, which every rclone user shares; julia already used a dedicated one and athena did not. Each failure was recorded in launchd and in the log, and none was noticed for days. Authorizing each remote again fixed both, and the next scheduled runs succeeded. The common cause is not yet known. One candidate to rule out first: a Google Cloud OAuth client left in <em>testing</em> status issues refresh tokens that expire after seven days. A dead authorization is cheap to detect before the night’s run:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fails within seconds if the remote's authorization is gone.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> about gdrive: <span class="op">&gt;</span>/dev/null <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> ok</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>An empty source is mirrored faithfully.</strong> <code>rclone sync</code> makes the destination match the source, so an empty or half-empty <code>~/prj</code>, from a failed restore or a mistaken move, would move the mirror into the dated <code>_deleted</code> folder and report success. The files would survive until the cleanup script deleted that folder for good, ninety days later. The wrapper now refuses to start when <code>~/prj</code> is missing or empty, and caps deletions per run with <code>--max-delete</code>. rclone counts the moves that <code>--backup-dir</code> makes against the cap, and stops the run with exit code 7 when it is reached. The cap is set at about a quarter of the 22,000 files synced, since deliberate cleanups have removed up to 5,500 files in a night; a larger cleanup needs one manual run with the cap raised.</p>
+<p><strong>Manual runs leave no record.</strong> The wrapper writes to standard error, and only the launchd job redirects that to the log the daily check reads. A run started by hand to recover from a failure leaves the log showing the failure, and it prints nothing until rclone finishes, so it looks hung. Recovery runs should append to the same log: <code>backup-remote gdrive 2&gt;&gt;~/Library/Logs/rclone-prj-gdrive.log</code>.</p>
+<p><strong>Duplicate names on Google Drive.</strong> Google Drive allows two files with the same name in one folder; most file systems do not. rclone skips such duplicates with a notice, every night, and still exits 0. julia’s mirror carried several hundred of them in November. <code>rclone dedupe</code> resolves them, and its interactive mode shows each pair before acting.</p>
 </section>
 </section>
 <section id="tier-3-time-machine" class="level1">
@@ -597,22 +640,35 @@ Host mercury
 </ul>
 <p><code>/Applications</code> and <code>/Library</code> stay in: with a minimal application set they are small, and they are what makes a restored system usable without reinstalling everything.</p>
 <p>Exclusions are applied with <code>tmutil</code>, scripted so they can be reviewed and re-applied:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tmutil addexclusion <span class="at">-p</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/Downloads"</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tmutil addexclusion <span class="at">-p</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/Library/Metadata/CoreSpotlight"</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># -p records a fixed path. Check the result with:</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">defaults</span> read /Library/Preferences/com.apple.TimeMachine SkipPaths</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tmutil addexclusion <span class="at">-p</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/Downloads"</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tmutil addexclusion <span class="at">-p</span> <span class="st">"</span><span class="va">$HOME</span><span class="st">/Library/Metadata/CoreSpotlight"</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># -p records a fixed path. Check the result with:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">defaults</span> read /Library/Preferences/com.apple.TimeMachine SkipPaths</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>One trap: <code>tmutil isexcluded</code> reports a path as excluded if any parent is excluded. Once a parent such as <code>/Library</code> is included again, a script that relied on <code>isexcluded</code> to decide “already handled” will skip children that now need their own exclusion. Check the <code>SkipPaths</code> list or the item’s own exclusion attribute instead.</p>
 <p><strong>Exclusions in a mail account folder are per account.</strong> Excluding the whole Mail folder would have dropped a local “On My Mac” mailbox that held recovered messages existing nowhere else. Exclude only the folder of an account whose mail is held on its server.</p>
+<p><strong>Time Machine needs an awake client.</strong> In November athena’s hourly backups failed 14 times in one day. Pairing each failure with the nearest sleep or wake event in <code>pmset -g log</code> showed that all 14 fell within 41 seconds of one. On mains power the laptop was set to sleep after one minute idle (<code>pmset -c sleep 1</code>), so backups ran inside the brief dark wakes that Power Nap schedules, and the next sleep broke the SMB session to the share. The assertion backupd takes to prevent idle sleep does not stop the maintenance sleep that ends a dark wake. The fix was one line:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pmset <span class="at">-c</span> sleep 0   <span class="co"># on mains power, never sleep on idle</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pmset</span> <span class="at">-g</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'^ *(sleep|powernap)'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Disabling sleep altogether (<code>pmset -a disablesleep 1</code>) was tried and reversed: it also keeps the machine awake with the lid closed, and a laptop carried in a bag must be able to sleep. The operating rule is instead that athena’s lid stays open while it sits at its desk. Power Nap was turned off as well, because with the lid closed it kept starting backups it could not finish, and one night of those cut-off writes left the backup image corrupt. The damaged image was set aside read-only for its history, and a fresh full backup started the next morning. The server contributed a smaller fault: its firewall was dropping the unicast Bonjour queries athena used to find the share (see <a href="../sec-five-machine-storage/">part 6</a>).</p>
+<p><strong>And an unlocked one.</strong> The sleep fix did not produce a completed backup. For two days every hourly run copied its data and then failed with result code 80, which backupd’s log names <code>BACKUP_FAILED_DEVICE_LOCKED</code>. Under macOS data protection some files cannot be read while the user session is locked, and one unreadable file fails the whole backup. Here there were 255 of them: cached Exchange calendar attachments (<code>~/Library/Group Containers/group.com.apple.calendar/Attachments</code>) and four Find My widget containers. An open lid keeps a Mac awake, not unlocked, so the operating rule did not help. The five folders were excluded with <code>tmutil addexclusion</code>, after checking that nothing in them was unique: every cached attachment belonged to an event on the Exchange server, and a sample opened from the server on two machines. Backups then completed every hour, including overnight with the screen locked.</p>
+<p>The result code and the reason are both on the machine, though neither is shown in System Settings:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Last result for each destination: 0 is success; 80 means files</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># could not be read because the session was locked.</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">defaults</span> read /Library/Preferences/com.apple.TimeMachine <span class="kw">|</span> <span class="fu">grep</span> RESULT</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The files that failed. zsh has a builtin named log; use the path.</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">/usr/bin/log</span> show <span class="at">--last</span> 2h <span class="at">--style</span> compact <span class="dt">\</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predicate</span> <span class="st">'eventMessage BEGINSWITH "Failed to backup"'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Each fix exposed the next failure, and backupd reported only one at a time: sleep first, then the lock screen. That is why the control that matters for this tier is the staleness alert described under <a href="#monitoring">Monitoring</a>, which catches any cause, including ones not yet found.</p>
 </section>
 <section id="restore-testing" class="level1">
 <h1>Restore Testing</h1>
 <p>A backup that has never been restored is a hypothesis. Each tier has a cheap test that belongs in the quarterly audit:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Borg: list archives, verify repository consistency, and restore a</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># known file into a scratch directory.</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> list <span class="st">"</span><span class="va">$REPO</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-3</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> check <span class="at">--repository-only</span> <span class="st">"</span><span class="va">$REPO</span><span class="st">"</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /tmp/restore-test <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> /tmp/restore-test</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> extract <span class="st">"</span><span class="va">$REPO</span><span class="st">::julia-20261001-020000"</span> Users/me/docs/notes.md</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Borg: list archives, verify repository consistency, and restore a</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># known file into a scratch directory.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> list <span class="st">"</span><span class="va">$REPO</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-3</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> check <span class="at">--repository-only</span> <span class="st">"</span><span class="va">$REPO</span><span class="st">"</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /tmp/restore-test <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> /tmp/restore-test</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">borg</span> extract <span class="st">"</span><span class="va">$REPO</span><span class="st">::julia-20261001-020000"</span> Users/me/docs/notes.md</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li><strong>Borg.</strong> Pick a file that changed recently, restore it from the latest archive and from one a month old, and compare. Run <code>borg check</code> on each repository at least quarterly; a full <code>borg check --verify-data</code> reads every chunk and is worth an occasional overnight run.</li>
 <li><strong>Cloud copies.</strong> Download a recently modified file from each provider and compare its checksum with the local file. Restore one file from a dated <code>_deleted</code> folder to confirm <code>--backup-dir</code> is working.</li>
@@ -622,27 +678,28 @@ Host mercury
 </section>
 <section id="monitoring" class="level1">
 <h1>Monitoring</h1>
-<p>There is no alerting in this fleet. The practice that replaces it is a short daily check of every job’s last exit status and the freshness of its log, <strong>on every machine, including the Linux ones</strong>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS: the second column is the last exit status.</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">launchctl</span> list <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'borg|rclone'</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux: the result of the last timer run.</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> show <span class="at">-p</span> Result,ExecMainStatus borg-backup.service</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Either: the newest Borg log and its final lines.</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="va">f</span><span class="op">=</span><span class="va">$(</span><span class="fu">ls</span> <span class="at">-t</span> ~/.borg/log/backup-<span class="pp">*</span>.log <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span><span class="kw">;</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'^=== '</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>A status of 0 everywhere and a log dated today is the whole check. Anything else gets read. The useful property of launchd’s exit status column is that it already recorded every failure described below; nobody was looking at it. Automating this check, so that a non-zero status or a stale log produces a message, is the most valuable improvement left in the design.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
-<figcaption>The UCSD Geisel Library at dusk.</figcaption>
-</figure>
-</div>
+<p>When this post was first written there was no alerting in this fleet. There is now some, and the gaps in it are instructive:</p>
+<ul>
+<li><strong>Borg alerts on failure.</strong> Since October the backup script sends a push notification through <a href="https://ntfy.sh">ntfy</a> when a run ends with an error or is aborted. The topic name is the only credential, so it is kept in a file outside the script and out of version control.</li>
+<li><strong>Time Machine alerts on staleness.</strong> A small script, run daily at noon by launchd, reads the completion dates backupd records in its preferences file and sends a notification when the newest is more than 26 hours old. It reads the preferences rather than calling <code>tmutil latestbackup</code>, which returns nothing while the network destination is unmounted, and that is most of the time. A staleness check catches failures that report no error at all, which is why it, rather than a failure hook, suits this tier.</li>
+<li><strong>The cloud copies do not alert.</strong> They were the tier that failed most in November, for the reasons above.</li>
+</ul>
+<p>The practice that covers the rest is a short daily check of every job’s last exit status and the freshness of its log, <strong>on every machine, including the Linux ones</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># macOS: the second column is the last exit status.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">launchctl</span> list <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'borg|rclone'</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Linux: the result of the last timer run.</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> <span class="at">--user</span> show <span class="at">-p</span> Result,ExecMainStatus borg-backup.service</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Either: the newest Borg log and its final lines.</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="va">f</span><span class="op">=</span><span class="va">$(</span><span class="fu">ls</span> <span class="at">-t</span> ~/.borg/log/backup-<span class="pp">*</span>.log <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span><span class="kw">;</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'^=== '</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>A status of 0 everywhere and a log dated today is the whole check. Anything else gets read. The useful property of launchd’s exit status column is that it already recorded every failure described below; nobody was looking at it. Extending the alerts to the cloud copies, so that a non-zero status or a stale log there also produces a message, is the most valuable improvement left in the design.</p>
+<p><img src="media/images/ambiance3.jpg" class="img-fluid"></p>
 </section>
 <section id="what-broke" class="level1">
 <h1>What broke, and how it was found</h1>
-<p>Every incident below was found by reading logs or exit statuses, most during the first <a href="../sec-fleet-hardening-lessons/">quarterly audit</a>. They are grouped by the lesson they teach.</p>
+<p>Every incident below was found by reading logs or exit statuses, most during the first <a href="../sec-fleet-hardening-lessons/">quarterly audit</a> and the rest in a review of the backups in November 2026. They are grouped by the lesson they teach.</p>
 <section id="a-partial-backup-looks-like-a-successful-one" class="level2">
 <h2 class="anchored" data-anchor-id="a-partial-backup-looks-like-a-successful-one">A partial backup looks like a successful one</h2>
 <ul>
@@ -656,12 +713,22 @@ Host mercury
 <li><strong>A job that never ran.</strong> A newly added OneDrive job on julia called a script through <code>~/bin</code>, a folder of links into the dotfiles repository, and the two new links had never been created. launchd recorded exit status 78 (program not found) every night.</li>
 <li><strong>A job silently unloaded.</strong> After a restart, julia’s Borg agent was no longer loaded in launchd. The job file was intact; the job simply was not scheduled. It was loaded again with <code>launchctl bootstrap</code>.</li>
 <li><strong>Invisible skips.</strong> Before the <code>-E 75</code> change, a cloud run that found the lock held exited 1 and wrote nothing, indistinguishable from a real failure. julia’s Google Drive copy skipped three nights this way while a long manual run held the lock.</li>
+<li><strong>Three weeks without a laptop backup</strong> <em>(November 2026)</em>. athena completed no Time Machine backup between mid-October and early November, a gap of 21 days, and nothing reported it. It came to light in a review of the backup history in November.</li>
+<li><strong>Expired cloud authorizations</strong> <em>(November 2026)</em>. The Google Drive jobs on both Macs failed for one and two nights on revoked or expired authorizations, after earlier nights lost to a lapsed login and a query quota. Described under Tier 2.</li>
 </ul>
 </section>
 <section id="the-network-is-part-of-the-backup" class="level2">
 <h2 class="anchored" data-anchor-id="the-network-is-part-of-the-backup">The network is part of the backup</h2>
 <ul>
 <li><strong>An address change broke Borg on three machines.</strong> The home server rebooted and received new LAN addresses from the router. athena, joe, and zeus still pointed at the old address, and their Borg runs failed with connection timeouts for several nights. julia was unaffected because it already used the server’s Tailscale address. The first fix updated <code>~/.ssh/config</code> and the runs still failed, because the Borg script reads its own <code>~/.borg/ssh_config</code>. The Linux laptop was found a day after the Macs, because the first status check covered only the Macs. All machines now use the Tailscale address in both files. Before trusting the new address, each machine confirmed that the server’s host key matched the key previously recorded for the old one.</li>
+<li><strong>A night without DNS</strong> <em>(November 2026)</em>. launchd starts a missed job the moment a Mac wakes. On one night both Macs woke for the 02:00 Google Drive job before name resolution was working, and both runs failed in seconds with <code>no such host</code>. The wrapper now waits up to five minutes for the provider’s login host to answer.</li>
+<li><strong>A firewall that hid the share</strong> <em>(November 2026)</em>. The server’s firewall dropped the unicast Bonjour queries that Time Machine uses to find its destination, and athena logged over a hundred failed lookups. One firewall rule fixed it.</li>
+</ul>
+</section>
+<section id="a-fix-can-expose-the-next-failure" class="level2">
+<h2 class="anchored" data-anchor-id="a-fix-can-expose-the-next-failure">A fix can expose the next failure</h2>
+<ul>
+<li><strong>Sleep, then the lock screen</strong> <em>(November 2026)</em>. Fixing athena’s sleep timer did not produce a completed Time Machine backup; it revealed a second, unrelated failure that backupd had been unable to report while the first one ended every run. See Tier 3.</li>
 </ul>
 </section>
 <section id="a-fix-needs-checking-on-every-machine-it-touches" class="level2">
@@ -685,12 +752,17 @@ Host mercury
 <li><strong>A general key in <code>~/.ssh/config</code> defeats a restricted key</strong> unless the backup uses <code>ssh -F</code> with <code>IdentitiesOnly yes</code>.</li>
 <li><strong><code>--append-only</code> means prune from the server.</strong> A client-side prune appears to succeed and reclaims nothing.</li>
 <li><strong>Borg’s exit code 1 is not a failure,</strong> and a missing include path is not an error. Read the <code>WARNING</code> lines, not just the exit code.</li>
-<li><strong><code>rclone sync -L</code> and broken links.</strong> One listing error disables deletions for the run. Scan for loops before moving or uninstalling anything under the backed-up tree.</li>
+<li><strong><code>rclone sync -L</code> and broken links.</strong> One listing error disables deletions for the run. Prefer <code>--links</code>; if links must be followed, scan for loops before moving or uninstalling anything under the backed-up tree.</li>
 <li><strong>Never point two machines at the same <code>rclone sync</code> destination.</strong></li>
 <li><strong>Time Machine encryption is a setup-time choice.</strong></li>
 <li><strong><code>tmutil isexcluded</code> follows parents.</strong> Check <code>SkipPaths</code> instead.</li>
 <li><strong>Scheduled jobs can disappear.</strong> Check that every agent or timer is still loaded, not only that its last run succeeded.</li>
 <li><strong>A Mac’s night job may run in a dark wake without a network.</strong> Wait or retry before failing.</li>
+<li><strong>Time Machine on a laptop needs it awake.</strong> Check the sleep timer on mains power (<code>pmset -g</code>) and Power Nap; a one-minute timer puts backups inside dark wakes that end mid-run.</li>
+<li><strong>…and unlocked.</strong> Files under data protection fail the whole backup while the session is locked. Read the <code>RESULT</code> code and backupd’s log, and exclude protected caches whose originals live on a server, after checking that they do.</li>
+<li><strong>Cloud authorizations expire without warning.</strong> <code>rclone about &lt;remote&gt;:</code> is a one-second test of whether a remote still works.</li>
+<li><strong><code>rclone sync</code> mirrors an empty source.</strong> Refuse to start on an empty source, and cap deletions with <code>--max-delete</code>.</li>
+<li><strong>Google Drive permits duplicate names.</strong> rclone skips them and still reports success; <code>rclone dedupe</code> resolves them.</li>
 </ol>
 </section>
 <section id="what-did-we-learn" class="level1">
@@ -703,26 +775,30 @@ Host mercury
 <li><strong>Separation of keys is cheap and effective.</strong> Per-host repositories, restricted append-only keys, and passphrases kept off the storage host mean that no single machine can destroy or read the whole fleet’s history.</li>
 <li><strong>Manual retention is an acceptable price</strong> for keeping decryption keys off the server, provided it is on a schedule.</li>
 <li><strong>Stable addressing belongs to the backup design.</strong> Scripted traffic should use addresses that do not change when a router reassigns a lease.</li>
+<li><strong>A backup reports one failure at a time.</strong> Each fix to athena’s Time Machine uncovered the next fault. An alert on staleness, which fires whatever the cause, is worth more than any single fix.</li>
 </ul>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>
 <ul>
-<li>No automated alerting. Detection depends on someone running the daily check.</li>
+<li>Alerting is partial. Borg failures and a stale Time Machine backup produce a notification; a failing cloud copy still depends on someone running the daily check.</li>
 <li>The cloud tier covers only the project tree of two machines. The remaining home-directory content of every machine has two copies (the original and Borg), both in the same house, plus Time Machine for the laptop.</li>
 <li>The Borg repositories and the Time Machine share sit on the same server. A fire or theft at home leaves the cloud copies of the project tree as the only surviving tier.</li>
 <li>Restores are tested file by file; a full bare-metal restore is the test that matters most and the one least often performed.</li>
-<li>rclone’s default Google Drive client identifier is shared and throttled; a dedicated API client is the durable configuration.</li>
+<li>rclone’s default Google Drive client identifier is shared and throttled; a dedicated API client is the durable configuration. julia has one; athena does not yet.</li>
+<li>The cloud copies of the password store keep every entry encrypted, but the file names, which name the accounts, are readable by the provider.</li>
+<li>Laptop backups depend on an operating rule (lid open at the desk), not on configuration alone.</li>
 </ul>
 </section>
 <section id="opportunities-for-improvement" class="level2">
 <h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
 <ol type="1">
-<li>A daily monitoring job that reports any non-zero exit status, any unloaded agent, or any log older than a day, on every machine.</li>
-<li>Connectivity checks with retry at the start of each backup script.</li>
-<li>An off-site copy of the Borg repositories themselves (for example, a second encrypted repository at a cloud provider), which would close the single-site limitation for the whole fleet.</li>
+<li>A daily monitoring job that reports any non-zero exit status, any unloaded agent, or any log older than a day, starting with the cloud copies, which have no alert at all.</li>
+<li>Connectivity checks with retry at the start of each backup script. The cloud jobs now wait for the network; the Borg script does not.</li>
+<li>An off-site copy of the Borg repositories themselves, which would close the single-site limitation for the whole fleet. At about 90 GiB and growing nightly, the repositories would nearly fill the free space on the fleet’s Google Drive account, so the candidate is a dedicated Borg host that supports append-only keys. No choice has been made.</li>
 <li>A scripted quarterly restore drill that extracts a fixed sample of files from each tier and compares checksums.</li>
 <li>The <code>flock</code> dependency made optional, so a missing lock tool degrades to a warning.</li>
+<li>An encrypted rclone remote (<code>crypt</code>) for the password-store copy, which would hide its file names from the provider.</li>
 </ol>
 </section>
 </section>
@@ -736,6 +812,7 @@ Host mercury
 <li>Give each machine its own cloud destination and keep deleted files with <code>--backup-dir</code>.</li>
 <li>Choose Time Machine encryption when adding the destination; it cannot be added later.</li>
 <li>Check every job’s exit status on every machine daily, and restore from every tier quarterly.</li>
+<li>Alert on staleness as well as on failure; a backup that stops without an error is the kind that goes unnoticed longest.</li>
 </ul>
 </section>
 <section id="see-also" class="level1">
@@ -750,6 +827,7 @@ Host mercury
 <li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
 <li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
 <li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+<li><a href="../sec-backup-failure-forensics/">Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks</a></li>
 </ol>
 <p>External references:</p>
 <ul>
@@ -761,7 +839,7 @@ Host mercury
 </section>
 <section id="reproducibility" class="level1">
 <h1>Reproducibility</h1>
-<p>The configuration excerpts are trimmed from the scripts in use on 2026-10-01; account names, addresses, and some excludes are replaced or omitted.</p>
+<p>The configuration excerpts are trimmed from the scripts in use on 2026-10-01, updated on 2026-11-16; account names, addresses, and some excludes are replaced or omitted.</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -797,6 +875,20 @@ Host mercury
 </tbody>
 </table>
 <p>The restore commands in the Restore Testing section use an illustrative archive name and path; substitute a real archive from <code>borg list</code>. Commands that require <code>sudo</code> are marked as such.</p>
+<hr>
+<p><em>Rendered on 2026-11-16 at 08:54 PST.</em><br> <em>Source: ~/prj/web/ryyblog/posts/sec-three-tier-backup-architecture/analysis/report/index.qmd</em></p>
+<!-- ============================================================================
+PRE-PUBLISH QA CHECKLIST
+
+  [ ] No real LAN or tailnet addresses, ntfy topic, Syncthing device
+      IDs, password-store entry names, or account identifiers.
+  [ ] Every November claim traceable to BLOG_UPDATE_PLAN.md (C1-C20)
+      or LAN_ARCHITECTURE.Rmd; open items stated as open.
+  [ ] Code lines within 78 characters.
+  [ ] Correction callout matches the body changes.
+  [ ] PDF renders cleanly; hero at 80%, three ambiance images.
+  [ ] HTML renders in a full site build.
+============================================================================ -->
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>

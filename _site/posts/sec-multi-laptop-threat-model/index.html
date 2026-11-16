@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 </div>
 <!-- ============================================================================
-AUTHOR NOTES
+AUTHOR PROVIDES
 
 Series hub (part 1 of 8). Owns: the fleet table, the threat model, the
 control set mapped to threats (one link per control to its owning
@@ -334,18 +334,42 @@ Images: hero.jpg, ambiance1.jpg (after Objectives), ambiance2.jpg
 (after the control set), ambiance3.jpg (before What Did We Learn?).
 Configuration artifacts: analysis/configs/security-audit.sh (macOS
 subset of an earlier checklist), analysis/configs/gpg-agent.conf.
+
+  [x] Correction of 2026-11-16 (BLOG_UPDATE_PLAN.md 4.5): alerting,
+      audit items 20-24, the November backup failures.
+  [ ] Add a control for ~/docs synchronization (Syncthing) once part 4
+      describes it and the rationale is confirmed (plan C7).
+  [ ] Add an off-site Borg control once the target is chosen (C9).
+  [ ] Add part 9 to The Series and See Also if it is written.
 ============================================================================ -->
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="media/images/hero.jpg" class="img-fluid figure-img" style="width:80.0%"></p>
-<figcaption>A pair of identical brass padlocks, one open and one locked, resting side by side on a dark stone surface.</figcaption>
+<p><img src="media/images/hero.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 <p><em>A credential store is only as strong as the machine it runs on, the key that unlocks it, and the habits that surround both.</em></p>
+<div class="callout callout-style-default callout-note callout-titled" title="Updated 2026-11-16">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Updated 2026-11-16
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A review of the fleet’s backups in November 2026 found new failures, and the series’ backup monitoring has changed since this post was written. The changes, made in the body below:</p>
+<ul>
+<li><strong>Alerting.</strong> Borg now sends a notification when a run fails, and Time Machine has a staleness alert. The cloud copies still rely on the manual check.</li>
+<li><strong>Audit checklist.</strong> Five backup items added (20 to 24): cloud authorizations, cloud run results, the laptop’s sleep and Time Machine status, the folders excluded for the lock screen, and the date of the last Borg prune.</li>
+<li><strong>Why the Backup Items Exist</strong> and <strong>Limitations</strong> updated to match.</li>
+</ul>
+</div>
+</div>
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
 <p>A research workflow that spans several machines multiplies both its conveniences and its exposures. Each machine holds a copy of the dotfiles, the project tree, the password store, and the keys that reach the others; each runs scheduled jobs that copy data somewhere else. Security for such a fleet is less a matter of any single tool than of knowing which threats matter, which control answers each, and how to tell, months later, that the controls still hold.</p>
-<p>This post is the hub of an eight-part series that documents one such fleet: three Macs, a Linux laptop, and a repurposed laptop that serves as a home server. It states the threat model, lists the controls and the post that treats each in depth, covers full-disk encryption directly, and gives the quarterly audit checklist that the rest of the series refers back to. The controls described here are the ones in use, and the lessons come from the first full audit of the fleet in the last week of September 2026.</p>
+<p>This post is the hub of a nine-part series that documents one such fleet: three Macs, a Linux laptop, and a repurposed laptop that serves as a home server. It states the threat model, lists the controls and the post that treats each in depth, covers full-disk encryption directly, and gives the quarterly audit checklist that the rest of the series refers back to. The controls described here are the ones in use, and the lessons come from the first full audit of the fleet in the last week of September 2026.</p>
 <section id="motivations" class="level2">
 <h2 class="anchored" data-anchor-id="motivations">Motivations</h2>
 <ul>
@@ -364,12 +388,7 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <li>Confirm full-disk encryption on every machine, macOS and Linux.</li>
 <li>Run a quarterly audit that checks every control on every machine, including whether last night’s backups actually succeeded.</li>
 </ol>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/images/ambiance1.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
-<figcaption>A magnifying glass held over a folded paper map showing two marked locations connected by a dotted line.</figcaption>
-</figure>
-</div>
+<p><img src="media/images/ambiance1.jpg" class="img-fluid"></p>
 </section>
 </section>
 <section id="the-fleet" class="level1">
@@ -590,12 +609,7 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <li><strong>Keep a copy of the GPG master key offline.</strong> Recommended practice is an offline backup of the master key, kept apart from every daily-use machine, so that losing all machines at once does not lose the password store; see <a href="../sec-pass-password-manager/">Setting Up pass</a>.</li>
 <li><strong>Inspect credential files by structure, not content.</strong> Count lines, list key names, or check file types; never print a token to check it. A printed token is treated as exposed and rotated.</li>
 </ul>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/images/ambiance2.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
-<figcaption>A small fireproof document box, lid ajar, with a few folded papers just visible inside, on a stone hearth.</figcaption>
-</figure>
-</div>
+<p><img src="media/images/ambiance2.jpg" class="img-fluid"></p>
 </section>
 </section>
 <section id="prerequisites" class="level1">
@@ -688,11 +702,32 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 19. Services listen where they should, and only there</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ss <span class="at">-tlnp</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Items 1 to 16 take a few minutes per machine once the fleet is in good order. Item 17 is the one most often skipped and the one that matters most: a backup that has never been restored is an assumption. A full restore test, onto a spare disk, belongs on the checklist once a year.</p>
+<p><strong>Backups, added November 2026 (C8)</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 20. Each cloud remote is still authorized (fails in seconds if not)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> about gdrive: <span class="op">&gt;</span>/dev/null <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'gdrive ok'</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">rclone</span> about onedrive: <span class="op">&gt;</span>/dev/null <span class="kw">&amp;&amp;</span> <span class="bu">echo</span> <span class="st">'onedrive ok'</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 21. Result of each cloud job's recent runs (machines with rclone)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-h</span> <span class="st">'finished rc='</span> ~/Library/Logs/rclone-prj-<span class="pp">*</span>.log <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-6</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 22. The laptop: no idle sleep on mains power, Power Nap off, the</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     last Time Machine result 0, and the staleness check running</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ex">pmset</span> <span class="at">-g</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-E</span> <span class="st">'^ *(sleep|powernap) '</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="ex">defaults</span> read /Library/Preferences/com.apple.TimeMachine <span class="kw">|</span> <span class="fu">grep</span> RESULT</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-1</span> ~/Library/Logs/tm-staleness.log</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 23. Folders unreadable while locked are still excluded</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="ex">tmutil</span> isexcluded <span class="dt">\</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  ~/Library/Group\ Containers/group.com.apple.calendar/Attachments</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 24. Borg prune: record the date of the last quarterly pass; run</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="co">#     borg-prune on each repository, which shows a dry run first</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Items 1 to 16 and 20 to 23 take a few minutes per machine once the fleet is in good order. Item 17 is the one most often skipped and the one that matters most: a backup that has never been restored is an assumption. A full restore test, onto a spare disk, belongs on the checklist once a year.</p>
 </section>
 <section id="why-the-backup-items-exist" class="level2">
 <h2 class="anchored" data-anchor-id="why-the-backup-items-exist">Why the Backup Items Exist</h2>
 <p>Every backup problem found during the first audit was found by reading a log or an exit status by hand, and in every case the information had been sitting there for days. A nightly job silently skipped three folders after they moved; a cloud job had never run at all; and Borg failed for several nights on three machines after the home server received new LAN addresses at a reboot. The scheduler’s own record of each job’s last exit status already showed the failure. Items 14 to 16 make reading that record a routine, and a daily automated version of the same check is the natural next step.</p>
+<p>Items 20 to 24 come from a review of the backups in November 2026, which found the same pattern again. The laptop had gone 21 days without a completed Time Machine backup, unnoticed. Its backups then failed for two separate reasons in turn: a one-minute sleep timer cut them short, and once that was fixed, files under data protection could not be read while the screen was locked. The Google Drive authorizations on both main Macs expired on the same night, and their jobs failed until someone looked. Two of these now raise an alert: Borg sends a notification when a run fails, and a daily check on the laptop sends one when its newest Time Machine backup is more than 26 hours old. The cloud copies still depend on items 20 and 21. The details are in <a href="../sec-three-tier-backup-architecture/">Research Backup Architecture</a>.</p>
 </section>
 </section>
 <section id="things-to-watch-out-for" class="level1">
@@ -705,17 +740,13 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <li><strong>Keychain credentials are absent in SSH sessions.</strong> Symptom: <code>git pull</code> over SSH into a Mac asks for a username. Fix: run git operations that need the hosting token at the keyboard, or accept that remote sessions are read-only for that purpose.</li>
 <li><strong>Printing a file to check it.</strong> Symptom: a live token on screen or in a scrollback buffer. Fix: rotate it, then inspect credential files by structure only.</li>
 <li><strong>A scheduled job firing before the network is up.</strong> Symptom: a 02:00 job on a sleeping Mac fails with a connection timeout while later jobs succeed. Fix: have the script wait or retry for connectivity before declaring failure.</li>
+<li><strong>A laptop backup that needs the laptop awake and unlocked.</strong> Symptom: Time Machine shows a schedule but no recent completed backup. Fix: check the sleep settings and the last <code>RESULT</code> code (item 22), and alert on the age of the newest backup rather than on errors.</li>
 </ol>
 </section>
 <section id="uninstall-rollback" class="level1">
 <h1>Uninstall / Rollback</h1>
 <p>The controls in this post are configuration rather than software, and most are reversed in the same place they were set: FileVault in System Settings (decryption runs in the background and can take hours), the screen-lock delay in Lock Screen settings, the GPG agent cache in <code>~/.gnupg/gpg-agent.conf</code> followed by <code>gpgconf --kill gpg-agent</code>. Reversing LUKS requires reinstalling. The controls owned by other posts each have their own rollback section.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/images/ambiance3.jpg" class="img-fluid figure-img" style="height:3.5in"></p>
-<figcaption>A single chain-link fence post with a padlock and chain wrapped around it.</figcaption>
-</figure>
-</div>
+<p><img src="media/images/ambiance3.jpg" class="img-fluid"></p>
 </section>
 <section id="what-did-we-learn" class="level1">
 <h1>What Did We Learn?</h1>
@@ -734,14 +765,14 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <ul>
 <li>The fleet has one operator. The model does not address shared administration, role separation, or onboarding another person.</li>
 <li>Hardware security keys are not used; private keys live on disk, protected by passphrases and full-disk encryption.</li>
-<li>Backup monitoring is a manual check on the audit schedule and on demand, not an automated daily alert.</li>
+<li>Backup alerting is partial. Failed Borg runs and a stale Time Machine backup raise a notification; the cloud copies are checked by hand, on the audit schedule and on demand.</li>
 <li>The audit checklist is a set of commands rather than a single tested script covering both macOS and Linux.</li>
 </ul>
 </section>
 <section id="opportunities-for-improvement" class="level2">
 <h2 class="anchored" data-anchor-id="opportunities-for-improvement">Opportunities for Improvement</h2>
 <ol type="1">
-<li><strong>A daily backup status report.</strong> Collect each job’s last exit status and log age from every machine and flag anything not successful or older than a day.</li>
+<li><strong>A daily backup status report.</strong> Collect each job’s last exit status and log age from every machine and flag anything not successful or older than a day. The cloud copies, which have no alert of their own, need it most.</li>
 <li><strong>Hardware-backed keys.</strong> Move SSH and GPG private keys onto a hardware token so that a copied file is no longer a usable key.</li>
 <li><strong>Automated secret scanning.</strong> A pre-commit hook on the dotfiles and project repositories would catch the next secret before it is committed.</li>
 <li><strong>Short-lived cloud credentials.</strong> Replace long-lived access keys with credentials issued per session where the provider supports it.</li>
@@ -772,6 +803,7 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a>: the server’s roles, networking, firewall, and storage.</li>
 <li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a>: a design argument for content-addressed research data.</li>
 <li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a>: the first audit, told as it happened.</li>
+<li><a href="../sec-backup-failure-forensics/">Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks</a>: the method that traced the November backup failures to causes.</li>
 </ol>
 </section>
 <section id="see-also" class="level1">
@@ -786,6 +818,7 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
 <li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
 <li><a href="../sec-fleet-hardening-lessons/">Running the Quarterly Security Audit for the First Time: What Actually Broke</a></li>
+<li><a href="../sec-backup-failure-forensics/">Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks</a></li>
 </ol>
 <p>External references:</p>
 <ul>
@@ -848,7 +881,20 @@ subset of an earlier checklist), analysis/configs/gpg-agent.conf.
 <li><code>analysis/configs/gpg-agent.conf</code>: a reference agent configuration with <code>pinentry-mac</code> and short cache lifetimes.</li>
 </ul>
 <p>Items 1, 3, 13, and 14 were run as written on julia (macOS), and items 1 and 15 on zeus (Linux), on 2026-10-01. The authorized-keys listing in item 8 was run on the home server and on zeus on 2026-10-12, and showed the restricted backup and simulation entries; the <code>grep</code> line added to item 8 was not run in exactly that form. The remaining items are the commands used during the first audit, collected here; they have not yet been run end to end as a single pass in this exact form. Item 9 is a manual review of provider settings pages, and item 17 needs the repository variables described in the backup post.</p>
+<p>Items 20 to 24 were added on 2026-11-16. The commands behind items 21 and 23, and the <code>RESULT</code> and <code>tm-staleness</code> lines of item 22, were run in close to this form on the Macs on 2026-11-15 and 2026-11-16; items 20 and 24 and the <code>pmset</code> line were not run in this exact form.</p>
 <hr>
+<p><em>Rendered on 2026-11-16 at 09:00 PST.</em><br> <em>Source: ~/prj/web/ryyblog/posts/sec-multi-laptop-threat-model/analysis/report/index.qmd</em></p>
+<!-- ============================================================================
+PRE-PUBLISH QA CHECKLIST
+
+  [ ] No real LAN or tailnet addresses, ntfy topic, Syncthing device
+      IDs, password-store entry names, or account identifiers.
+  [ ] November claims traceable to BLOG_UPDATE_PLAN.md or
+      LAN_ARCHITECTURE.Rmd; open items stated as open.
+  [ ] Audit item numbers referenced in prose match the checklist.
+  [ ] Code lines within 78 characters.
+  [ ] PDF renders cleanly; hero at 80%, three ambiance images.
+============================================================================ -->
 </section>
 <section id="lets-connect" class="level1">
 <h1>Let’s Connect</h1>

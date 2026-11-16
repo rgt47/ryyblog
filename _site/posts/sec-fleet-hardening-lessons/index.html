@@ -497,7 +497,7 @@ Note
 <section id="time-machine-a-file-system-that-could-not-be-checked-and-a-missed-checkbox" class="level2">
 <h2 class="anchored" data-anchor-id="time-machine-a-file-system-that-could-not-be-checked-and-a-missed-checkbox">14. Time Machine: a file system that could not be checked, and a missed checkbox</h2>
 <p><strong>Broke, twice.</strong> The external drive was first formatted HFS+, chosen deliberately because both macOS and Linux can read it. Within a week the drive dropped off USB in the middle of a write, and the Linux HFS+ checker could not verify the volume afterward. A backup volume that cannot be checked on the machine it is attached to is not one to trust, so it was reformatted ext4, a documented choice for this setup. Separately, the first Time Machine backup to the share was created without encryption, which Time Machine offers only when a destination is first added. It had reached 258 GB of one Mac’s files, unencrypted, on another machine before the omission was noticed.</p>
-<p><strong>Changed:</strong> the unencrypted backup was deleted, the freed space trimmed, and the backup restarted with encryption on and its password stored in <code>pass</code>. The setup is described in <a href="../sec-five-machine-storage/">part 6</a> and the policy in <a href="../sec-three-tier-backup-architecture/">part 5</a>.</p>
+<p><strong>Changed:</strong> the unencrypted backup was deleted, the freed space trimmed, and the backup restarted with encryption on and its password stored in <code>pass</code>. The setup is described in <a href="../sec-five-machine-storage/">part 6</a> and the policy in <a href="../sec-three-tier-backup-architecture/">part 5</a>. Later, between mid-October and mid-November 2026, Time Machine on one laptop rarely completed a backup, for four separate reasons it did not report; <a href="../sec-backup-failure-forensics/">part 9</a> traces each one to its cause in the logs.</p>
 </section>
 <section id="a-share-that-listened-only-to-itself" class="level2">
 <h2 class="anchored" data-anchor-id="a-share-that-listened-only-to-itself">15. A share that listened only to itself</h2>
@@ -605,6 +605,7 @@ Note
 <li><a href="../sec-five-machine-storage/">A Home Server for a Five-Machine Research Fleet</a></li>
 <li><a href="../sec-object-store-research-data/">Object Storage for Research Data: The Layer Git Cannot Hold</a></li>
 <li>Running the Quarterly Security Audit for the First Time: What Actually Broke (this post)</li>
+<li><a href="../sec-backup-failure-forensics/">Finding Why a Backup Fails: Correlating Logs Across Sleep, Locks, and Networks</a></li>
 </ol>
 <p>External references:</p>
 <ul>

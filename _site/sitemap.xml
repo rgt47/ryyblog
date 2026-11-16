@@ -6,15 +6,15 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-share-rmd-via-docker/index.html</loc>
-    <lastmod>2026-10-04T17:38:12.042Z</lastmod>
+    <lastmod>2026-11-16T23:02:04.025Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-offload-simulations-home-server/index.html</loc>
-    <lastmod>2026-10-15T19:31:24.134Z</lastmod>
+    <lastmod>2026-11-16T19:16:15.518Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-markdown-to-blog-workflow/index.html</loc>
-    <lastmod>2026-10-04T17:38:12.035Z</lastmod>
+    <lastmod>2026-11-16T23:01:58.004Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-github-actions-workflows/index.html</loc>
@@ -22,7 +22,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-analysis-profile-walkthrough/index.html</loc>
-    <lastmod>2026-08-29T02:17:58.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:56.294Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-analysis-initiation-checklist/docs/analysis-checklist.html</loc>
@@ -34,7 +34,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-neovim-data-science-ide/index.html</loc>
-    <lastmod>2026-08-29T02:17:57.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:54.341Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-modern-cli-tools/index.html</loc>
@@ -42,7 +42,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-git-for-data-science/index.html</loc>
-    <lastmod>2026-09-13T17:17:36.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:50.241Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-claude-code-in-shell/index.html</loc>
@@ -50,31 +50,35 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/shy-prototype-with-chatgpt/index.html</loc>
-    <lastmod>2026-09-13T17:17:35.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:46.283Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/sh-daily-research-log/index.html</loc>
-    <lastmod>2026-09-13T17:17:36.000Z</lastmod>
+    <lastmod>2026-11-16T19:15:35.480Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-pass-password-manager/index.html</loc>
-    <lastmod>2026-10-01T19:00:34.032Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-three-tier-backup-architecture/index.html</loc>
+    <lastmod>2026-11-16T23:01:44.074Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-multi-laptop-threat-model/index.html</loc>
-    <lastmod>2026-10-15T16:45:07.435Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-object-store-research-data/index.html</loc>
+    <lastmod>2026-11-16T22:44:30.820Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-five-machine-storage/index.html</loc>
-    <lastmod>2026-10-15T19:23:05.822Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-fleet-hardening-lessons/index.html</loc>
+    <lastmod>2026-11-16T23:01:38.863Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-dropbox-to-portable-sync/docs/migration-decision-worksheet.html</loc>
-    <lastmod>2026-08-27T01:24:16.000Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-dropbox-to-portable-sync/index.html</loc>
+    <lastmod>2026-11-16T23:01:37.022Z</lastmod>
+  </url>
+  <url>
+    <loc>https://focusonr.org/posts/sec-backup-failure-forensics/index.html</loc>
+    <lastmod>2026-11-16T22:51:08.652Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/rp-zzvim-r-introduction/index.html</loc>
-    <lastmod>2026-08-29T02:17:57.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:33.814Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/rp-testthat-to-tinytest/index.html</loc>
@@ -82,11 +86,11 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/rp-testing-data-analysis/index.html</loc>
-    <lastmod>2026-09-13T17:17:36.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:29.542Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/rp-package-update-workflow/index.html</loc>
-    <lastmod>2026-09-13T17:17:36.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:27.184Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/rp-code-review-exemplar/index.html</loc>
@@ -98,11 +102,11 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/rl-dynamic-column-names/index.html</loc>
-    <lastmod>2026-08-29T02:17:57.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:23.414Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pub-r-script-to-rmd/index.html</loc>
-    <lastmod>2026-09-13T17:17:36.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:18.894Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pub-obs-r-screencasts/index.html</loc>
@@ -110,27 +114,27 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/pub-hosting-quarto-books-netlify/index.html</loc>
-    <lastmod>2026-09-07T20:55:45.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:14.762Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pp-random-forest/index.html</loc>
-    <lastmod>2026-10-15T20:17:54.586Z</lastmod>
+    <lastmod>2026-11-16T23:01:12.015Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pp-grouped-plots-with-purrr/index.html</loc>
-    <lastmod>2026-09-16T23:38:21.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:07.623Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pp-diagnostics/index.html</loc>
-    <lastmod>2026-10-15T20:17:54.450Z</lastmod>
+    <lastmod>2026-11-16T23:01:05.622Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pp-body-mass-prediction/index.html</loc>
-    <lastmod>2026-08-29T02:17:57.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:01.479Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/cln-shiny-docker-caddy-hosting/index.html</loc>
-    <lastmod>2026-09-13T17:17:35.000Z</lastmod>
+    <lastmod>2026-11-16T19:15:32.586Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/cln-aws-ec2-provisioning/index.html</loc>
@@ -142,15 +146,15 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/cln-multilang-trial-validation/index.html</loc>
-    <lastmod>2026-09-13T17:17:35.000Z</lastmod>
+    <lastmod>2026-11-16T23:00:57.332Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/cln-zzedc-investigator-independence/index.html</loc>
-    <lastmod>2026-09-13T17:17:36.000Z</lastmod>
+    <lastmod>2026-11-16T23:00:59.468Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pp-cross-validation/index.html</loc>
-    <lastmod>2026-10-15T20:17:54.381Z</lastmod>
+    <lastmod>2026-11-16T23:01:03.311Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pp-eda/index.html</loc>
@@ -158,7 +162,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/pp-multiple-regression/index.html</loc>
-    <lastmod>2026-10-15T20:17:54.518Z</lastmod>
+    <lastmod>2026-11-16T23:01:09.547Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pub-ai-course-policy-survey/index.html</loc>
@@ -166,7 +170,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/pub-multi-language-quarto/index.html</loc>
-    <lastmod>2026-09-07T20:55:27.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:16.749Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/pub-open-textbook-guidebook/index.html</loc>
@@ -178,7 +182,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/rl-pipe-equivalence-myth/index.html</loc>
-    <lastmod>2026-08-29T02:17:57.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:25.310Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/rp-book-review-methodology/index.html</loc>
@@ -198,35 +202,39 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/rp-vim-r-repl-plugin/index.html</loc>
-    <lastmod>2026-09-13T17:17:35.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:31.974Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/sec-aws-and-pass-secrets/index.html</loc>
-    <lastmod>2026-10-01T19:00:34.033Z</lastmod>
+    <lastmod>2026-11-16T23:01:35.362Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-dropbox-to-portable-sync/index.html</loc>
-    <lastmod>2026-10-15T16:46:41.478Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-dropbox-to-portable-sync/docs/migration-decision-worksheet.html</loc>
+    <lastmod>2026-08-27T01:24:16.000Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-fleet-hardening-lessons/index.html</loc>
-    <lastmod>2026-10-15T16:45:38.692Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-five-machine-storage/index.html</loc>
+    <lastmod>2026-11-16T22:44:30.818Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-object-store-research-data/index.html</loc>
-    <lastmod>2026-10-01T19:00:34.037Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-multi-laptop-threat-model/index.html</loc>
+    <lastmod>2026-11-16T23:01:40.527Z</lastmod>
   </url>
   <url>
-    <loc>https://focusonr.org/posts/sec-three-tier-backup-architecture/index.html</loc>
-    <lastmod>2026-10-15T16:45:51.298Z</lastmod>
+    <loc>https://focusonr.org/posts/sec-pass-password-manager/index.html</loc>
+    <lastmod>2026-11-16T23:01:42.195Z</lastmod>
+  </url>
+  <url>
+    <loc>https://focusonr.org/posts/sh-autopush-and-leave-check/index.html</loc>
+    <lastmod>2026-11-12T00:19:08.850Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/sh-scripts-vs-functions/index.html</loc>
-    <lastmod>2026-08-29T02:17:57.000Z</lastmod>
+    <lastmod>2026-11-12T00:18:26.801Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/shy-shiny-with-observable/index.html</loc>
-    <lastmod>2026-09-13T17:17:35.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:48.506Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-construct-overview-anchor/index.html</loc>
@@ -234,7 +242,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-linux-mint-on-macbook/index.html</loc>
-    <lastmod>2026-08-29T02:17:57.000Z</lastmod>
+    <lastmod>2026-11-16T23:01:52.110Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-multi-laptop-dotfiles-bootstrap/index.html</loc>
@@ -246,7 +254,7 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/wf-voice-copyedit-pipeline/index.html</loc>
-    <lastmod>2026-09-13T17:17:35.000Z</lastmod>
+    <lastmod>2026-11-16T19:16:00.977Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-analysis-initiation-checklist/index.html</loc>
@@ -262,11 +270,11 @@
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-new-student-reading-guide/index.html</loc>
-    <lastmod>2026-09-11T16:42:54.000Z</lastmod>
+    <lastmod>2026-11-16T23:02:00.173Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-quarto-compendium-intro/index.html</loc>
-    <lastmod>2026-10-04T17:38:12.024Z</lastmod>
+    <lastmod>2026-11-16T23:02:01.756Z</lastmod>
   </url>
   <url>
     <loc>https://focusonr.org/posts/zc-tiered-ci-strategy/docs/ci-strategy-tiered-model.html</loc>

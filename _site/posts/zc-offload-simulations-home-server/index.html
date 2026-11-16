@@ -806,6 +806,7 @@ mem@small = 12</code></pre>
 <li><strong>A cap larger than the machine does not start.</strong> <code>--cpus=8</code> on a 4-thread host is refused. Set per-host defaults (<code>cores@ALIAS</code>) instead of one global number.</li>
 <li><strong>Jobs share an account with everything else on the host.</strong> Rootless containers confine a job to the server account, not away from it. On the home server that account also owned the backup repositories, so a hostile or runaway job could have deleted them (append-only protection is enforced by the backup keys, not by file permissions). The fix was a dedicated unprivileged account for jobs: it has its own home, queue, container storage and data store, no <code>sudo</code>, and no ownership of anything else. The cost is that container images are per account, so the first job after the move rebuilds its image (about six minutes for the demonstration project). Where a separate account is not practical, prefer a host that holds nothing else.</li>
 </ol>
+<p><img src="media/images/ambiance3.jpg" class="img-fluid"></p>
 </section>
 <section id="what-did-we-learn" class="level1">
 <h1>What Did We Learn?</h1>
@@ -819,7 +820,6 @@ mem@small = 12</code></pre>
 <li>Measure hosts before preferring one. The newer machine was twice as fast per core, but scaling was far from linear on both and its sustained rate was below its burst rate, so the best setting (8 of 12 cores) was not the obvious one.</li>
 <li>A restricted credential turns the service behind it into the security boundary. Restricting client keys exposed three weaknesses in a server we had written for a trusted caller; hostile-input tests, not review, found them.</li>
 </ul>
-<p><img src="media/images/ambiance3.jpg" class="img-fluid"></p>
 </section>
 <section id="limitations" class="level2">
 <h2 class="anchored" data-anchor-id="limitations">Limitations</h2>

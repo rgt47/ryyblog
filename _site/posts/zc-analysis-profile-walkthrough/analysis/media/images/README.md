@@ -74,3 +74,10 @@
   white palette with warm amber accents established by the hero.
 - Generated with Google Imagen 3 via Gemini.
 - Date of generation: pending.
+
+## Replacements, 2026-11-16
+
+Placeholder or reused images were replaced, or empty slots filled, during an image audit of the whole blog. New images were generated with Gemini (`gemini-3-pro-image-preview`) through the image MCP server, checked for logos and readable text, and converted with `magick -resize 1600x -strip -quality 85`. Each line gives the slot, the generated file in `~/gen_image/`, and a summary of the prompt (scene; metaphor). Every prompt opened with 'Generate a 16:9 landscape image with the following description:' and closed with a lens, a genre, and 'no people, no logos, no readable text'.
+
+- `ambiance2.jpg`: existing file, now placed (a desk with a scatter plot on a monitor and an open notebook).
+- `ambiance3.jpg`: existing file, now placed (a packed archive box beside stacked papers on a white desk).

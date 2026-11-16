@@ -34,3 +34,10 @@ with post-specific screenshots or generated images per IMAGE_GENERATION_PLAN.md.
 - placeholder-coffee-05.jpg — Photo on Unsplash (ID: SvnFUJuun78).
   Coffee being poured into coffee maker, moody. Licence: Unsplash Free.
 
+
+## Replacements, 2026-11-16
+
+Placeholder or reused images were replaced, or empty slots filled, during an image audit of the whole blog. New images were generated with Gemini (`gemini-3-pro-image-preview`) through the image MCP server, checked for logos and readable text, and converted with `magick -resize 1600x -strip -quality 85`. Each line gives the slot, the generated file in `~/gen_image/`, and a summary of the prompt (scene; metaphor). Every prompt opened with 'Generate a 16:9 landscape image with the following description:' and closed with a lens, a genre, and 'no people, no logos, no readable text'.
+
+- `ambiance1.jpg`: `careful_wooden_toolbox_reorganization.png`. an open compartment toolbox with tools laid out beside it; a package changed one careful part at a time.
+- `ambiance3.jpg`: `three_herbs_varied_lighting.png`. the same potted herb on three windowsills in three kinds of light; one package checked on three operating systems.
